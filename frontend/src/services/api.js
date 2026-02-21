@@ -22,9 +22,9 @@ if (rawApiUrl) {
 
 // Fallback logic:
 // 1. If VITE_API_URL is provided, use it.
-// 2. In development, use localhost:8000.
+// 2. In development, use localhost:8001.
 // 3. In production, use relative /api (assumes same-origin hosting).
-const DEFAULT_API_BASE_URL = rawApiUrl || (import.meta.env.DEV ? 'http://127.0.0.1:8000/api' : '/api');
+const DEFAULT_API_BASE_URL = rawApiUrl || (import.meta.env.DEV ? 'http://127.0.0.1:8001/api' : '/api');
 
 const api = axios.create({
   baseURL: DEFAULT_API_BASE_URL,
@@ -117,15 +117,73 @@ api.interceptors.response.use(
 // Dashboard
 // ============================================================================
 export const dashboardApi = {
-  getStats: () => api.get('/dashboard/stats'),
+  getStats: (deptId = null) => {
+    const params = deptId ? `?dept_id=${deptId}` : '';
+    return api.get(`/dashboard/stats${params}`);
+  },
   getRecentSubstitutions: () => api.get('/dashboard/recent-substitutions'),
+};
+
+// Teacher Load Dashboard
+export const teacherLoadApi = {
+  getDashboard: (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.deptId) searchParams.append('dept_id', params.deptId);
+    if (params.year) searchParams.append('year', params.year);
+    const suffix = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return api.get(`/dashboard/teacher-load${suffix}`);
+  },
+};
+
+// ============================================================================
+// Departments
+// ============================================================================
+export const departmentsApi = {
+  getAll: () => api.get('/departments/'),
+  getById: (id) => api.get(`/departments/${id}`),
+  create: (data) => api.post('/departments/', data),
+  update: (id, data) => api.put(`/departments/${id}`, data),
+  delete: (id) => api.delete(`/departments/${id}`),
+};
+
+// ============================================================================
+// Rule Toggles (Department-Specific)
+// ============================================================================
+export const ruleTogglesApi = {
+  getAll: () => api.get('/rule-toggles/'),
+  getByDept: (deptId) => api.get(`/rule-toggles/${deptId}`),
+  update: (deptId, data) => api.put(`/rule-toggles/${deptId}`, data),
+};
+
+// ============================================================================
+// Reports (Accreditation)
+// ============================================================================
+const buildDeptQuery = (deptId) => (deptId ? `?dept_id=${deptId}` : '');
+
+export const reportsApi = {
+  getTeacherWorkload: (deptId = null) =>
+    api.get(`/reports/teacher-workload${buildDeptQuery(deptId)}`),
+  getRoomUtilization: (deptId = null) =>
+    api.get(`/reports/room-utilization${buildDeptQuery(deptId)}`),
+  getSubjectCoverage: (deptId = null) =>
+    api.get(`/reports/subject-coverage${buildDeptQuery(deptId)}`),
+  getTeacherWorkloadPdfUrl: (deptId = null) =>
+    `${api.defaults.baseURL}/reports/teacher-workload/pdf${buildDeptQuery(deptId)}`,
+  getRoomUtilizationPdfUrl: (deptId = null) =>
+    `${api.defaults.baseURL}/reports/room-utilization/pdf${buildDeptQuery(deptId)}`,
+  getSubjectCoveragePdfUrl: (deptId = null) =>
+    `${api.defaults.baseURL}/reports/subject-coverage/pdf${buildDeptQuery(deptId)}`,
 };
 
 // ============================================================================
 // Teachers
 // ============================================================================
 export const teachersApi = {
-  getAll: (activeOnly = true) => api.get(`/teachers/?active_only=${activeOnly}`),
+  getAll: (activeOnly = true, deptId = null) => {
+    let url = `/teachers/?active_only=${activeOnly}`;
+    if (deptId) url += `&dept_id=${deptId}`;
+    return api.get(url);
+  },
   getById: (id) => api.get(`/teachers/${id}`),
   create: (data) => api.post('/teachers/', data),
   update: (id, data) => api.put(`/teachers/${id}`, data),
@@ -144,7 +202,14 @@ export const teachersApi = {
 // Subjects
 // ============================================================================
 export const subjectsApi = {
-  getAll: () => api.get('/subjects/'),
+  getAll: (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.deptId) searchParams.append('dept_id', params.deptId);
+    if (params.year) searchParams.append('year', params.year);
+    if (params.semester) searchParams.append('semester', params.semester);
+    if (params.isElective !== undefined) searchParams.append('is_elective', params.isElective);
+    return api.get(`/subjects/?${searchParams.toString()}`);
+  },
   getById: (id) => api.get(`/subjects/${id}`),
   create: (data) => api.post('/subjects/', data),
   update: (id, data) => api.put(`/subjects/${id}`, data),
@@ -155,18 +220,31 @@ export const subjectsApi = {
 // Semesters/Classes
 // ============================================================================
 export const semestersApi = {
-  getAll: () => api.get('/semesters/'),
+  getAll: (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.deptId) searchParams.append('dept_id', params.deptId);
+    return api.get(`/semesters/?${searchParams.toString()}`);
+  },
   getById: (id) => api.get(`/semesters/${id}`),
   create: (data) => api.post('/semesters/', data),
   update: (id, data) => api.put(`/semesters/${id}`, data),
   delete: (id) => api.delete(`/semesters/${id}`),
+  // Batches
+  getBatches: (id) => api.get(`/semesters/${id}/batches`),
+  createBatch: (id, data) => api.post(`/semesters/${id}/batches`, data),
+  deleteBatch: (id, batchId) => api.delete(`/semesters/${id}/batches/${batchId}`),
 };
 
 // ============================================================================
 // Rooms
 // ============================================================================
 export const roomsApi = {
-  getAll: () => api.get('/rooms/'),
+  getAll: (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.deptId) searchParams.append('dept_id', params.deptId);
+    const suffix = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return api.get(`/rooms/${suffix}`);
+  },
   getById: (id) => api.get(`/rooms/${id}`),
   create: (data) => api.post('/rooms/', data),
   update: (id, data) => api.put(`/rooms/${id}`, data),
@@ -178,23 +256,32 @@ export const roomsApi = {
 // ============================================================================
 export const timetableApi = {
   generate: (data = {}) => api.post('/timetable/generate', data),
+  generateAsync: (data = {}) => api.post('/timetable/generate/async', data),
+  getGenerationStatus: (taskId) => api.get(`/timetable/generate/status/${taskId}`),
   getAllocations: (filters = {}) => {
     const params = new URLSearchParams();
     if (filters.semesterId) params.append('semester_id', filters.semesterId);
     if (filters.teacherId) params.append('teacher_id', filters.teacherId);
     if (filters.day !== undefined) params.append('day', filters.day);
+    if (filters.deptId) params.append('dept_id', filters.deptId);
     return api.get(`/timetable/allocations?${params}`);
   },
   getBySemester: (semesterId, viewDate = null) => {
     const params = viewDate ? `?view_date=${viewDate}` : '';
     return api.get(`/timetable/view/semester/${semesterId}${params}`);
   },
-  getByTeacher: (teacherId, viewDate = null) => {
-    const params = viewDate ? `?view_date=${viewDate}` : '';
+  getByTeacher: (teacherId, viewDate = null, deptId = null) => {
+    const parts = [];
+    if (viewDate) parts.push(`view_date=${viewDate}`);
+    if (deptId) parts.push(`dept_id=${deptId}`);
+    const params = parts.length > 0 ? `?${parts.join('&')}` : '';
     return api.get(`/timetable/view/teacher/${teacherId}${params}`);
   },
-  clear: (semesterId = null) => {
-    const params = semesterId ? `?semester_id=${semesterId}` : '';
+  clear: (semesterId = null, deptId = null) => {
+    const parts = [];
+    if (semesterId) parts.push(`semester_id=${semesterId}`);
+    if (deptId) parts.push(`dept_id=${deptId}`);
+    const params = parts.length > 0 ? `?${parts.join('&')}` : '';
     return api.delete(`/timetable/clear${params}`);
   },
   // PDF Export (READ-ONLY operations)
@@ -235,6 +322,8 @@ export const substitutionApi = {
   },
   cancel: (id) => api.delete(`/substitution/${id}`),
 };
+
+
 
 // ============================================================================
 // Fixed Slots (Manual Slot Locking)

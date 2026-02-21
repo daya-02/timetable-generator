@@ -6,11 +6,13 @@
 import { useEffect, useState } from 'react';
 import { Calendar, User, GraduationCap, AlertCircle, FileText, Download, Eye } from 'lucide-react';
 import { timetableApi, semestersApi, teachersApi } from '../services/api';
+import { useDepartmentContext } from '../context/DepartmentContext';
 import TimetableGrid from '../components/TimetableGrid';
 import PDFPreviewModal from '../components/PDFPreviewModal';
 import './TimetablePage.css';
 
 export default function TimetablePage() {
+    const { departments, selectedDeptId, setSelectedDeptId, deptId } = useDepartmentContext();
     const [viewType, setViewType] = useState('semester'); // 'semester' or 'teacher'
     const [semesters, setSemesters] = useState([]);
     const [teachers, setTeachers] = useState([]);
@@ -26,9 +28,12 @@ export default function TimetablePage() {
     const [pdfLoading, setPdfLoading] = useState(false);
 
     useEffect(() => {
-        fetchOptions();
         checkExportStatus();
     }, []);
+
+    useEffect(() => {
+        fetchOptions();
+    }, [deptId]); // Refetch options when department changes
 
     useEffect(() => {
         if (selectedId) {
@@ -38,17 +43,20 @@ export default function TimetablePage() {
 
     const fetchOptions = async () => {
         try {
+            const semParams = {};
+            if (deptId) semParams.deptId = deptId;
+
+            const teacherActive = true;
+            const teacherDept = deptId;
+
             const [semRes, teachRes] = await Promise.all([
-                semestersApi.getAll(),
-                teachersApi.getAll(),
+                semestersApi.getAll(semParams),
+                teachersApi.getAll(teacherActive, teacherDept),
             ]);
             setSemesters(semRes.data);
             setTeachers(teachRes.data);
-
-            // Auto-select first option
-            if (semRes.data.length > 0) {
-                setSelectedId(semRes.data[0].id);
-            }
+            setSelectedId(null); // Reset selection
+            setTimetable(null);
         } catch (err) {
             setError('Failed to load options');
             console.error(err);
@@ -70,7 +78,7 @@ export default function TimetablePage() {
         try {
             const res = viewType === 'semester'
                 ? await timetableApi.getBySemester(selectedId, viewDate)
-                : await timetableApi.getByTeacher(selectedId, viewDate);
+                : await timetableApi.getByTeacher(selectedId, viewDate, deptId);
             setTimetable(res.data);
             // Refresh export status when timetable changes
             checkExportStatus();
@@ -147,6 +155,20 @@ export default function TimetablePage() {
 
             {/* Controls */}
             <div className="timetable-controls card">
+                <div className="control-group">
+                    <label className="form-label">Department (Optional)</label>
+                    <select
+                        className="form-select"
+                        value={selectedDeptId || ''}
+                        onChange={(e) => setSelectedDeptId(e.target.value)}
+                    >
+                        <option value="">All Departments</option>
+                        {departments.map(d => (
+                            <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                        ))}
+                    </select>
+                </div>
+
                 <div className="control-group">
                     <label className="form-label">View By</label>
                     <div className="type-selector">

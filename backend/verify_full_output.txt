@@ -1,0 +1,459 @@
+﻿Running generation...
+
+============================================================
+COLLEGE TIMETABLE GENERATION ENGINE (MULTI-DEPT)
+============================================================
+TARGET: 14 classes across 3 departments
+
+DATA: Loading global resources (Teachers, Subjects, Rooms)...
+   READ [LOCKED]: Class 5, Subject 2, theory -> Teacher 10
+   READ [LOCKED]: Class 5, Subject 3, theory -> Teacher 11
+   READ [LOCKED]: Class 5, Subject 3, lab -> Teacher 11
+   READ [LOCKED]: Class 5, Subject 4, theory -> Teacher 12
+   READ [LOCKED]: Class 5, Subject 4, lab -> Teacher 13
+   READ [LOCKED]: Class 5, Subject 5, theory -> Teacher 14
+   READ [LOCKED]: Class 5, Subject 5, lab -> Teacher 14
+   READ [LOCKED]: Class 6, Subject 2, theory -> Teacher 19
+   READ [LOCKED]: Class 6, Subject 3, theory -> Teacher 20
+   READ [LOCKED]: Class 6, Subject 4, theory -> Teacher 21
+   READ [LOCKED]: Class 6, Subject 4, lab -> Teacher 21
+   READ [LOCKED]: Class 6, Subject 5, theory -> Teacher 22
+   READ [LOCKED]: Class 7, Subject 1, theory -> Teacher 26
+   READ [LOCKED]: Class 7, Subject 3, theory -> Teacher 28
+   READ [LOCKED]: Class 7, Subject 3, lab -> Teacher 28
+   READ [LOCKED]: Class 7, Subject 4, theory -> Teacher 29
+   READ [LOCKED]: Class 7, Subject 4, lab -> Teacher 29
+   READ [LOCKED]: Class 7, Subject 5, theory -> Teacher 30
+   READ [LOCKED]: Class 7, Subject 5, lab -> Teacher 30
+   READ [LOCKED]: Class 5, Subject 10, theory -> Teacher 34
+   READ [LOCKED]: Class 6, Subject 10, theory -> Teacher 34
+   READ [LOCKED]: Class 7, Subject 10, theory -> Teacher 34
+   READ [LOCKED]: Class 5, Subject 10, lab -> Teacher 34
+   READ [LOCKED]: Class 6, Subject 10, lab -> Teacher 34
+   READ [LOCKED]: Class 7, Subject 10, lab -> Teacher 34
+   READ [LOCKED]: Class 5, Subject 11, theory -> Teacher 35
+   READ [LOCKED]: Class 5, Subject 11, lab -> Teacher 35
+   READ [LOCKED]: Class 6, Subject 11, theory -> Teacher 35
+   READ [LOCKED]: Class 6, Subject 11, lab -> Teacher 35
+   READ [LOCKED]: Class 7, Subject 11, theory -> Teacher 35
+   READ [LOCKED]: Class 7, Subject 11, lab -> Teacher 35
+   READ [LOCKED]: Class 6, Subject 3, lab -> Teacher 20
+   READ [LOCKED]: Class 5, Subject 1, theory -> Teacher 9
+   READ [LOCKED]: Class 6, Subject 1, theory -> Teacher 18
+   READ [LOCKED]: Class 7, Subject 2, theory -> Teacher 27
+   READ [LOCKED]: Class 11, Subject 14, theory -> Teacher 13
+   READ [LOCKED]: Class 11, Subject 15, theory -> Teacher 28
+   READ [LOCKED]: Class 11, Subject 24, lab -> Teacher 13
+   READ [LOCKED]: Class 11, Subject 17, theory -> Teacher 12
+   READ [LOCKED]: Class 11, Subject 18, theory -> Teacher 37
+   READ [LOCKED]: Class 11, Subject 18, lab -> Teacher 37
+   READ [LOCKED]: Class 12, Subject 18, theory -> Teacher 37
+   READ [LOCKED]: Class 12, Subject 18, lab -> Teacher 37
+   READ [LOCKED]: Class 13, Subject 18, theory -> Teacher 37
+   READ [LOCKED]: Class 13, Subject 18, lab -> Teacher 37
+   READ [LOCKED]: Class 11, Subject 19, theory -> Teacher 38
+   READ [LOCKED]: Class 11, Subject 19, lab -> Teacher 38
+   READ [LOCKED]: Class 12, Subject 19, theory -> Teacher 38
+   READ [LOCKED]: Class 12, Subject 19, lab -> Teacher 38
+   READ [LOCKED]: Class 13, Subject 19, theory -> Teacher 38
+   READ [LOCKED]: Class 13, Subject 19, lab -> Teacher 38
+   READ [LOCKED]: Class 11, Subject 20, theory -> Teacher 39
+   READ [LOCKED]: Class 11, Subject 20, lab -> Teacher 39
+   READ [LOCKED]: Class 12, Subject 20, theory -> Teacher 39
+   READ [LOCKED]: Class 12, Subject 20, lab -> Teacher 39
+   READ [LOCKED]: Class 13, Subject 20, theory -> Teacher 39
+   READ [LOCKED]: Class 13, Subject 20, lab -> Teacher 39
+   READ [LOCKED]: Class 11, Subject 21, theory -> Teacher 36
+   READ [LOCKED]: Class 11, Subject 21, lab -> Teacher 36
+   READ [LOCKED]: Class 12, Subject 21, theory -> Teacher 36
+   READ [LOCKED]: Class 12, Subject 21, lab -> Teacher 36
+   READ [LOCKED]: Class 13, Subject 21, theory -> Teacher 36
+   READ [LOCKED]: Class 13, Subject 21, lab -> Teacher 36
+   READ [LOCKED]: Class 11, Subject 22, theory -> Teacher 40
+   READ [LOCKED]: Class 11, Subject 22, lab -> Teacher 40
+   READ [LOCKED]: Class 12, Subject 22, theory -> Teacher 40
+   READ [LOCKED]: Class 12, Subject 22, lab -> Teacher 40
+   READ [LOCKED]: Class 13, Subject 22, theory -> Teacher 40
+   READ [LOCKED]: Class 13, Subject 22, lab -> Teacher 40
+   READ [LOCKED]: Class 11, Subject 23, theory -> Teacher 41
+   READ [LOCKED]: Class 11, Subject 23, lab -> Teacher 41
+   READ [LOCKED]: Class 12, Subject 23, theory -> Teacher 41
+   READ [LOCKED]: Class 12, Subject 23, lab -> Teacher 41
+   READ [LOCKED]: Class 13, Subject 23, theory -> Teacher 41
+   READ [LOCKED]: Class 13, Subject 23, lab -> Teacher 41
+   READ [LOCKED]: Class 11, Subject 25, theory -> Teacher 22
+   READ [LOCKED]: Class 11, Subject 25, lab -> Teacher 22
+   READ [LOCKED]: Class 11, Subject 26, theory -> Teacher 11
+   READ [LOCKED]: Class 11, Subject 26, lab -> Teacher 11
+   READ [LOCKED]: Class 11, Subject 27, theory -> Teacher 42
+   READ [LOCKED]: Class 12, Subject 27, theory -> Teacher 42
+   READ [LOCKED]: Class 13, Subject 27, theory -> Teacher 42
+   READ [LOCKED]: Class 11, Subject 28, theory -> Teacher 43
+   READ [LOCKED]: Class 12, Subject 28, theory -> Teacher 43
+   READ [LOCKED]: Class 13, Subject 28, theory -> Teacher 43
+   READ [LOCKED]: Class 11, Subject 17, lab -> Teacher 12
+   READ [LOCKED]: Class 12, Subject 14, theory -> Teacher 44
+   READ [LOCKED]: Class 12, Subject 24, lab -> Teacher 44
+   READ [LOCKED]: Class 12, Subject 15, theory -> Teacher 21
+   READ [LOCKED]: Class 12, Subject 29, theory -> Teacher 45
+   READ [LOCKED]: Class 12, Subject 29, lab -> Teacher 45
+   READ [LOCKED]: Class 12, Subject 30, theory -> Teacher 39
+   READ [LOCKED]: Class 12, Subject 30, lab -> Teacher 39
+   READ [LOCKED]: Class 13, Subject 14, theory -> Teacher 35
+   READ [LOCKED]: Class 13, Subject 24, lab -> Teacher 35
+   READ [LOCKED]: Class 13, Subject 15, theory -> Teacher 41
+   READ [LOCKED]: Class 13, Subject 29, theory -> Teacher 20
+   READ [LOCKED]: Class 13, Subject 29, lab -> Teacher 20
+   READ [LOCKED]: Class 13, Subject 30, theory -> Teacher 21
+   READ [LOCKED]: Class 13, Subject 30, lab -> Teacher 21
+   READ [LOCKED]: Class 13, Subject 31, theory -> Teacher 28
+   READ [LOCKED]: Class 13, Subject 31, lab -> Teacher 28
+   READ [LOCKED]: Class 12, Subject 31, theory -> Teacher 22
+   READ [LOCKED]: Class 12, Subject 31, lab -> Teacher 22
+   READ [LOCKED]: Class 11, Subject 16, theory -> Teacher 46
+   READ [LOCKED]: Class 12, Subject 16, theory -> Teacher 47
+   READ [LOCKED]: Class 13, Subject 16, theory -> Teacher 48
+   READ [LOCKED]: Class 5, Subject 12, theory -> Teacher 38
+   READ [LOCKED]: Class 6, Subject 12, theory -> Teacher 38
+   READ [LOCKED]: Class 7, Subject 12, theory -> Teacher 38
+   READ [LOCKED]: Class 5, Subject 12, lab -> Teacher 38
+   READ [LOCKED]: Class 6, Subject 12, lab -> Teacher 38
+   READ [LOCKED]: Class 7, Subject 12, lab -> Teacher 38
+   READ [LOCKED]: Class 18, Subject 59, theory -> Teacher 52
+   READ [LOCKED]: Class 18, Subject 63, lab -> Teacher 52
+   READ [LOCKED]: Class 18, Subject 60, theory -> Teacher 55
+   READ [LOCKED]: Class 18, Subject 64, theory -> Teacher 55
+   READ [LOCKED]: Class 18, Subject 64, lab -> Teacher 55
+   READ [LOCKED]: Class 18, Subject 61, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 61, lab -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 66, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 69, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 72, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 73, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 62, theory -> Teacher 57
+   READ [LOCKED]: Class 18, Subject 62, lab -> Teacher 57
+   READ [LOCKED]: Class 18, Subject 65, theory -> Teacher 57
+   READ [LOCKED]: Class 18, Subject 70, theory -> Teacher 58
+   READ [LOCKED]: Class 17, Subject 53, theory -> Teacher 59
+   READ [LOCKED]: Class 17, Subject 56, lab -> Teacher 59
+   READ [LOCKED]: Class 17, Subject 54, theory -> Teacher 56
+   READ [LOCKED]: Class 17, Subject 58, lab -> Teacher 56
+   READ [LOCKED]: Class 17, Subject 55, theory -> Teacher 58
+   READ [LOCKED]: Class 17, Subject 57, lab -> Teacher 58
+   READ [LOCKED]: Class 17, Subject 74, theory -> Teacher 60
+   READ [LOCKED]: Class 17, Subject 74, lab -> Teacher 60
+   READ [LOCKED]: Class 17, Subject 75, theory -> Teacher 52
+   READ [LOCKED]: Class 17, Subject 75, lab -> Teacher 52
+   READ [LOCKED]: Class 17, Subject 7, theory -> Teacher 62
+   READ [LOCKED]: Class 5, Subject 7, theory -> Teacher 24
+   READ [LOCKED]: Class 6, Subject 7, theory -> Teacher 62
+   READ [LOCKED]: Class 6, Subject 8, theory -> Teacher 63
+   READ [LOCKED]: Class 7, Subject 8, theory -> Teacher 25
+   READ [LOCKED]: Class 17, Subject 8, theory -> Teacher 25
+   READ [LOCKED]: Class 17, Subject 2, theory -> Teacher 61
+   READ [LOCKED]: Class 17, Subject 27, theory -> Teacher 42
+   READ [LOCKED]: Class 5, Subject 13, lab -> Teacher 15
+   READ [LOCKED]: Class 6, Subject 13, lab -> Teacher 23
+   READ [LOCKED]: Class 7, Subject 13, lab -> Teacher 31
+   READ [LOCKED]: Class 7, Subject 9, theory -> Teacher 30
+   READ [LOCKED]: Class 6, Subject 9, theory -> Teacher 22
+   READ [LOCKED]: Class 5, Subject 9, theory -> Teacher 11
+   READ [LOCKED]: Class 5, Subject 8, theory -> Teacher 63
+   READ [LOCKED]: Class 7, Subject 7, theory -> Teacher 62
+   TOTAL LOCKED MAPPINGS: 154
+
+PHASE 0: PRE-SCHEDULING ELECTIVE BASKETS
+   [PLAN] Basket 1 (Year 4) needs: 2 Theory, 1 Lab Blocks
+   [PLAN] Basket 2 (Year 6) needs: 2 Theory, 1 Lab Blocks
+   [PLAN] Basket 3 (Year 6) needs: 2 Theory, 1 Lab Blocks
+   [PLAN] Basket 4 (Year 6) needs: 3 Theory, 0 Lab Blocks
+   [GLOBAL] Locked 4 theory groups and 4 lab groups
+
+STARTING PHASE 1: Dept 3 (3 classes)
+   Cleared 0 existing allocations
+   [GLOBAL] Loaded 273 external allocations as constraints
+   READ [ROOM]: Class 18, Subject 63, lab ΓåÆ Room 18
+   READ [ROOM]: Class 18, Subject 64, lab ΓåÆ Room 19
+   READ [ROOM]: Class 18, Subject 61, lab ΓåÆ Room 19
+   READ [ROOM]: Class 18, Subject 62, lab ΓåÆ Room 19
+   READ [ROOM]: Class 17, Subject 56, lab ΓåÆ Room 19
+   READ [ROOM]: Class 17, Subject 58, lab ΓåÆ Room 18
+   READ [ROOM]: Class 17, Subject 57, lab ΓåÆ Room 18
+   READ [ROOM]: Class 17, Subject 74, lab ΓåÆ Room 18
+   READ [ROOM]: Class 17, Subject 75, lab ΓåÆ Room 18
+   READ [ROOM]: Class 5, Subject 13, lab ΓåÆ Room 20
+   READ [ROOM]: Class 6, Subject 13, lab ΓåÆ Room 20
+   READ [ROOM]: Class 7, Subject 13, lab ΓåÆ Room 20
+   TOTAL ROOM PREFERENCES: 12
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   [NO MAPPING] CEB1221 - theory in CIVIL 2ND YEAR
+   [NO MAPPING] CEB1222 - theory in CIVIL 2ND YEAR
+   [NO MAPPING] CEC1291 - theory in CIVIL 2ND YEAR
+   [NO MAPPING] CEC1293 - theory in CIVIL 2ND YEAR
+   [NO MAPPING] CEB1223 - theory in CIVIL 2ND YEAR
+   [NO MAPPING] CEB1224 - theory in CIVIL 2ND YEAR
+   [NO MAPPING] CEB1224 - lab in CIVIL 2ND YEAR
+   [NO MAPPING] CEB1225 - theory in CIVIL 2ND YEAR
+   [NO MAPPING] CEB1225 - project in CIVIL 2ND YEAR
+   [NO MAPPING] CEB1231 - lab in CIVIL 2ND YEAR
+   [NO MAPPING] CEB1232 - lab in CIVIL 2ND YEAR
+   [NO MAPPING] GEA1221 - theory in CIVIL 2ND YEAR
+   [NO MAPPING] GEA12211 - theory in CIVIL 2ND YEAR
+   [NO MAPPING] GEA1211 - lab in CIVIL 2ND YEAR
+   [NO MAPPING] CEB1321 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] CEB1322 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] CEB1323 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] CEB1323 - lab in CIVIL 3RD YEAR
+   [NO MAPPING] CEC1371 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] CEC1371 - lab in CIVIL 3RD YEAR
+   [NO MAPPING] CEC1374 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] CEC1374 - lab in CIVIL 3RD YEAR
+   [NO MAPPING] CEC1391 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] CEC1393 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] CEB1331 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] CEB1332 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] CEB1332 - project in CIVIL 3RD YEAR
+   [NO MAPPING] CEB1333 - theory in CIVIL 3RD YEAR
+   [NO MAPPING] 20CE8925 - theory in CIVIL 4TH YEAR
+   [NO MAPPING] 20CE8926 - theory in CIVIL 4TH YEAR
+   Built 0 requirements from existing mappings
+   [DEBUG] Found 0 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 1:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 1:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 1:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 0:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 0:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 0:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:6
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:5
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:5
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:5
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:2
+   [SYNC] Found 15 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 4 groups
+   [PLAN] Applied global elective LAB plan for 4 groups
+      No elective requirements to schedule
+      No elective lab requirements to schedule.
+
+STARTING PHASE 1: Dept 4 (2 classes)
+   Cleared 66 existing allocations
+   [GLOBAL] Loaded 207 external allocations as constraints
+   READ [ROOM]: Class 18, Subject 63, lab ΓåÆ Room 18
+   READ [ROOM]: Class 18, Subject 64, lab ΓåÆ Room 19
+   READ [ROOM]: Class 18, Subject 61, lab ΓåÆ Room 19
+   READ [ROOM]: Class 18, Subject 62, lab ΓåÆ Room 19
+   READ [ROOM]: Class 17, Subject 56, lab ΓåÆ Room 19
+   READ [ROOM]: Class 17, Subject 58, lab ΓåÆ Room 18
+   READ [ROOM]: Class 17, Subject 57, lab ΓåÆ Room 18
+   READ [ROOM]: Class 17, Subject 74, lab ΓåÆ Room 18
+   READ [ROOM]: Class 17, Subject 75, lab ΓåÆ Room 18
+   READ [ROOM]: Class 5, Subject 13, lab ΓåÆ Room 20
+   READ [ROOM]: Class 6, Subject 13, lab ΓåÆ Room 20
+   READ [ROOM]: Class 7, Subject 13, lab ΓåÆ Room 20
+   TOTAL ROOM PREFERENCES: 12
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   [NO MAPPING] CGB1221 - theory in IT 2ND YEAR
+   [NO MAPPING] CGB1221 - lab in IT 2ND YEAR
+   [NO MAPPING] lib - theory in IT 2ND YEAR
+   [NO MAPPING] CGI1257 - theory in IT 2ND YEAR
+   [NO MAPPING] CGI1257 - lab in IT 2ND YEAR
+   [NO MAPPING] CGI1252 - theory in IT 2ND YEAR
+   [NO MAPPING] CGI1252 - lab in IT 2ND YEAR
+   [NO MAPPING] CGI1253 - theory in IT 2ND YEAR
+   [NO MAPPING] CGI1253 - lab in IT 2ND YEAR
+   [NO MAPPING] CCO - theory in IT 3RD YEAR
+   [NO MAPPING] LBBBB - theory in IT 3RD YEAR
+   [NO MAPPING] ITC13*2 - theory in IT 3RD YEAR
+   [NO MAPPING] ITC13*2 - lab in IT 3RD YEAR
+   Built 28 requirements from existing mappings
+   [DEBUG] Found 1 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 4 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 1:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 1:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 1:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 0:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 0:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 0:0
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:6
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:5
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:5
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:4
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 3 at 4:5
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:2
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:1
+      [DEBUG-SYNC] Found existing elective slot: Year 3 Basket 2 at 4:2
+   [SYNC] Found 14 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 4 groups
+   [PLAN] Applied global elective LAB plan for 4 groups
+      Processing 1 elective group(s)
+
+      Elective Group 'Emerging Elective 1' (Year 4, Basket 1):
+        Component: theory
+        [SYNC] Restricted to 2 global slots
+        Scheduled 2/2 hours for theory
+      [E-LAB] Grouped 1 reqs into 1 basket groups
+      [E-LAB] Basket 1 (Year 4): 1 subjects, need 1 block(s)
+        [OK] Lab block at Day 1 Slots 4-5 (1 subjects)
+      IT 2ND YEAR...
+         -> 20 subjects + 1 FREE
+      IT 3RD YEAR...
+         -> 28 subjects + 3 FREE
+   [OK] Saved 66 allocations
+
+STARTING PHASE 1: General Dept (9 classes)
+   Cleared 207 existing allocations
+   [GLOBAL] Loaded 66 external allocations as constraints
+   READ [ROOM]: Class 18, Subject 63, lab ΓåÆ Room 18
+   READ [ROOM]: Class 18, Subject 64, lab ΓåÆ Room 19
+   READ [ROOM]: Class 18, Subject 61, lab ΓåÆ Room 19
+   READ [ROOM]: Class 18, Subject 62, lab ΓåÆ Room 19
+   READ [ROOM]: Class 17, Subject 56, lab ΓåÆ Room 19
+   READ [ROOM]: Class 17, Subject 58, lab ΓåÆ Room 18
+   READ [ROOM]: Class 17, Subject 57, lab ΓåÆ Room 18
+   READ [ROOM]: Class 17, Subject 74, lab ΓåÆ Room 18
+   READ [ROOM]: Class 17, Subject 75, lab ΓåÆ Room 18
+   READ [ROOM]: Class 5, Subject 13, lab ΓåÆ Room 20
+   READ [ROOM]: Class 6, Subject 13, lab ΓåÆ Room 20
+   READ [ROOM]: Class 7, Subject 13, lab ΓåÆ Room 20
+   TOTAL ROOM PREFERENCES: 12
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   [NO MAPPING] ITC1291 - theory in AIML
+   [NO MAPPING] ITC1291 - lab in AIML
+   [NO MAPPING] ITC1291 - theory in AIDS-A
+   [NO MAPPING] ITC1291 - lab in AIDS-A
+   [NO MAPPING] ITC1291 - theory in AIDS-B
+   [NO MAPPING] ITC1291 - lab in AIDS-B
+   [NO MAPPING] AGB1221 - theory in Dummy 1
+   [NO MAPPING] AGB1221 - theory in Dummy 2
+   [NO MAPPING] AGB1221 - theory in Dummy 3
+   Built 126 requirements from existing mappings
+   [DEBUG] Found 27 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 1 at 1:5
+   [SYNC] Found 4 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 4 groups
+   [PLAN] Applied global elective LAB plan for 4 groups
+      Processing 4 elective group(s)
+
+      Elective Group 'Emerging Elective 1' (Year 4, Basket 1):
+        Component: theory
+        [SYNC] Restricted to 2 global slots
+        Scheduled 2/2 hours for theory
+
+      Elective Group 'Open Elective' (Year 6, Basket 4):
+        Component: theory
+        [SYNC] Restricted to 3 global slots
+        Scheduled 2/3 hours for theory
+        [THEORY] Elective Group 'Open Elective' (Year 6, Basket 4) Component 'theory': Failed 1/3 hours.
+
+      Elective Group 'Professional Elective' (Year 6, Basket 3):
+        Component: theory
+        [SYNC] Restricted to 2 global slots
+        Scheduled 2/2 hours for theory
+
+      Elective Group 'Emerging Elective' (Year 6, Basket 2):
+        Component: theory
+        [SYNC] Restricted to 2 global slots
+        Scheduled 2/2 hours for theory
+      [E-LAB] Grouped 27 reqs into 3 basket groups
+      [E-LAB] Basket 1 (Year 4): 3 subjects, need 1 block(s)
+        [OK] Lab block at Day 1 Slots 5-6 (9 subjects)
+      [E-LAB] Basket 3 (Year 6): 3 subjects, need 1 block(s)
+        [OK] Lab block at Day 4 Slots 4-5 (9 subjects)
+      [E-LAB] Basket 2 (Year 6): 3 subjects, need 1 block(s)
+        [OK] Lab block at Day 4 Slots 1-2 (9 subjects)
+      AIML...
+         -> 21 subjects
+      AIDS-A...
+         -> 21 subjects
+      AIDS-B...
+         -> 21 subjects
+      Dummy 1...
+         -> 0 subjects + 35 FREE
+      Dummy 2...
+         -> 0 subjects + 35 FREE
+      Dummy 3...
+         -> 0 subjects + 35 FREE
+      AIML 3RD YEAR...
+         -> 16 subjects + 1 FREE
+      AIDS A 3RD ...
+         -> 16 subjects + 1 FREE
+      AIDS 3RD B...
+         -> 16 subjects + 1 FREE
+   [OK] Saved 207 allocations
+
+PHASE 2: GLOBAL VALIDATION & CONFLICT CHECK...
+
+==============================================
+  ALLOCATION ISSUES / FAILURES:
+==============================================
+  - [FREE] Class 18 Day 2 Slot 6: Subj LIBBBBBBBB: Teacher 56 Busy
+  - [THEORY] Elective Group 'Open Elective' (Year 6, Basket 4) Component 'theory': Failed 1/3 hours.
+   [OK] GLOBAL VALIDATION PASSED. No inter-department conflicts.

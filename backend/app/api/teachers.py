@@ -1,12 +1,12 @@
 """
 CRUD API routes for Teachers.
 """
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db
-from app.db.models import Teacher, Subject, teacher_subjects, ClassSubjectTeacher, Semester, ComponentType
+from app.db.models import Teacher, Subject, Room, RoomType, teacher_subjects, ClassSubjectTeacher, Semester, ComponentType
 from app.schemas.schemas import TeacherCreate, TeacherUpdate, TeacherResponse, ClassSubjectTeacherCreate, ClassSubjectTeacherResponse
 
 router = APIRouter(prefix="/teachers", tags=["Teachers"])
@@ -15,26 +15,44 @@ router = APIRouter(prefix="/teachers", tags=["Teachers"])
 @router.get("/", response_model=List[TeacherResponse])
 def list_teachers(
     skip: int = 0,
-    limit: int = 100,
+    limit: Optional[int] = None,
     active_only: bool = True,
+    dept_id: Optional[int] = None,
+    teacher_code: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    """Get all teachers."""
+    """Get all teachers with optional filtering."""
     query = db.query(Teacher).options(
         selectinload(Teacher.subjects).selectinload(Subject.semesters),
         selectinload(Teacher.class_assignments).selectinload(ClassSubjectTeacher.semester),
-        selectinload(Teacher.class_assignments).selectinload(ClassSubjectTeacher.subject).selectinload(Subject.semesters)
+        selectinload(Teacher.class_assignments).selectinload(ClassSubjectTeacher.room),
+        selectinload(Teacher.class_assignments).selectinload(ClassSubjectTeacher.subject).selectinload(Subject.semesters),
+        selectinload(Teacher.class_assignments).selectinload(ClassSubjectTeacher.batch)
     )
     if active_only:
         query = query.filter(Teacher.is_active == True)
-    teachers = query.offset(skip).limit(limit).all()
+    if dept_id:
+        query = query.filter(Teacher.dept_id == dept_id)
+    if teacher_code:
+        query = query.filter(Teacher.teacher_code == teacher_code)
+        
+    query = query.offset(skip)
+    if limit is not None:
+        query = query.limit(limit)
+    teachers = query.all()
     return teachers
 
 
 @router.get("/{teacher_id}", response_model=TeacherResponse)
 def get_teacher(teacher_id: int, db: Session = Depends(get_db)):
     """Get a specific teacher by ID."""
-    teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
+    teacher = db.query(Teacher).options(
+        selectinload(Teacher.subjects).selectinload(Subject.semesters),
+        selectinload(Teacher.class_assignments).selectinload(ClassSubjectTeacher.semester),
+        selectinload(Teacher.class_assignments).selectinload(ClassSubjectTeacher.room),
+        selectinload(Teacher.class_assignments).selectinload(ClassSubjectTeacher.subject).selectinload(Subject.semesters),
+        selectinload(Teacher.class_assignments).selectinload(ClassSubjectTeacher.batch)
+    ).filter(Teacher.id == teacher_id).first()
     if not teacher:
         raise HTTPException(status_code=404, detail="Teacher not found")
     return teacher
@@ -48,6 +66,10 @@ def create_teacher(teacher_data: TeacherCreate, db: Session = Depends(get_db)):
         existing = db.query(Teacher).filter(Teacher.email == teacher_data.email).first()
         if existing:
             raise HTTPException(status_code=400, detail="Teacher with this email already exists")
+            
+    # Check teacher_code uniqueness
+    if db.query(Teacher).filter(Teacher.teacher_code == teacher_data.teacher_code).first():
+        raise HTTPException(status_code=400, detail="Teacher code already exists")
     
     # Extract subject_ids
     subject_ids = teacher_data.subject_ids
@@ -200,18 +222,35 @@ def add_teacher_assignment(
     if not subject:
         raise HTTPException(status_code=404, detail="Subject not found")
 
+    # Optional room assignment (primarily for labs)
+    if getattr(assignment_data, "room_id", None):
+        room = db.query(Room).filter(Room.id == assignment_data.room_id).first()
+        if not room:
+            raise HTTPException(status_code=404, detail="Room not found")
+        if assignment_data.component_type == ComponentType.LAB and room.room_type != RoomType.LAB:
+            raise HTTPException(status_code=400, detail="Selected room is not a lab room")
+
     # Check for existing assignment (Unique constraint)
-    existing = db.query(ClassSubjectTeacher).filter(
+    query = db.query(ClassSubjectTeacher).filter(
         ClassSubjectTeacher.semester_id == assignment_data.semester_id,
         ClassSubjectTeacher.subject_id == assignment_data.subject_id,
         ClassSubjectTeacher.component_type == assignment_data.component_type
-    ).first()
+    )
+    
+    if assignment_data.batch_id is not None:
+        query = query.filter(ClassSubjectTeacher.batch_id == assignment_data.batch_id)
+    else:
+        query = query.filter(ClassSubjectTeacher.batch_id.is_(None))
+        
+    existing = query.first()
     
     if existing:
         # Update existing assignment
         existing.teacher_id = teacher_id
+        existing.room_id = assignment_data.room_id
         existing.assignment_reason = assignment_data.assignment_reason
         existing.is_locked = assignment_data.is_locked
+        existing.parallel_lab_group = assignment_data.parallel_lab_group
         
         # Sync qualification
         if subject not in teacher.subjects:

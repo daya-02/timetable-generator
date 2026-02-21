@@ -17,7 +17,7 @@ from datetime import datetime, date
 from typing import List, Optional
 from sqlalchemy import (
     String, Integer, Float, Boolean, ForeignKey, DateTime, Date,
-    Enum as SQLEnum, UniqueConstraint, Table, Column, CheckConstraint
+    Enum as SQLEnum, UniqueConstraint, Table, Column, CheckConstraint, Index
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
@@ -93,6 +93,14 @@ elective_basket_semesters = Table(
     Column("semester_id", Integer, ForeignKey("semesters.id", ondelete="CASCADE"), primary_key=True),
 )
 
+# Many-to-Many: Rooms <-> Departments (shared labs across departments)
+room_departments = Table(
+    "room_departments",
+    Base.metadata,
+    Column("room_id", Integer, ForeignKey("rooms.id", ondelete="CASCADE"), primary_key=True),
+    Column("dept_id", Integer, ForeignKey("departments.id", ondelete="CASCADE"), primary_key=True),
+)
+
 
 # ============================================================================
 # MODELS
@@ -110,6 +118,33 @@ class Department(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class DepartmentRuleToggle(Base):
+    """Department-specific rule toggle configuration (soft rules by default)."""
+    __tablename__ = "department_rule_toggles"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    dept_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id", ondelete="CASCADE"),
+        unique=True
+    )
+
+    # Rule toggles (default OFF)
+    lab_continuity_strict: Mapped[bool] = mapped_column(Boolean, default=False)
+    teacher_gap_preference: Mapped[bool] = mapped_column(Boolean, default=False)
+    max_consecutive_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    max_consecutive_limit: Mapped[int] = mapped_column(Integer, default=3)
+
+    # Soft by default; can be marked hard explicitly
+    lab_continuity_is_hard: Mapped[bool] = mapped_column(Boolean, default=False)
+    teacher_gap_is_hard: Mapped[bool] = mapped_column(Boolean, default=False)
+    max_consecutive_is_hard: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    department: Mapped["Department"] = relationship()
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class Room(Base):
     """Physical room/classroom entity."""
     __tablename__ = "rooms"
@@ -121,11 +156,22 @@ class Room(Base):
     is_available: Mapped[bool] = mapped_column(Boolean, default=True)
     
     # Scalability: Future support for multiple departments/colleges
-    dept_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    dept_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
     college_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    
+    # Section-wise room assignment (optional)
+    # When assigned_year + assigned_section + is_default_classroom are set,
+    # this room becomes the DEFAULT classroom for that section's theory classes.
+    # If not set, the room behaves as a shared resource (backward compatible).
+    assigned_year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    assigned_section: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    is_default_classroom: Mapped[bool] = mapped_column(Boolean, default=False)
     
     # Relationships
     allocations: Mapped[List["Allocation"]] = relationship(back_populates="room")
+    departments: Mapped[List["Department"]] = relationship(
+        secondary=room_departments, lazy="joined"
+    )
     
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -140,6 +186,9 @@ class Teacher(Base):
     email: Mapped[Optional[str]] = mapped_column(String(200), unique=True, nullable=True)
     phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     
+    # New mandatory unique code for identification
+    teacher_code: Mapped[str] = mapped_column(String(20), unique=True, nullable=True, index=True) # Populated via script
+    
     # Constraints & scoring
     max_hours_per_week: Mapped[int] = mapped_column(Integer, default=20)
     max_consecutive_classes: Mapped[int] = mapped_column(Integer, default=3)
@@ -152,7 +201,7 @@ class Teacher(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
     # Scalability
-    dept_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    dept_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
     college_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     
     # Relationships
@@ -192,11 +241,33 @@ class Subject(Base):
     theory_hours_per_week: Mapped[int] = mapped_column(Integer, default=3)  # Theory periods
     lab_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)     # Lab periods (2 per block)
     tutorial_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)  # Tutorial periods
+
+    # EXTENDED ACADEMIC COMPONENTS (Optional, backward-compatible)
+    # These are treated as timetable-visible components when hours > 0.
+    project_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)
+    project_block_size: Mapped[int] = mapped_column(Integer, default=1)  # 1 or 2
+
+    report_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)
+    report_block_size: Mapped[int] = mapped_column(Integer, default=1)  # 1 or 2
+
+    seminar_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)  # Single period sessions
+
+    internship_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)
+    internship_block_size: Mapped[int] = mapped_column(Integer, default=2)  # 1 or 2 (or 7 for day-based)
+    internship_day_based: Mapped[bool] = mapped_column(Boolean, default=False)
     
     # Total weekly hours (computed from components)
     @property
     def total_weekly_hours(self) -> int:
-        return self.theory_hours_per_week + self.lab_hours_per_week + self.tutorial_hours_per_week
+        return (
+            self.theory_hours_per_week
+            + self.lab_hours_per_week
+            + self.tutorial_hours_per_week
+            + (self.project_hours_per_week or 0)
+            + (self.report_hours_per_week or 0)
+            + (self.seminar_hours_per_week or 0)
+            + (self.internship_hours_per_week or 0)
+        )
     
     # Legacy compatibility field (deprecated, but kept for DB compatibility)
     weekly_hours: Mapped[int] = mapped_column(Integer, default=3)
@@ -209,14 +280,17 @@ class Subject(Base):
     # Elective Basket reference (if this is an elective)
     elective_basket_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("elective_baskets.id", ondelete="SET NULL"), 
-        nullable=True
+        nullable=True, index=True
     )
     
     # Semester mapping (e.g. 3 for 3rd semester)
     semester: Mapped[int] = mapped_column(Integer, default=1)
     
+    # Year (1, 2, 3, 4) - Explicit field for filtering
+    year: Mapped[int] = mapped_column(Integer, default=1)
+    
     # Scalability
-    dept_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    dept_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
     college_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     
     # Relationships
@@ -286,7 +360,7 @@ class Semester(Base):
     student_count: Mapped[int] = mapped_column(Integer, default=60)
     
     # Scalability
-    dept_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    dept_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
     college_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     
     # Relationships
@@ -294,6 +368,27 @@ class Semester(Base):
         secondary=subject_semesters, back_populates="semesters"
     )
     allocations: Mapped[List["Allocation"]] = relationship(back_populates="semester")
+    batches: Mapped[List["Batch"]] = relationship(back_populates="semester", cascade="all, delete-orphan")
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Batch(Base):
+    """
+    Represents a student batch within a semester (e.g., "Batch A", "Batch B").
+    Used for practicals (labs) where the class is split into smaller groups.
+    """
+    __tablename__ = "batches"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(50))  # e.g., "A", "B", "1"
+    
+    semester_id: Mapped[int] = mapped_column(ForeignKey("semesters.id", ondelete="CASCADE"))
+    
+    # Relationships
+    semester: Mapped["Semester"] = relationship(back_populates="batches")
+    allocations: Mapped[List["Allocation"]] = relationship(back_populates="batch")
     
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -309,19 +404,24 @@ class Allocation(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     
     # Foreign keys
-    teacher_id: Mapped[int] = mapped_column(ForeignKey("teachers.id", ondelete="CASCADE"))
-    subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"))
-    semester_id: Mapped[int] = mapped_column(ForeignKey("semesters.id", ondelete="CASCADE"))
-    room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id", ondelete="CASCADE"))
+    teacher_id: Mapped[int] = mapped_column(ForeignKey("teachers.id", ondelete="CASCADE"), index=True)
+    subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    semester_id: Mapped[int] = mapped_column(ForeignKey("semesters.id", ondelete="CASCADE"), index=True)
+    room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id", ondelete="CASCADE"), index=True)
     
     # Time slot info
-    day: Mapped[int] = mapped_column(Integer)  # 0=Monday, 4=Friday
+    day: Mapped[int] = mapped_column(Integer, index=True)  # 0=Monday, 4=Friday
     slot: Mapped[int] = mapped_column(Integer)  # 0-6 (7 periods)
     
     # Component type for this allocation
     component_type: Mapped[ComponentType] = mapped_column(
         SQLEnum(ComponentType), default=ComponentType.THEORY
     )
+
+    # Extended academic component label (optional).
+    # When set, this provides the "real" academic component type (project/report/seminar/internship/etc)
+    # while `component_type` continues to drive scheduling behavior (theory/lab/tutorial).
+    academic_component: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     
     # For multi-slot sessions (labs)
     is_lab_continuation: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -332,16 +432,36 @@ class Allocation(Base):
         ForeignKey("elective_baskets.id", ondelete="SET NULL"), nullable=True
     )
     
+    batch_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("batches.id", ondelete="SET NULL"), nullable=True
+    )
+    
     # Relationships
     teacher: Mapped["Teacher"] = relationship(back_populates="allocations")
     subject: Mapped["Subject"] = relationship(back_populates="allocations")
     semester: Mapped["Semester"] = relationship(back_populates="allocations")
     room: Mapped["Room"] = relationship(back_populates="allocations")
+    batch: Mapped[Optional["Batch"]] = relationship(back_populates="allocations")
     substitutions: Mapped[List["Substitution"]] = relationship(back_populates="allocation")
     
-    # Unique constraint: One class per semester per day/slot
+    # Unique constraint: One class per semester per day/slot (unless split by batches)
+    # MODIFIED: Now we allow multiple allocations if they have different batch_ids (or if one is null and another is batch?)
+    # Actually, if batch_id is NULL, it means the WHOLE class.
+    # If batch_id is SET, it means a PART of the class.
+    # Constraint: (semester_id, day, slot, batch_id) should be unique.
+    # BUT: We also need to prevent "Whole Class" + "Batch A" overlap.
+    # This is complex to enforce purely via SQL UniqueConstraint if NULLs are involved.
+    # For now, we relax the strict SQL unique constraint and enforce logic in Generator.
+    # However, to prevent duplicates:
+    # We'll use a functional index or just rely on application logic + (teacher, day, slot) uniqueness.
+    
     __table_args__ = (
-        UniqueConstraint("semester_id", "day", "slot", name="uq_semester_day_slot"),
+        # We REMOVE the strict (semester, day, slot) unique constraint because parallel batches share this.
+        # Instead, we rely on (teacher, day, slot) and (room, day, slot) uniqueness which are implicit via logic
+        # OR we add batch_id to uniqueness.
+        # UniqueConstraint("semester_id", "day", "slot", "batch_id", name="uq_semester_day_slot_batch"),
+        Index('ix_allocations_sem_day_slot', 'semester_id', 'day', 'slot'),
+        Index('ix_allocations_teacher_day_slot', 'teacher_id', 'day', 'slot'),
     )
     
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -413,15 +533,31 @@ class ClassSubjectTeacher(Base):
     
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     
-    semester_id: Mapped[int] = mapped_column(ForeignKey("semesters.id", ondelete="CASCADE"))
-    subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"))
-    teacher_id: Mapped[int] = mapped_column(ForeignKey("teachers.id", ondelete="CASCADE"))
+    semester_id: Mapped[int] = mapped_column(ForeignKey("semesters.id", ondelete="CASCADE"), index=True)
+    subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    teacher_id: Mapped[int] = mapped_column(ForeignKey("teachers.id", ondelete="CASCADE"), index=True)
+    # Optional preferred/assigned room (primarily for lab components).
+    # When set, the generator will prefer this room for scheduling.
+    room_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("rooms.id", ondelete="SET NULL"), nullable=True
+    )
     component_type: Mapped[ComponentType] = mapped_column(
         SQLEnum(ComponentType), default=ComponentType.THEORY
     )
     
+    # Batch support
+    batch_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("batches.id", ondelete="CASCADE"), nullable=True
+    )
+    
     # Assignment metadata
     assignment_reason: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    
+    # Parallel multi-subject lab group.
+    # When multiple CST lab entries for the SAME semester share this group string,
+    # they are co-scheduled in the same time slot with different teachers/rooms/batches.
+    # Example: "IT2A-parallel-1" links DBMS Lab + OS Lab for IT 2nd Year Section A.
+    parallel_lab_group: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
     # Lock flag - once locked, cannot be changed
     is_locked: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -430,11 +566,15 @@ class ClassSubjectTeacher(Base):
     teacher: Mapped["Teacher"] = relationship(back_populates="class_assignments")
     semester: Mapped["Semester"] = relationship()
     subject: Mapped["Subject"] = relationship()
+    room: Mapped[Optional["Room"]] = relationship()
+    batch: Mapped[Optional["Batch"]] = relationship()
     
-    # Unique constraint: One teacher per (semester, subject, component)
+    # Unique constraint: One teacher per (semester, subject, component, batch)
+    # Note: If batch_id is NULL (Whole Class), it conflicts with nothing else in DB constraint terms,
+    # but application logic must handle it.
     __table_args__ = (
-        UniqueConstraint("semester_id", "subject_id", "component_type", 
-                         name="uq_semester_subject_component_teacher"),
+        UniqueConstraint("semester_id", "subject_id", "component_type", "batch_id",
+                         name="uq_semester_subject_component_batch_teacher"),
     )
     
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -472,6 +612,9 @@ class ElectiveBasket(Base):
     
     # Semester this basket belongs to (e.g., 5 for 5th semester)
     semester_number: Mapped[int] = mapped_column(Integer)
+    
+    # Year (1-4) for college-wide grouping — multiple baskets per year allowed
+    year: Mapped[int] = mapped_column(Integer, default=2)
     
     # Total hours (COMMON for all subjects in basket)
     theory_hours_per_week: Mapped[int] = mapped_column(Integer, default=3)
@@ -585,6 +728,9 @@ class FixedSlot(Base):
     component_type: Mapped[ComponentType] = mapped_column(
         SQLEnum(ComponentType), default=ComponentType.THEORY
     )
+
+    # Extended academic component label (optional).
+    academic_component: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     
     # For lab blocks that span 2 periods
     is_lab_continuation: Mapped[bool] = mapped_column(Boolean, default=False)

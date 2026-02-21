@@ -7,8 +7,6 @@ import {
     UserX,
     UserCheck,
     Calendar,
-    Clock,
-    Star,
     AlertCircle,
     CheckCircle,
     Zap,
@@ -17,11 +15,13 @@ import {
     Briefcase,
 } from 'lucide-react';
 import { substitutionApi, teachersApi } from '../services/api';
+import { useDepartmentContext } from '../context/DepartmentContext';
 import './SubstitutionPage.css';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 export default function SubstitutionPage() {
+    const { deptId } = useDepartmentContext();
     const [teachers, setTeachers] = useState([]);
     const [activeSubstitutions, setActiveSubstitutions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -40,13 +40,13 @@ export default function SubstitutionPage() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [deptId]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
             const [teachersRes, subsRes] = await Promise.all([
-                teachersApi.getAll(),
+                teachersApi.getAll(true, deptId),
                 substitutionApi.getActive(),
             ]);
             setTeachers(teachersRes.data);
@@ -309,10 +309,10 @@ export default function SubstitutionPage() {
                                 </div>
 
                                 <div className="candidates-section">
-                                    <h5>Available Substitutes (Ranked by Score)</h5>
+                                    <h5>Same-Class Teachers Available</h5>
                                     {candidates[alloc.allocation_id]?.length > 0 ? (
                                         <div className="candidates-list">
-                                            {candidates[alloc.allocation_id].slice(0, 5).map((candidate, idx) => (
+                                            {candidates[alloc.allocation_id].map((candidate, idx) => (
                                                 <div
                                                     key={candidate.teacher_id}
                                                     className={`candidate-item ${idx === 0 ? 'top' : ''}`}
@@ -320,18 +320,23 @@ export default function SubstitutionPage() {
                                                     <div className="candidate-info">
                                                         <span className="candidate-rank">#{idx + 1}</span>
                                                         <div>
-                                                            <span className="candidate-name">{candidate.teacher_name}</span>
-                                                            <div className="candidate-tags">
-                                                                {candidate.subject_match && (
-                                                                    <span className="tag tag-success">Qualified</span>
+                                                            <span className="candidate-name">
+                                                                {candidate.teacher_name}
+                                                                {candidate.teacher_code && (
+                                                                    <span className="tag" style={{ marginLeft: '0.5rem' }}>
+                                                                        {candidate.teacher_code}
+                                                                    </span>
                                                                 )}
-                                                                <span className="tag">Load: {candidate.current_load}h</span>
+                                                            </span>
+                                                            <div className="candidate-tags">
+                                                                {candidate.class_subjects?.length > 0 && (
+                                                                    candidate.class_subjects.map((subj, si) => (
+                                                                        <span key={si} className="tag tag-success">{subj}</span>
+                                                                    ))
+                                                                )}
+                                                                <span className="tag">Load: {candidate.current_load}h/wk</span>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="candidate-score">
-                                                        <Star size={14} />
-                                                        <span>{(candidate.score * 100).toFixed(0)}%</span>
                                                     </div>
                                                     <button
                                                         className="btn btn-sm btn-primary"
@@ -343,7 +348,12 @@ export default function SubstitutionPage() {
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-muted text-sm">No available substitutes</p>
+                                        <div className="empty-state" style={{ padding: '1rem' }}>
+                                            <AlertCircle size={20} />
+                                            <p className="text-muted text-sm" style={{ margin: '0.5rem 0 0' }}>
+                                                No internal class teachers available.
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -378,7 +388,7 @@ export default function SubstitutionPage() {
                                     {sub.substitution_id ? (
                                         <>
                                             <CheckCircle size={14} className="text-success" />
-                                            <span>{sub.subject_name}: {sub.substitute_teacher_name} (Score: {(sub.score * 100).toFixed(0)}%)</span>
+                                            <span>{sub.subject_name}: {sub.substitute_teacher_name}</span>
                                         </>
                                     ) : (
                                         <>

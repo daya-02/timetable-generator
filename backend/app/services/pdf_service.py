@@ -106,12 +106,23 @@ class TimetablePDFService:
     
     def _get_component_suffix(self, alloc) -> str:
         """Get component type suffix for display."""
-        if alloc.component_type:
-            ct = alloc.component_type.value
-            if ct == "lab":
-                return "(P)"
-            elif ct == "tutorial":
-                return "(T)"
+        comp = getattr(alloc, "academic_component", None) or (
+            alloc.component_type.value if getattr(alloc, "component_type", None) else "theory"
+        )
+
+        if comp == "lab":
+            return "(P)"
+        if comp == "tutorial":
+            return "(T)"
+        if comp == "project":
+            return "(PRJ)"
+        if comp == "report":
+            return "(RPT)"
+        if comp == "seminar":
+            return "(SEM)"
+        if comp == "internship":
+            return "(INT)"
+
         return "(L)"
     
     def _build_header_section(self, semester: Semester) -> Table:

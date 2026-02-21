@@ -5,17 +5,19 @@
 import { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, X, Layers, BookOpen, AlertCircle, Save } from 'lucide-react';
 import api, { subjectsApi, semestersApi } from '../services/api'; // Extended with elective API
+import { useDepartmentContext } from '../context/DepartmentContext';
 import './CrudPage.css';
 
 // API for Elective Baskets
 const electivesApi = {
-    getAll: () => api.get('/elective-baskets/'),
+    getAll: (deptId = null) => api.get(`/elective-baskets/${deptId ? `?dept_id=${deptId}` : ''}`),
     create: (data) => api.post('/elective-baskets/', data),
     update: (id, data) => api.put(`/elective-baskets/${id}`, data),
     delete: (id) => api.delete(`/elective-baskets/${id}`),
 };
 
 export default function ElectivesPage() {
+    const { deptId } = useDepartmentContext();
     const [baskets, setBaskets] = useState([]);
     const [subjects, setSubjects] = useState([]);
     const [semesters, setSemesters] = useState([]);
@@ -36,15 +38,15 @@ export default function ElectivesPage() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [deptId]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
             const [basketRes, subjRes, semRes] = await Promise.all([
-                electivesApi.getAll(),
-                subjectsApi.getAll(),
-                semestersApi.getAll()
+                electivesApi.getAll(deptId),
+                subjectsApi.getAll({ deptId }),
+                semestersApi.getAll({ deptId })
             ]);
             setBaskets(basketRes.data);
             setSubjects(subjRes.data);

@@ -690,3 +690,56 @@
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+/* Batch Display Styles */
+.batch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.batch-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 0.7rem;
+}
+
+.batch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.batch-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-weight: 600;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.65rem;
+}
+
+.batch-room {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: #64748b;
+    font-size: 0.65rem;
+}
+
+.batch-teacher {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: #475569;
+    font-weight: 500;
+}
+
+.batch-teacher svg {
+    color: #94a3b8;
+}

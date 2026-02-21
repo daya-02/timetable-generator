@@ -143,8 +143,13 @@ export default function TimetableGrid({ timetable, viewType = 'semester' }) {
                                     {timetable.days.map((day, dayIdx) => {
                                         const slot = getSlotData(day, periodIdx);
                                         const isEmpty = !slot || !slot.subject_name;
-                                        const isLab = slot?.is_lab || slot?.component_type === 'lab';
-                                        const isTutorial = slot?.component_type === 'tutorial';
+                                        const academicComponent = slot?.academic_component || slot?.component_type || null;
+                                        const isLab = slot?.is_lab || academicComponent === 'lab';
+                                        const isTutorial = academicComponent === 'tutorial';
+                                        const isProject = academicComponent === 'project';
+                                        const isReport = academicComponent === 'report';
+                                        const isSeminar = academicComponent === 'seminar';
+                                        const isInternship = academicComponent === 'internship';
                                         const isElective = slot?.is_elective;
                                         const isSubstituted = slot?.is_substituted;
 
@@ -155,6 +160,8 @@ export default function TimetableGrid({ timetable, viewType = 'semester' }) {
                                         else if (isTutorial) typeClass = 'tutorial';
                                         else if (isElective) typeClass = 'elective';
                                         else typeClass = 'theory';
+
+
 
                                         return (
                                             <td
@@ -171,29 +178,55 @@ export default function TimetableGrid({ timetable, viewType = 'semester' }) {
                                                             <span className="slot-code">{slot.subject_code}</span>
                                                         )}
 
-                                                        {viewType === 'semester' && slot.teacher_name && (
-                                                            <div className="slot-teacher">
-                                                                <User size={12} />
-                                                                <span>
-                                                                    {isSubstituted ? (
-                                                                        <>
-                                                                            <span className="original-teacher">{slot.teacher_name}</span>
-                                                                            <span className="substitute-teacher">
-                                                                                → {slot.substitute_teacher_name}
-                                                                            </span>
-                                                                        </>
-                                                                    ) : (
-                                                                        slot.teacher_name
-                                                                    )}
-                                                                </span>
+                                                        {/* Batch Display Logic */}
+                                                        {slot.batch_allocations && slot.batch_allocations.length > 0 ? (
+                                                            <div className="batch-list">
+                                                                {slot.batch_allocations.map((batch, bIdx) => (
+                                                                    <div key={bIdx} className="batch-item">
+                                                                        <div className="batch-header">
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                                <span className="batch-badge">{batch.batch_name}</span>
+                                                                                {batch.subject_code && (
+                                                                                    <span className="batch-subject" style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
+                                                                                        {batch.subject_code}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            {batch.room_name && <span className="batch-room"><MapPin size={10} /> {batch.room_name}</span>}
+                                                                        </div>
+                                                                        <div className="batch-teacher">
+                                                                            <User size={10} /> {batch.teacher_name}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        )}
+                                                        ) : (
+                                                            <>
+                                                                {viewType === 'semester' && slot.teacher_name && (
+                                                                    <div className="slot-teacher">
+                                                                        <User size={12} />
+                                                                        <span>
+                                                                            {isSubstituted ? (
+                                                                                <>
+                                                                                    <span className="original-teacher">{slot.teacher_name}</span>
+                                                                                    <span className="substitute-teacher">
+                                                                                        → {slot.substitute_teacher_name}
+                                                                                    </span>
+                                                                                </>
+                                                                            ) : (
+                                                                                slot.teacher_name
+                                                                            )}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
 
-                                                        {slot.room_name && (
-                                                            <div className="slot-room">
-                                                                <MapPin size={12} />
-                                                                <span>{slot.room_name}</span>
-                                                            </div>
+                                                                {slot.room_name && (
+                                                                    <div className="slot-room">
+                                                                        <MapPin size={12} />
+                                                                        <span>{slot.room_name}</span>
+                                                                    </div>
+                                                                )}
+                                                            </>
                                                         )}
 
                                                         <div className="slot-badges">
@@ -202,6 +235,18 @@ export default function TimetableGrid({ timetable, viewType = 'semester' }) {
                                                             )}
                                                             {isTutorial && (
                                                                 <span className="slot-badge tutorial-badge">TUT</span>
+                                                            )}
+                                                            {isProject && (
+                                                                <span className="slot-badge elective-badge">PRJ</span>
+                                                            )}
+                                                            {isReport && (
+                                                                <span className="slot-badge elective-badge">RPT</span>
+                                                            )}
+                                                            {isSeminar && (
+                                                                <span className="slot-badge elective-badge">SEM</span>
+                                                            )}
+                                                            {isInternship && (
+                                                                <span className="slot-badge elective-badge">INT</span>
                                                             )}
                                                             {isElective && (
                                                                 <span className="slot-badge elective-badge">ELECTIVE</span>

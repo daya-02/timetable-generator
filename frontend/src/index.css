@@ -874,3 +874,55 @@ tbody tr:last-child td {
     background-position: -200% 0;
   }
 }
+
+/* Spinning animation for loading indicators */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* Print-friendly styles */
+@media print {
+
+  .sidebar,
+  .page-header-actions,
+  .timetable-controls,
+  .generate-actions,
+  .btn,
+  .modal-overlay,
+  nav {
+    display: none !important;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-layout {
+    display: block;
+  }
+
+  .card {
+    border: 1px solid #ddd;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  body {
+    background: white;
+    font-size: 12px;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  .timetable-grid {
+    font-size: 0.7rem;
+  }
+
+  .timetable-grid th,
+  .timetable-grid td {
+    padding: 4px 6px;
+  }
+}

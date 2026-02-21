@@ -2,7 +2,7 @@
 CRUD API routes for Subjects.
 Updated to support the CORRECT ACADEMIC DATA MODEL with component-based subjects.
 """
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
 
@@ -21,12 +21,41 @@ router = APIRouter(prefix="/subjects", tags=["Subjects"])
 def list_subjects(
     skip: int = 0,
     limit: int = 100,
+    dept_id: Optional[int] = None,
+    year: Optional[int] = None,
+    semester: Optional[int] = None,
+    is_elective: Optional[bool] = None,
     db: Session = Depends(get_db)
 ):
-    """Get all subjects."""
-    subjects = db.query(Subject).options(
+    """Get all subjects with department-aware filtering."""
+    query = db.query(Subject).options(
         selectinload(Subject.semesters)
-    ).offset(skip).limit(limit).all()
+    )
+    
+    # Department Filtering Rule:
+    # - When a department is selected, show ONLY that department's subjects.
+    # - Electives are college-level, but visibility is department-filtered using participating classes.
+    if dept_id:
+        from sqlalchemy import and_, or_
+
+        elective_in_dept = and_(
+            Subject.is_elective == True,
+            Subject.semesters.any(Semester.dept_id == dept_id)
+        )
+
+        if is_elective is True:
+            query = query.filter(elective_in_dept)
+        elif is_elective is False:
+            query = query.filter(Subject.dept_id == dept_id).filter(Subject.is_elective == False)
+        else:
+            query = query.filter(or_(Subject.dept_id == dept_id, elective_in_dept))
+    
+    if year:
+        query = query.filter(Subject.year == year)
+    if semester:
+        query = query.filter(Subject.semester == semester)
+        
+    subjects = query.offset(skip).limit(limit).all()
     return subjects
 
 
@@ -61,10 +90,34 @@ def create_subject(subject_data: SubjectCreate, db: Session = Depends(get_db)):
     data = subject_data.model_dump(exclude={'semester_ids', 'elective_basket_id'})
     
     # Calculate legacy weekly_hours for backward compatibility
+    def _validate_block(component_name: str, hours: int, block_size: int):
+        if hours <= 0:
+            return
+        if block_size == 2 and hours % 2 != 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{component_name} hours must be even when block size is 2 (continuous)."
+            )
+
+    _validate_block("Project", subject_data.project_hours_per_week, subject_data.project_block_size)
+    _validate_block("Report", subject_data.report_hours_per_week, subject_data.report_block_size)
+    _validate_block("Internship", subject_data.internship_hours_per_week, subject_data.internship_block_size)
+
+    if subject_data.internship_day_based and subject_data.internship_hours_per_week > 0:
+        if subject_data.internship_hours_per_week < 7:
+            raise HTTPException(
+                status_code=400,
+                detail="Internship day-based mode requires at least 7 periods per week."
+            )
+
     total_hours = (
-        subject_data.theory_hours_per_week + 
-        subject_data.lab_hours_per_week + 
-        subject_data.tutorial_hours_per_week
+        subject_data.theory_hours_per_week
+        + subject_data.lab_hours_per_week
+        + subject_data.tutorial_hours_per_week
+        + subject_data.project_hours_per_week
+        + subject_data.report_hours_per_week
+        + subject_data.seminar_hours_per_week
+        + subject_data.internship_hours_per_week
     )
     if total_hours > 0:
         data['weekly_hours'] = total_hours
@@ -144,10 +197,34 @@ def update_subject(subject_id: int, subject_data: SubjectUpdate, db: Session = D
         setattr(subject, key, value)
     
     # Recalculate legacy weekly_hours
+    def _validate_block(component_name: str, hours: int, block_size: int):
+        if hours <= 0:
+            return
+        if block_size == 2 and hours % 2 != 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{component_name} hours must be even when block size is 2 (continuous)."
+            )
+
+    _validate_block("Project", subject.project_hours_per_week or 0, subject.project_block_size or 1)
+    _validate_block("Report", subject.report_hours_per_week or 0, subject.report_block_size or 1)
+    _validate_block("Internship", subject.internship_hours_per_week or 0, subject.internship_block_size or 2)
+
+    if getattr(subject, "internship_day_based", False) and (subject.internship_hours_per_week or 0) > 0:
+        if (subject.internship_hours_per_week or 0) < 7:
+            raise HTTPException(
+                status_code=400,
+                detail="Internship day-based mode requires at least 7 periods per week."
+            )
+
     total_hours = (
-        subject.theory_hours_per_week + 
-        subject.lab_hours_per_week + 
-        subject.tutorial_hours_per_week
+        (subject.theory_hours_per_week or 0)
+        + (subject.lab_hours_per_week or 0)
+        + (subject.tutorial_hours_per_week or 0)
+        + (subject.project_hours_per_week or 0)
+        + (subject.report_hours_per_week or 0)
+        + (subject.seminar_hours_per_week or 0)
+        + (subject.internship_hours_per_week or 0)
     )
     if total_hours > 0:
         subject.weekly_hours = total_hours
@@ -248,13 +325,45 @@ def get_subject_components(subject_id: int, db: Session = Depends(get_db)):
             "hours_per_week": subject.tutorial_hours_per_week,
             "description": f"{subject.tutorial_hours_per_week} tutorial period(s)/week"
         })
+
+    if getattr(subject, "project_hours_per_week", 0) > 0:
+        components.append({
+            "type": "project",
+            "hours_per_week": subject.project_hours_per_week,
+            "block_size": getattr(subject, "project_block_size", 1),
+            "description": f"{subject.project_hours_per_week} project period(s)/week"
+        })
+
+    if getattr(subject, "report_hours_per_week", 0) > 0:
+        components.append({
+            "type": "report",
+            "hours_per_week": subject.report_hours_per_week,
+            "block_size": getattr(subject, "report_block_size", 1),
+            "description": f"{subject.report_hours_per_week} report period(s)/week"
+        })
+
+    if getattr(subject, "seminar_hours_per_week", 0) > 0:
+        components.append({
+            "type": "seminar",
+            "hours_per_week": subject.seminar_hours_per_week,
+            "description": f"{subject.seminar_hours_per_week} seminar period(s)/week"
+        })
+
+    if getattr(subject, "internship_hours_per_week", 0) > 0:
+        components.append({
+            "type": "internship",
+            "hours_per_week": subject.internship_hours_per_week,
+            "block_size": getattr(subject, "internship_block_size", 2),
+            "day_based": getattr(subject, "internship_day_based", False),
+            "description": f"{subject.internship_hours_per_week} internship period(s)/week"
+        })
     
     return {
         "subject_id": subject.id,
         "subject_name": subject.name,
         "subject_code": subject.code,
         "is_elective": subject.is_elective,
-        "total_hours_per_week": subject.theory_hours_per_week + subject.lab_hours_per_week + subject.tutorial_hours_per_week,
+        "total_hours_per_week": subject.total_weekly_hours,
         "components": components
     }
 

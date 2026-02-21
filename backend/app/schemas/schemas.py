@@ -25,6 +25,22 @@ class ComponentType(str, Enum):
     TUTORIAL = "tutorial"
 
 
+class AcademicComponentType(str, Enum):
+    """
+    Extended academic component labels (timetable-visible).
+
+    NOTE: These labels can be stored alongside `component_type` for reporting/UI without
+    changing scheduling behavior.
+    """
+    THEORY = "theory"
+    LAB = "lab"
+    TUTORIAL = "tutorial"
+    PROJECT = "project"
+    REPORT = "report"
+    SEMINAR = "seminar"
+    INTERNSHIP = "internship"
+
+
 class SubjectType(str, Enum):
     """Subject classification for scheduling."""
     REGULAR = "regular"
@@ -43,6 +59,30 @@ class SubstitutionStatus(str, Enum):
 
 
 # ============================================================================
+# DEPARTMENT SCHEMAS
+# ============================================================================
+
+class DepartmentBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    code: str = Field(..., min_length=1, max_length=20)
+
+class DepartmentCreate(DepartmentBase):
+    pass
+
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = Field(None, min_length=1, max_length=20)
+
+class DepartmentResponse(DepartmentBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+# ============================================================================
 # ROOM SCHEMAS
 # ============================================================================
 
@@ -51,6 +91,12 @@ class RoomBase(BaseModel):
     capacity: int = Field(..., ge=1, le=500)
     room_type: RoomType = RoomType.LECTURE
     is_available: bool = True
+    dept_id: Optional[int] = None  # Legacy single-department (backward compat)
+    dept_ids: List[int] = Field(default_factory=list, description="Departments that share this room")
+    # Section-wise assignment (optional)
+    assigned_year: Optional[int] = Field(None, ge=1, le=6, description="Year this room is assigned to")
+    assigned_section: Optional[str] = Field(None, max_length=10, description="Section this room is assigned to")
+    is_default_classroom: bool = Field(False, description="If true, room is auto-used for this section's theory classes")
 
 
 class RoomCreate(RoomBase):
@@ -62,12 +108,27 @@ class RoomUpdate(BaseModel):
     capacity: Optional[int] = Field(None, ge=1, le=500)
     room_type: Optional[RoomType] = None
     is_available: Optional[bool] = None
+    dept_id: Optional[int] = None
+    dept_ids: Optional[List[int]] = None
+    assigned_year: Optional[int] = Field(None, ge=1, le=6)
+    assigned_section: Optional[str] = Field(None, max_length=10)
+    is_default_classroom: Optional[bool] = None
 
 
-class RoomResponse(RoomBase):
+class RoomResponse(BaseModel):
     id: int
+    name: str
+    capacity: int
+    room_type: RoomType
+    is_available: bool
+    dept_id: Optional[int] = None
+    dept_ids: List[int] = Field(default_factory=list)
+    assigned_year: Optional[int] = None
+    assigned_section: Optional[str] = None
+    is_default_classroom: bool = False
     created_at: datetime
     updated_at: datetime
+
     
     class Config:
         from_attributes = True
@@ -83,8 +144,21 @@ class SubjectBase(BaseModel):
     
     # Component-based hours (NEW - Correct Academic Model)
     theory_hours_per_week: int = Field(default=3, ge=0, le=25, description="Theory periods per week")
-    lab_hours_per_week: int = Field(default=0, ge=0, le=10, description="Lab periods per week (2 = 1 block)")
-    tutorial_hours_per_week: int = Field(default=0, ge=0, le=4, description="Tutorial periods per week")
+    lab_hours_per_week: int = Field(default=0, ge=0, le=20, description="Lab periods per week (2 = 1 block)")
+    tutorial_hours_per_week: int = Field(default=0, ge=0, le=10, description="Tutorial periods per week")
+
+    # Extended academic components (Optional)
+    project_hours_per_week: int = Field(default=0, ge=0, le=26, description="Project periods per week")
+    project_block_size: int = Field(default=1, ge=1, le=2, description="Project block size (1 or 2)")
+
+    report_hours_per_week: int = Field(default=0, ge=0, le=26, description="Report periods per week")
+    report_block_size: int = Field(default=1, ge=1, le=2, description="Report block size (1 or 2)")
+
+    seminar_hours_per_week: int = Field(default=0, ge=0, le=26, description="Seminar periods per week")
+
+    internship_hours_per_week: int = Field(default=0, ge=0, le=35, description="Internship/IT periods per week")
+    internship_block_size: int = Field(default=2, ge=1, le=7, description="Internship block size (1, 2, or 7 for day-based)")
+    internship_day_based: bool = Field(default=False, description="Prefer day-based internship scheduling when enabled")
     
     # Elective flag (NEW)
     is_elective: bool = Field(default=False, description="Is this an elective subject?")
@@ -93,6 +167,11 @@ class SubjectBase(BaseModel):
     weekly_hours: int = Field(default=3, ge=1, le=35)
     subject_type: SubjectType = SubjectType.REGULAR
     consecutive_slots: int = Field(default=1, ge=1, le=4)
+    
+    # New Fields for Filtering
+    dept_id: Optional[int] = None
+    year: int = Field(default=1, ge=1, le=4)
+    semester: int = Field(default=1, ge=1, le=8)
 
 
 class SubjectCreate(SubjectBase):
@@ -106,10 +185,27 @@ class SubjectUpdate(BaseModel):
     
     # Component hours
     theory_hours_per_week: Optional[int] = Field(None, ge=0, le=25)
-    lab_hours_per_week: Optional[int] = Field(None, ge=0, le=10)
-    tutorial_hours_per_week: Optional[int] = Field(None, ge=0, le=4)
+    lab_hours_per_week: Optional[int] = Field(None, ge=0, le=20)
+    tutorial_hours_per_week: Optional[int] = Field(None, ge=0, le=10)
+
+    project_hours_per_week: Optional[int] = Field(None, ge=0, le=26)
+    project_block_size: Optional[int] = Field(None, ge=1, le=2)
+
+    report_hours_per_week: Optional[int] = Field(None, ge=0, le=26)
+    report_block_size: Optional[int] = Field(None, ge=1, le=2)
+
+    seminar_hours_per_week: Optional[int] = Field(None, ge=0, le=26)
+
+    internship_hours_per_week: Optional[int] = Field(None, ge=0, le=35)
+    internship_block_size: Optional[int] = Field(None, ge=1, le=7)
+    internship_day_based: Optional[bool] = None
     
     is_elective: Optional[bool] = None
+
+    # Department context + academic level (optional)
+    dept_id: Optional[int] = None
+    year: Optional[int] = Field(None, ge=1, le=4)
+    semester: Optional[int] = Field(None, ge=1, le=8)
     
     # Legacy
     weekly_hours: Optional[int] = Field(None, ge=1, le=35)
@@ -200,9 +296,15 @@ class TeacherBase(BaseModel):
     experience_score: float = Field(default=0.5, ge=0.0, le=1.0)
     available_days: str = Field(default="0,1,2,3,4")
     is_active: bool = True
+    
+    # New Fields
+    teacher_code: Optional[str] = None
+    dept_id: Optional[int] = None
 
 
 class TeacherCreate(TeacherBase):
+    teacher_code: str = Field(..., min_length=1, max_length=20)
+    dept_id: Optional[int] = None
     subject_ids: List[int] = []
 
 
@@ -216,12 +318,14 @@ class TeacherUpdate(BaseModel):
     experience_score: Optional[float] = Field(None, ge=0.0, le=1.0)
     available_days: Optional[str] = None
     is_active: Optional[bool] = None
+    dept_id: Optional[int] = None
     subject_ids: Optional[List[int]] = None
 
 
 class TeacherBrief(BaseModel):
     id: int
     name: str
+    teacher_code: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -238,6 +342,7 @@ class SemesterBase(BaseModel):
     semester_number: int = Field(default=3, ge=1, le=8)  # Added for clarity
     section: str = Field(default="A", max_length=10)
     student_count: int = Field(default=60, ge=1, le=200)
+    dept_id: Optional[int] = None
 
 
 class SemesterCreate(SemesterBase):
@@ -251,6 +356,7 @@ class SemesterUpdate(BaseModel):
     semester_number: Optional[int] = Field(None, ge=1, le=8)
     section: Optional[str] = Field(None, max_length=10)
     student_count: Optional[int] = Field(None, ge=1, le=200)
+    dept_id: Optional[int] = None
 
 
 class SemesterResponse(SemesterBase):
@@ -274,6 +380,30 @@ class SemesterWithHours(SemesterResponse):
 
 
 # ============================================================================
+# BATCH SCHEMAS (NEW)
+# ============================================================================
+
+class BatchBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
+    size: Optional[int] = Field(None, ge=1)
+
+class BatchCreate(BatchBase):
+    pass
+
+class BatchResponse(BatchBase):
+    id: int
+    semester_id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class SemesterResponseWithBatches(SemesterResponse):
+    batches: List[BatchResponse] = []
+
+
+# ============================================================================
 # FIXED TEACHER ASSIGNMENT SCHEMAS
 # ============================================================================
 
@@ -281,8 +411,11 @@ class ClassSubjectTeacherBase(BaseModel):
     semester_id: int
     subject_id: int
     teacher_id: int
+    room_id: Optional[int] = None
+    batch_id: Optional[int] = None
     component_type: ComponentType = ComponentType.THEORY
     assignment_reason: Optional[str] = None
+    parallel_lab_group: Optional[str] = None
     is_locked: bool = True
 
 class ClassSubjectTeacherCreate(ClassSubjectTeacherBase):
@@ -292,6 +425,8 @@ class ClassSubjectTeacherResponse(ClassSubjectTeacherBase):
     id: int
     semester: Optional[SemesterResponse] = None
     subject: Optional[SubjectResponse] = None
+    room: Optional[RoomResponse] = None
+    batch: Optional[BatchResponse] = None
     
     class Config:
         from_attributes = True
@@ -319,9 +454,11 @@ class AllocationBase(BaseModel):
     subject_id: int
     semester_id: int
     room_id: int
+    batch_id: Optional[int] = None  # NEW
     day: int = Field(..., ge=0, le=4)  # 0=Monday, 4=Friday
     slot: int = Field(..., ge=0, le=6)  # 7 periods (0-6)
     component_type: ComponentType = ComponentType.THEORY
+    academic_component: Optional[AcademicComponentType] = None
     is_lab_continuation: bool = False
 
 
@@ -335,12 +472,23 @@ class AllocationResponse(AllocationBase):
     subject: SubjectResponse
     semester: SemesterResponse
     room: RoomResponse
+    batch: Optional[BatchResponse] = None
     is_elective: bool = False
     created_at: datetime
     updated_at: datetime
     
     class Config:
         from_attributes = True
+
+
+class BatchAllocationData(BaseModel):
+    """Details for a specific batch in a slot."""
+    batch_id: Optional[int] = None
+    batch_name: Optional[str] = None
+    teacher_name: str
+    room_name: Optional[str] = None
+    subject_name: Optional[str] = None  # NEW: For parallel multi-subject labs
+    subject_code: Optional[str] = None  # NEW: For parallel multi-subject labs
 
 
 class TimetableSlot(BaseModel):
@@ -351,7 +499,10 @@ class TimetableSlot(BaseModel):
     subject_name: Optional[str] = None
     subject_code: Optional[str] = None
     room_name: Optional[str] = None
+    batch_name: Optional[str] = None  # NEW
+    batch_allocations: List[BatchAllocationData] = []  # NEW: For parallel batches
     component_type: Optional[str] = None  # theory/lab/tutorial
+    academic_component: Optional[str] = None  # extended label (project/report/seminar/internship)
     is_lab: bool = False
     is_elective: bool = False
     is_substituted: bool = False
@@ -394,14 +545,16 @@ class TeacherAbsenceResponse(TeacherAbsenceCreate):
 
 
 class SubstitutionCandidate(BaseModel):
-    """A potential substitute teacher."""
+    """A potential substitute teacher (strict same-class policy)."""
     teacher_id: int
     teacher_name: str
+    teacher_code: str = ''
     score: float
     subject_match: bool
     current_load: int
     effectiveness: float
     experience_score: float
+    class_subjects: List[str] = []  # Subjects they already handle for this class
 
 
 class SubstitutionRequest(BaseModel):
@@ -435,6 +588,7 @@ class SubstitutionResponse(BaseModel):
 class GenerationRequest(BaseModel):
     """Request to generate timetable."""
     semester_ids: Optional[List[int]] = None  # If None, generate for all
+    dept_id: Optional[int] = None # Department-wise generation
     clear_existing: bool = True
 
 
@@ -466,6 +620,7 @@ class GenerationResult(BaseModel):
     # Soft constraint metrics
     hard_constraint_violations: int = 0
     soft_constraint_score: float = 0.0
+    total_batches_scheduled: int = 0  # NEW
     generation_time_seconds: float = 0.0
 
 
@@ -524,6 +679,7 @@ class FixedSlotBase(BaseModel):
     teacher_id: int
     room_id: Optional[int] = None
     component_type: ComponentType = ComponentType.THEORY
+    academic_component: Optional[AcademicComponentType] = None
     is_lab_continuation: bool = False
     is_elective: bool = False
     elective_basket_id: Optional[int] = None
@@ -587,6 +743,160 @@ class DashboardStats(BaseModel):
     total_fixed_slots: int = 0  # NEW: Count of locked slots
     active_substitutions: int
     teachers_absent_today: int
+
+
+# ============================================================================
+# RULE TOGGLES (DEPARTMENT-SPECIFIC)
+# ============================================================================
+
+class DepartmentSummary(BaseModel):
+    id: int
+    name: str
+    code: str
+
+    class Config:
+        from_attributes = True
+
+
+class DepartmentRuleToggleBase(BaseModel):
+    lab_continuity_strict: bool = False
+    teacher_gap_preference: bool = False
+    max_consecutive_enabled: bool = False
+    max_consecutive_limit: int = Field(default=3, ge=1, le=8)
+    lab_continuity_is_hard: bool = False
+    teacher_gap_is_hard: bool = False
+    max_consecutive_is_hard: bool = False
+
+
+class DepartmentRuleToggleUpdate(BaseModel):
+    lab_continuity_strict: Optional[bool] = None
+    teacher_gap_preference: Optional[bool] = None
+    max_consecutive_enabled: Optional[bool] = None
+    max_consecutive_limit: Optional[int] = Field(default=None, ge=1, le=8)
+    lab_continuity_is_hard: Optional[bool] = None
+    teacher_gap_is_hard: Optional[bool] = None
+    max_consecutive_is_hard: Optional[bool] = None
+
+
+class DepartmentRuleToggleResponse(DepartmentRuleToggleBase):
+    id: Optional[int] = None
+    dept_id: int
+    department: Optional[DepartmentSummary] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================================================
+# REPORTING SCHEMAS (READ-ONLY)
+# ============================================================================
+
+class TeacherWorkloadReportRow(BaseModel):
+    teacher_id: int
+    teacher_name: str
+    teacher_code: Optional[str] = None
+    total_hours: int
+    theory_hours: int
+    lab_hours: int
+    tutorial_hours: int
+    project_hours: int = 0
+    report_hours: int = 0
+    seminar_hours: int = 0
+    internship_hours: int = 0
+    elective_hours: int
+    max_consecutive_periods: int
+    free_periods: int
+    departments: List[DepartmentSummary] = []
+
+
+class TeacherWorkloadReport(BaseModel):
+    generated_at: datetime
+    dept_id: Optional[int] = None
+    department: Optional[DepartmentSummary] = None
+    total_teachers: int
+    rows: List[TeacherWorkloadReportRow] = []
+
+
+class RoomUtilizationReportRow(BaseModel):
+    room_id: int
+    room_name: str
+    room_type: RoomType
+    total_available_periods: int
+    periods_used: int
+    utilization_percent: float
+    peak_usage_days: List[str] = []
+
+
+class RoomUtilizationReport(BaseModel):
+    generated_at: datetime
+    dept_id: Optional[int] = None
+    department: Optional[DepartmentSummary] = None
+    total_rooms: int
+    rows: List[RoomUtilizationReportRow] = []
+
+
+class SubjectCoverageReportRow(BaseModel):
+    subject_id: int
+    subject_code: str
+    subject_name: str
+    required_hours: int
+    assigned_hours: int
+    status: str
+    teacher_names: List[str] = []
+    teacher_codes: List[str] = []
+    dept_id: Optional[int] = None
+    department: Optional[str] = None
+    year: Optional[int] = None
+    section: Optional[str] = None
+    semester_id: Optional[int] = None
+    semester_name: Optional[str] = None
+    semester_code: Optional[str] = None
+
+
+class SubjectCoverageReport(BaseModel):
+    generated_at: datetime
+    dept_id: Optional[int] = None
+    department: Optional[DepartmentSummary] = None
+    total_subjects: int
+    rows: List[SubjectCoverageReportRow] = []
+
+
+# ============================================================================
+# TEACHER LOAD DASHBOARD (READ-ONLY)
+# ============================================================================
+
+class TeacherLoadRow(BaseModel):
+    teacher_id: int
+    teacher_name: str
+    teacher_code: Optional[str] = None
+    total_hours: int
+    theory_hours: int
+    lab_hours: int
+    tutorial_hours: int = 0
+    project_hours: int = 0
+    report_hours: int = 0
+    seminar_hours: int = 0
+    internship_hours: int = 0
+    elective_hours: int
+    max_consecutive_periods: int
+    days_with_overload: int
+    max_hours_per_week: int
+    max_consecutive_allowed: int
+    load_ratio: float
+    status: str  # normal | high | overload
+    consecutive_overload: bool
+    departments: List[DepartmentSummary] = []
+
+
+class TeacherLoadDashboard(BaseModel):
+    generated_at: datetime
+    dept_id: Optional[int] = None
+    year: Optional[int] = None
+    department: Optional[DepartmentSummary] = None
+    total_teachers: int
+    rows: List[TeacherLoadRow] = []
 
 
 # Update forward references

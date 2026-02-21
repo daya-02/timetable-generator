@@ -36,6 +36,10 @@ if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
         if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.execute("PRAGMA journal_mode=WAL")       # WAL mode for concurrent reads
+            cursor.execute("PRAGMA synchronous=NORMAL")     # Faster writes, still safe
+            cursor.execute("PRAGMA cache_size=-8000")       # 8MB cache
+            cursor.execute("PRAGMA temp_store=MEMORY")      # Temp tables in memory
             cursor.close()
 else:
     engine = create_engine(SQLALCHEMY_DATABASE_URL)

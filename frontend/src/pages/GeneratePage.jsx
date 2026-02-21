@@ -1,8 +1,9 @@
 /**
  * Generate Timetable Page
  * Trigger timetable generation with options
+ * Supports async generation with polling status
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
     RefreshCw,
     Play,
@@ -11,30 +12,45 @@ import {
     Clock,
     AlertCircle,
     Trash2,
+    Loader,
 } from 'lucide-react';
 import { timetableApi, semestersApi } from '../services/api';
+import { useDepartmentContext } from '../context/DepartmentContext';
 import { Link } from 'react-router-dom';
 import './GeneratePage.css';
 
 export default function GeneratePage() {
+    const { departments, selectedDeptId, setSelectedDeptId, deptId } = useDepartmentContext();
     const [semesters, setSemesters] = useState([]);
     const [selectedSemesters, setSelectedSemesters] = useState([]);
     const [clearExisting, setClearExisting] = useState(true);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
+    const [elapsed, setElapsed] = useState(0);
+    const [genStatus, setGenStatus] = useState(null); // 'queued' | 'running' | 'completed' | 'failed'
+    const pollRef = useRef(null);
 
     useEffect(() => {
         fetchSemesters();
+    }, [deptId]);
+
+    // Cleanup polling on unmount
+    useEffect(() => {
+        return () => {
+            if (pollRef.current) clearInterval(pollRef.current);
+        };
     }, []);
 
     const fetchSemesters = async () => {
         try {
-            const res = await semestersApi.getAll();
+            const params = {};
+            if (deptId) params.deptId = deptId;
+            const res = await semestersApi.getAll(params);
             setSemesters(res.data);
+            setSelectedSemesters([]);
         } catch (err) {
             setError('Failed to load classes');
-            console.error(err);
         }
     };
 
@@ -44,46 +60,84 @@ export default function GeneratePage() {
         );
     };
 
-    const selectAll = () => {
-        setSelectedSemesters(semesters.map((s) => s.id));
-    };
+    const selectAll = () => setSelectedSemesters(semesters.map((s) => s.id));
+    const clearSelection = () => setSelectedSemesters([]);
 
-    const clearSelection = () => {
-        setSelectedSemesters([]);
-    };
+    const pollForStatus = useCallback((taskId) => {
+        pollRef.current = setInterval(async () => {
+            try {
+                const res = await timetableApi.getGenerationStatus(taskId);
+                const data = res.data;
+                setGenStatus(data.status);
+                if (data.elapsed_seconds) setElapsed(data.elapsed_seconds);
+
+                if (data.status === 'completed' || data.status === 'failed') {
+                    clearInterval(pollRef.current);
+                    pollRef.current = null;
+                    setLoading(false);
+                    if (data.result) setResult(data.result);
+                    if (data.status === 'failed') {
+                        setError(data.result?.message || 'Generation failed');
+                    }
+                }
+            } catch (err) {
+                // If poll fails, keep trying
+            }
+        }, 1500);
+    }, []);
 
     const handleGenerate = async () => {
         setLoading(true);
         setError(null);
         setResult(null);
+        setElapsed(0);
+        setGenStatus('queued');
 
         try {
-            const res = await timetableApi.generate({
+            // Use async generation to avoid blocking
+            const res = await timetableApi.generateAsync({
                 semester_ids: selectedSemesters.length > 0 ? selectedSemesters : null,
+                dept_id: deptId ?? null,
                 clear_existing: clearExisting,
             });
-            setResult(res.data);
+
+            const taskId = res.data.task_id;
+            pollForStatus(taskId);
         } catch (err) {
-            setError(err.response?.data?.detail || 'Generation failed');
-            console.error(err);
-        } finally {
+            // Fallback to sync if async endpoint not available
+            try {
+                const res = await timetableApi.generate({
+                    semester_ids: selectedSemesters.length > 0 ? selectedSemesters : null,
+                    dept_id: deptId ?? null,
+                    clear_existing: clearExisting,
+                });
+                setResult(res.data);
+                setGenStatus(res.data.success ? 'completed' : 'failed');
+            } catch (syncErr) {
+                setError(syncErr.response?.data?.detail || 'Generation failed');
+                setGenStatus('failed');
+            }
             setLoading(false);
         }
     };
 
     const handleClearAll = async () => {
-        if (!confirm('Are you sure you want to clear all timetable allocations?')) return;
+        const scopeLabel = deptId ? `this department's` : 'ALL';
+        if (!confirm(`Are you sure you want to clear ${scopeLabel} timetable allocations?`)) return;
 
         try {
-            await timetableApi.clear();
+            await timetableApi.clear(null, deptId);
             setResult(null);
             setError(null);
-            alert('All allocations cleared successfully');
+            alert('Allocations cleared successfully');
         } catch (err) {
             setError('Failed to clear allocations');
-            console.error(err);
         }
     };
+
+    const statusLabel = genStatus === 'queued' ? 'Queuing...'
+        : genStatus === 'running' ? `Generating... (${elapsed}s)`
+            : loading ? 'Starting...' : null;
 
     return (
         <div className="generate-page">
@@ -99,6 +153,20 @@ export default function GeneratePage() {
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Generation Options</h3>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Department (Optional)</label>
+                        <select
+                            className="form-input"
+                            value={selectedDeptId || ''}
+                            onChange={(e) => setSelectedDeptId(e.target.value)}
+                        >
+                            <option value="">All Departments</option>
+                            {departments.map(d => (
+                                <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="form-group">
@@ -143,8 +211,8 @@ export default function GeneratePage() {
                         >
                             {loading ? (
                                 <>
-                                    <RefreshCw size={20} className="spinning" />
-                                    Generating...
+                                    <Loader size={20} className="spinning" />
+                                    {statusLabel || 'Starting...'}
                                 </>
                             ) : (
                                 <>
@@ -159,12 +227,31 @@ export default function GeneratePage() {
                             disabled={loading}
                         >
                             <Trash2 size={18} />
-                            Clear All
+                            {deptId ? 'Clear Dept' : 'Clear All'}
                         </button>
                     </div>
+
+                    {/* Progress indicator during generation */}
+                    {loading && (
+                        <div className="generation-progress" style={{
+                            marginTop: '1rem',
+                            padding: '1rem',
+                            background: 'var(--bg-secondary, #f8f9fa)',
+                            borderRadius: '8px',
+                            textAlign: 'center'
+                        }}>
+                            <Loader size={24} className="spinning" style={{ marginBottom: '0.5rem' }} />
+                            <p style={{ margin: 0, color: 'var(--text-secondary, #666)', fontSize: '0.9rem' }}>
+                                {genStatus === 'running'
+                                    ? `Engine is generating... ${elapsed}s elapsed`
+                                    : 'Preparing generation engine...'}
+                            </p>
+                            <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted, #999)', fontSize: '0.8rem' }}>
+                                This page will update automatically when complete
+                            </p>
+                        </div>
+                    )}
                 </div>
-
-
             </div>
 
             {/* Result */}
@@ -197,7 +284,7 @@ export default function GeneratePage() {
             )}
 
             {/* Error */}
-            {error && (
+            {error && !loading && (
                 <div className="alert alert-error">
                     <AlertCircle size={18} />
                     {error}

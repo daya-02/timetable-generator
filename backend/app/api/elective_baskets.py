@@ -2,7 +2,7 @@
 CRUD API routes for Elective Baskets.
 Manages elective groups that share common scheduling slots.
 """
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -18,9 +18,15 @@ router = APIRouter(prefix="/elective-baskets", tags=["Elective Baskets"])
 
 
 @router.get("/", response_model=List[ElectiveBasketResponse])
-def list_elective_baskets(db: Session = Depends(get_db)):
-    """Get all elective baskets."""
-    baskets = db.query(ElectiveBasket).all()
+def list_elective_baskets(
+    dept_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """Get all elective baskets (optionally filtered by department via participating classes)."""
+    query = db.query(ElectiveBasket)
+    if dept_id:
+        query = query.filter(ElectiveBasket.participating_semesters.any(Semester.dept_id == dept_id))
+    baskets = query.all()
     return baskets
 
 

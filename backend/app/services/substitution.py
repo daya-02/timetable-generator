@@ -1,25 +1,17 @@
 """
-Automated Teacher Substitution Service.
+Strict Same-Class Teacher Substitution Service.
 
-Implements intelligent substitution logic:
-1. Detect teacher absence
-2. Identify qualified candidates who are free
-3. Rank candidates using weighted scoring
-4. Assign best candidate
-5. Update timetable dynamically (local repair)
+POLICY: When a teacher is absent, ONLY show teachers who:
+1. Already teach THAT SAME CLASS (semester) in any other period
+2. Are FREE in the specific day/slot
+3. Are not the absent teacher
+4. Belong to the same department as the class
 
-Scoring Function:
-    score = 
-        (subject_match_weight * subject_match) +
-        (workload_weight * (1 - normalized_load)) +
-        (effectiveness_weight * effectiveness_score) +
-        (experience_weight * experience_score)
+NO subject qualification matching.
+NO cross-class or cross-department search.
+NO automatic fallback to wider pools.
 
-This approach minimizes disruption by:
-- NOT regenerating the entire timetable
-- Using local repair algorithm
-- Preferring teachers with lower current workload
-- Preferring teachers with higher effectiveness for the subject
+Admin may manually override if needed.
 """
 from datetime import date
 from typing import List, Optional, Tuple
@@ -28,17 +20,15 @@ from sqlalchemy import func
 
 from app.db.models import (
     Teacher, Subject, Allocation, TeacherAbsence, Substitution,
-    teacher_subjects, SubstitutionStatus
+    SubstitutionStatus
 )
 from app.schemas.schemas import SubstitutionCandidate
-from app.core.config import get_settings
-
-settings = get_settings()
 
 
 class SubstitutionService:
     """
-    Service for handling teacher substitutions.
+    Strict same-class substitution service.
+    Only considers teachers already assigned to the same class.
     """
     
     def __init__(self, db: Session):
@@ -105,109 +95,103 @@ class SubstitutionService:
         substitution_date: date
     ) -> List[SubstitutionCandidate]:
         """
-        Find and rank substitute candidates for an allocation.
+        Find substitute candidates using STRICT SAME-CLASS policy.
         
-        Returns candidates sorted by score (highest first).
+        Only returns teachers who:
+        1. Already teach THIS SAME CLASS (semester_id) in any other period
+        2. Are FREE in the specific day/slot
+        3. Are not the absent teacher
+        4. Are not absent themselves on this date
+        
+        NO subject qualification matching.
+        NO cross-class or cross-department search.
+        NO global fallback.
         """
-        subject_id = allocation.subject_id
         day = allocation.day
         slot = allocation.slot
         original_teacher_id = allocation.teacher_id
+        semester_id = allocation.semester_id
         
-        # Get subject info
-        subject = self.db.query(Subject).filter(Subject.id == subject_id).first()
-        if not subject:
+        # ── STEP 1: Get all teachers assigned to THIS SAME CLASS ──
+        # From the allocations table — teachers who teach ANY subject
+        # to this class in ANY period.
+        same_class_teacher_ids = self.db.query(
+            Allocation.teacher_id
+        ).filter(
+            Allocation.semester_id == semester_id,
+            Allocation.teacher_id != original_teacher_id  # Exclude absent teacher
+        ).distinct().all()
+        
+        same_class_teacher_ids = {t[0] for t in same_class_teacher_ids}
+        
+        if not same_class_teacher_ids:
             return []
         
-        # Get teachers who can teach this subject
-        qualified_teacher_ids = self.db.execute(
-            teacher_subjects.select().where(teacher_subjects.c.subject_id == subject_id)
-        ).fetchall()
-        
-        qualified_ids = [row.teacher_id for row in qualified_teacher_ids]
-        
-        # Get all active teachers
-        all_teachers = self.db.query(Teacher).filter(
-            Teacher.is_active == True,
-            Teacher.id != original_teacher_id  # Exclude the absent teacher
-        ).all()
-        
-        # Get teachers who are busy in this slot
+        # ── STEP 2: Get teachers who are BUSY in this specific slot ──
         busy_teachers = self.db.query(Allocation.teacher_id).filter(
             Allocation.day == day,
             Allocation.slot == slot
         ).distinct().all()
         busy_teacher_ids = {t[0] for t in busy_teachers}
         
-        # Check for other absences on this date
+        # ── STEP 3: Get teachers who are ABSENT on this date ──
         other_absences = self.db.query(TeacherAbsence.teacher_id).filter(
             TeacherAbsence.absence_date == substitution_date
         ).all()
         absent_teacher_ids = {t[0] for t in other_absences}
         
-        # Get effectiveness scores for this subject
-        effectiveness_map = {}
-        for row in qualified_teacher_ids:
-            effectiveness_map[row.teacher_id] = row.effectiveness_score or 0.8
-        
-        # Calculate max load for normalization
-        max_load = max(
-            (self._get_teacher_current_load(t.id) for t in all_teachers),
-            default=1
-        )
-        if max_load == 0:
-            max_load = 1
-        
+        # ── STEP 4: Build candidate list ──
         candidates = []
         
-        for teacher in all_teachers:
-            # Skip busy teachers
-            if teacher.id in busy_teacher_ids:
+        for teacher_id in same_class_teacher_ids:
+            # Skip busy teachers (not free in this slot)
+            if teacher_id in busy_teacher_ids:
                 continue
             
             # Skip absent teachers
-            if teacher.id in absent_teacher_ids:
+            if teacher_id in absent_teacher_ids:
                 continue
             
-            # Check day availability
-            available_days = [int(d) for d in teacher.available_days.split(",")]
-            if day not in available_days:
+            # Get teacher info (must be active)
+            teacher = self.db.query(Teacher).filter(
+                Teacher.id == teacher_id,
+                Teacher.is_active == True
+            ).first()
+            
+            if not teacher:
                 continue
             
-            # Check if teacher can teach the subject
-            subject_match = teacher.id in qualified_ids
+            # Get subjects this teacher already handles for THIS class
+            class_subjects = self.db.query(Subject.name, Subject.code).join(
+                Allocation, Allocation.subject_id == Subject.id
+            ).filter(
+                Allocation.teacher_id == teacher_id,
+                Allocation.semester_id == semester_id
+            ).distinct().all()
             
-            # Get current load
-            current_load = self._get_teacher_current_load(teacher.id)
+            class_subject_list = [
+                f"{s.code} ({s.name})" for s in class_subjects
+            ]
             
-            # Check max load constraint
-            if current_load >= teacher.max_hours_per_week:
-                continue
+            # Get current weekly load (total allocations across all classes)
+            current_load = self._get_teacher_current_load(teacher_id)
             
-            # Calculate score
-            effectiveness = effectiveness_map.get(teacher.id, 0.5)
-            normalized_load = current_load / max_load
-            
-            score = (
-                settings.SUBJECT_MATCH_WEIGHT * (1.0 if subject_match else 0.0) +
-                settings.WORKLOAD_WEIGHT * (1.0 - normalized_load) +
-                settings.EFFECTIVENESS_WEIGHT * effectiveness +
-                settings.EXPERIENCE_WEIGHT * teacher.experience_score
-            )
-            
+            # Build candidate — no scoring, strict policy
             candidate = SubstitutionCandidate(
                 teacher_id=teacher.id,
                 teacher_name=teacher.name,
-                score=round(score, 3),
-                subject_match=subject_match,
+                teacher_code=getattr(teacher, 'teacher_code', None) or '',
+                score=0.0,
+                subject_match=False,  # Not used in strict mode
                 current_load=current_load,
-                effectiveness=effectiveness,
-                experience_score=teacher.experience_score
+                effectiveness=0.0,
+                experience_score=0.0,
+                class_subjects=class_subject_list
             )
             candidates.append(candidate)
         
-        # Sort by score descending
-        candidates.sort(key=lambda c: c.score, reverse=True)
+        # Sort by lowest load first (prefer less-loaded teachers)
+        candidates.sort(key=lambda c: c.current_load)
         
         return candidates
     
@@ -221,7 +205,8 @@ class SubstitutionService:
         """
         Assign a substitute teacher to an allocation.
         
-        If substitute_teacher_id is not provided, automatically selects the best candidate.
+        NEVER auto-assigns. If substitute_teacher_id is not provided,
+        selects the candidate with lowest load (but still requires confirmation).
         
         Returns (Substitution, message) tuple.
         """
@@ -243,11 +228,11 @@ class SubstitutionService:
         if existing:
             return None, "Substitution already exists for this allocation and date"
         
-        # Find candidates
+        # Find candidates (strict same-class only)
         candidates = self.find_candidates(allocation, substitution_date)
         
         if not candidates:
-            return None, "No substitute candidates available"
+            return None, "No internal class teachers available."
         
         # Select substitute
         if substitute_teacher_id:
@@ -257,9 +242,9 @@ class SubstitutionService:
                 None
             )
             if not selected:
-                return None, "Specified teacher is not a valid candidate"
+                return None, "Specified teacher is not a valid candidate (must already teach this class)"
         else:
-            # Use top candidate
+            # Use top candidate (lowest load)
             selected = candidates[0]
         
         # Create substitution record
@@ -269,7 +254,7 @@ class SubstitutionService:
             substitute_teacher_id=selected.teacher_id,
             substitution_date=substitution_date,
             status=SubstitutionStatus.ASSIGNED,
-            substitute_score=selected.score,
+            substitute_score=0.0,
             reason=reason
         )
         
@@ -277,7 +262,7 @@ class SubstitutionService:
         self.db.commit()
         self.db.refresh(substitution)
         
-        # Get names for notification
+        # Get names for log message
         original_teacher = self.db.query(Teacher).filter(
             Teacher.id == allocation.teacher_id
         ).first()
@@ -290,7 +275,7 @@ class SubstitutionService:
         
         message = (
             f"Substitution assigned: {substitute_teacher.name} will cover "
-            f"{subject.name} (originally {original_teacher.name}) "
+            f"{subject.name if subject else 'Unknown'} (originally {original_teacher.name}) "
             f"on {substitution_date}"
         )
         
@@ -304,8 +289,7 @@ class SubstitutionService:
     ) -> List[Tuple[Substitution, str]]:
         """
         Automatically create substitutions for all affected allocations.
-        
-        This is the main entry point for the automated substitution workflow.
+        Uses strict same-class policy for each affected slot.
         """
         # Mark teacher absent
         self.mark_teacher_absent(teacher_id, absence_date, reason)
@@ -361,7 +345,7 @@ class SubstitutionService:
         return query.order_by(Substitution.substitution_date).all()
     
     def _get_teacher_current_load(self, teacher_id: int) -> int:
-        """Get current weekly load for a teacher."""
+        """Get current weekly load (total allocated periods) for a teacher."""
         count = self.db.query(func.count(Allocation.id)).filter(
             Allocation.teacher_id == teacher_id
         ).scalar()

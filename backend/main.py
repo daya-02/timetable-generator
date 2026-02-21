@@ -15,6 +15,17 @@ from app.db.base import Base
 from app.db.session import engine
 import sys
 import os
+import logging
+import traceback as tb_module
+
+# Configure logging: reduce noise in localhost
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    datefmt='%H:%M:%S'
+)
+logging.getLogger('app').setLevel(logging.INFO)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 # Force UTF-8 encoding for logs
 try:
@@ -25,7 +36,20 @@ except AttributeError:
     pass
 
 # Import all routers
-from app.api import rooms, subjects, teachers, semesters, timetable, substitution, dashboard, elective_baskets, fixed_slots
+from app.api import (
+    rooms,
+    subjects,
+    teachers,
+    semesters,
+    timetable,
+    substitution,
+    dashboard,
+    elective_baskets,
+    fixed_slots,
+    departments,
+    reports,
+    rule_toggles,
+)
 
 settings = get_settings()
 
@@ -36,6 +60,14 @@ async def lifespan(app: FastAPI):
     # Create all database tables
     Base.metadata.create_all(bind=engine)
     print("[INFO] Database tables created/verified")
+
+    # Safe schema updates for backward-compatible columns (SQLite)
+    try:
+        from update_db_schema import update_schema
+        update_schema()
+        print("[INFO] Database schema updates applied (if needed)")
+    except Exception as e:
+        print(f"[WARN] Schema update failed (non-critical): {e}")
     
     # Auto-seed if needed (wrapped in try-except to prevent crash)
     try:
@@ -78,11 +110,30 @@ app = FastAPI(
 # Configure CORS for frontend (allow all origins for production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global exception handler - NEVER crash the server
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch all unhandled exceptions and return structured JSON error."""
+    error_detail = str(exc)
+    tb_str = tb_module.format_exc()
+    logging.getLogger('app').error(f"Unhandled error on {request.url.path}: {error_detail}\n{tb_str}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": f"Internal server error: {error_detail}",
+            "path": str(request.url.path),
+            "type": type(exc).__name__
+        }
+    )
 
 # Include API routers
 app.include_router(dashboard.router, prefix="/api")
@@ -94,6 +145,9 @@ app.include_router(timetable.router, prefix="/api")
 app.include_router(substitution.router, prefix="/api")
 app.include_router(elective_baskets.router, prefix="/api")
 app.include_router(fixed_slots.router, prefix="/api")
+app.include_router(departments.router, prefix="/api")
+app.include_router(reports.router, prefix="/api")
+app.include_router(rule_toggles.router, prefix="/api")
 
 
 @app.get("/")

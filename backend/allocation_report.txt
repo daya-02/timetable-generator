@@ -1,0 +1,26 @@
+Generation Result: True (0.15s)
+Message: Dept 3: Generated 0 slots ; Dept 4: Generated 66 slots (4 free) ; General Dept: Generated 207 slots (108 free)
+
+ALLOCATION FAILURES:
+  - [FREE] Class 18 Day 2 Slot 6: Subj LIBBBBBBBB: Teacher 56 Busy
+  - [THEORY] Elective Group 'Open Elective' (Year 6, Basket 4) Component 'theory': Failed 1/3 hours.
+
+ELECTIVE BASKET 1 ANALYSIS:
+Dept None Sem 4 - Business Analytics (theory): D0S5, D1S2
+Dept None Sem 4 - Digital Marketing (theory): D0S5, D1S2
+Dept None Sem 4 - GEN AI (lab): D1S5, D1S6
+Dept None Sem 4 - GEN AI (theory): D0S5, D1S2
+Dept 4 Sem 4 - SCRUM (lab): D1S4, D1S5
+Dept 4 Sem 4 - SCRUM (theory): D0S5, D1S2
+
+[DIAGNOSTIC] Subject 'GEN AI' Teachers: [34, 34, 34, 34, 34, 34]
+[DIAGNOSTIC] GEN AI Allocations: 8
+  - Sem 5 | Type: ComponentType.THEORY | Day 0 Slot 5 | IsElective: True | Basket: 1
+  - Sem 5 | Type: ComponentType.THEORY | Day 1 Slot 2 | IsElective: True | Basket: 1
+  - Sem 5 | Type: ComponentType.LAB | Day 1 Slot 5 | IsElective: True | Basket: 1
+  - Sem 5 | Type: ComponentType.LAB | Day 1 Slot 6 | IsElective: True | Basket: 1
+  - Sem 6 | Type: ComponentType.LAB | Day 1 Slot 5 | IsElective: True | Basket: 1
+  - Sem 6 | Type: ComponentType.LAB | Day 1 Slot 6 | IsElective: True | Basket: 1
+  - Sem 7 | Type: ComponentType.LAB | Day 1 Slot 5 | IsElective: True | Basket: 1
+  - Sem 7 | Type: ComponentType.LAB | Day 1 Slot 6 | IsElective: True | Basket: 1
+[DIAGNOSTIC] Subject 'SCRUM' Teachers: [60, 60]

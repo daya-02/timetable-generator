@@ -1,0 +1,243 @@
+﻿Running full generation...
+
+============================================================
+COLLEGE TIMETABLE GENERATION ENGINE (MULTI-DEPT)
+============================================================
+TARGET: 14 classes across 3 departments
+
+DATA: Loading global resources (Teachers, Subjects, Rooms)...
+   READ [LOCKED]: Class 5, Subject 2, theory -> Teacher 10
+   READ [LOCKED]: Class 5, Subject 3, theory -> Teacher 11
+   READ [LOCKED]: Class 5, Subject 3, lab -> Teacher 11
+   READ [LOCKED]: Class 5, Subject 4, theory -> Teacher 12
+   READ [LOCKED]: Class 5, Subject 4, lab -> Teacher 13
+   READ [LOCKED]: Class 5, Subject 5, theory -> Teacher 14
+   READ [LOCKED]: Class 5, Subject 5, lab -> Teacher 14
+   READ [LOCKED]: Class 6, Subject 2, theory -> Teacher 19
+   READ [LOCKED]: Class 6, Subject 3, theory -> Teacher 20
+   READ [LOCKED]: Class 6, Subject 4, theory -> Teacher 21
+   READ [LOCKED]: Class 6, Subject 4, lab -> Teacher 21
+   READ [LOCKED]: Class 6, Subject 5, theory -> Teacher 22
+   READ [LOCKED]: Class 7, Subject 1, theory -> Teacher 26
+   READ [LOCKED]: Class 7, Subject 3, theory -> Teacher 28
+   READ [LOCKED]: Class 7, Subject 3, lab -> Teacher 28
+   READ [LOCKED]: Class 7, Subject 4, theory -> Teacher 29
+   READ [LOCKED]: Class 7, Subject 4, lab -> Teacher 29
+   READ [LOCKED]: Class 7, Subject 5, theory -> Teacher 30
+   READ [LOCKED]: Class 7, Subject 5, lab -> Teacher 30
+   READ [LOCKED]: Class 5, Subject 10, theory -> Teacher 34
+   READ [LOCKED]: Class 6, Subject 10, theory -> Teacher 34
+   READ [LOCKED]: Class 7, Subject 10, theory -> Teacher 34
+   READ [LOCKED]: Class 5, Subject 10, lab -> Teacher 34
+   READ [LOCKED]: Class 6, Subject 10, lab -> Teacher 34
+   READ [LOCKED]: Class 7, Subject 10, lab -> Teacher 34
+   READ [LOCKED]: Class 5, Subject 11, theory -> Teacher 35
+   READ [LOCKED]: Class 5, Subject 11, lab -> Teacher 35
+   READ [LOCKED]: Class 6, Subject 11, theory -> Teacher 35
+   READ [LOCKED]: Class 6, Subject 11, lab -> Teacher 35
+   READ [LOCKED]: Class 7, Subject 11, theory -> Teacher 35
+   READ [LOCKED]: Class 7, Subject 11, lab -> Teacher 35
+   READ [LOCKED]: Class 6, Subject 3, lab -> Teacher 20
+   READ [LOCKED]: Class 5, Subject 1, theory -> Teacher 9
+   READ [LOCKED]: Class 6, Subject 1, theory -> Teacher 18
+   READ [LOCKED]: Class 7, Subject 2, theory -> Teacher 27
+   READ [LOCKED]: Class 11, Subject 14, theory -> Teacher 13
+   READ [LOCKED]: Class 11, Subject 15, theory -> Teacher 28
+   READ [LOCKED]: Class 11, Subject 24, lab -> Teacher 13
+   READ [LOCKED]: Class 11, Subject 17, theory -> Teacher 12
+   READ [LOCKED]: Class 11, Subject 18, theory -> Teacher 37
+   READ [LOCKED]: Class 11, Subject 18, lab -> Teacher 37
+   READ [LOCKED]: Class 12, Subject 18, theory -> Teacher 37
+   READ [LOCKED]: Class 12, Subject 18, lab -> Teacher 37
+   READ [LOCKED]: Class 13, Subject 18, theory -> Teacher 37
+   READ [LOCKED]: Class 13, Subject 18, lab -> Teacher 37
+   READ [LOCKED]: Class 11, Subject 19, theory -> Teacher 38
+   READ [LOCKED]: Class 11, Subject 19, lab -> Teacher 38
+   READ [LOCKED]: Class 12, Subject 19, theory -> Teacher 38
+   READ [LOCKED]: Class 12, Subject 19, lab -> Teacher 38
+   READ [LOCKED]: Class 13, Subject 19, theory -> Teacher 38
+   READ [LOCKED]: Class 13, Subject 19, lab -> Teacher 38
+   READ [LOCKED]: Class 11, Subject 20, theory -> Teacher 39
+   READ [LOCKED]: Class 11, Subject 20, lab -> Teacher 39
+   READ [LOCKED]: Class 12, Subject 20, theory -> Teacher 39
+   READ [LOCKED]: Class 12, Subject 20, lab -> Teacher 39
+   READ [LOCKED]: Class 13, Subject 20, theory -> Teacher 39
+   READ [LOCKED]: Class 13, Subject 20, lab -> Teacher 39
+   READ [LOCKED]: Class 11, Subject 21, theory -> Teacher 36
+   READ [LOCKED]: Class 11, Subject 21, lab -> Teacher 36
+   READ [LOCKED]: Class 12, Subject 21, theory -> Teacher 36
+   READ [LOCKED]: Class 12, Subject 21, lab -> Teacher 36
+   READ [LOCKED]: Class 13, Subject 21, theory -> Teacher 36
+   READ [LOCKED]: Class 13, Subject 21, lab -> Teacher 36
+   READ [LOCKED]: Class 11, Subject 22, theory -> Teacher 40
+   READ [LOCKED]: Class 11, Subject 22, lab -> Teacher 40
+   READ [LOCKED]: Class 12, Subject 22, theory -> Teacher 40
+   READ [LOCKED]: Class 12, Subject 22, lab -> Teacher 40
+   READ [LOCKED]: Class 13, Subject 22, theory -> Teacher 40
+   READ [LOCKED]: Class 13, Subject 22, lab -> Teacher 40
+   READ [LOCKED]: Class 11, Subject 23, theory -> Teacher 41
+   READ [LOCKED]: Class 11, Subject 23, lab -> Teacher 41
+   READ [LOCKED]: Class 12, Subject 23, theory -> Teacher 41
+   READ [LOCKED]: Class 12, Subject 23, lab -> Teacher 41
+   READ [LOCKED]: Class 13, Subject 23, theory -> Teacher 41
+   READ [LOCKED]: Class 13, Subject 23, lab -> Teacher 41
+   READ [LOCKED]: Class 11, Subject 25, theory -> Teacher 22
+   READ [LOCKED]: Class 11, Subject 25, lab -> Teacher 22
+   READ [LOCKED]: Class 11, Subject 26, theory -> Teacher 11
+   READ [LOCKED]: Class 11, Subject 26, lab -> Teacher 11
+   READ [LOCKED]: Class 11, Subject 27, theory -> Teacher 42
+   READ [LOCKED]: Class 12, Subject 27, theory -> Teacher 42
+   READ [LOCKED]: Class 13, Subject 27, theory -> Teacher 42
+   READ [LOCKED]: Class 11, Subject 28, theory -> Teacher 43
+   READ [LOCKED]: Class 12, Subject 28, theory -> Teacher 43
+   READ [LOCKED]: Class 13, Subject 28, theory -> Teacher 43
+   READ [LOCKED]: Class 11, Subject 17, lab -> Teacher 12
+   READ [LOCKED]: Class 12, Subject 14, theory -> Teacher 44
+   READ [LOCKED]: Class 12, Subject 24, lab -> Teacher 44
+   READ [LOCKED]: Class 12, Subject 15, theory -> Teacher 21
+   READ [LOCKED]: Class 12, Subject 29, theory -> Teacher 45
+   READ [LOCKED]: Class 12, Subject 29, lab -> Teacher 45
+   READ [LOCKED]: Class 12, Subject 30, theory -> Teacher 39
+   READ [LOCKED]: Class 12, Subject 30, lab -> Teacher 39
+   READ [LOCKED]: Class 13, Subject 14, theory -> Teacher 35
+   READ [LOCKED]: Class 13, Subject 24, lab -> Teacher 35
+   READ [LOCKED]: Class 13, Subject 15, theory -> Teacher 41
+   READ [LOCKED]: Class 13, Subject 29, theory -> Teacher 20
+   READ [LOCKED]: Class 13, Subject 29, lab -> Teacher 20
+   READ [LOCKED]: Class 13, Subject 30, theory -> Teacher 21
+   READ [LOCKED]: Class 13, Subject 30, lab -> Teacher 21
+   READ [LOCKED]: Class 13, Subject 31, theory -> Teacher 28
+   READ [LOCKED]: Class 13, Subject 31, lab -> Teacher 28
+   READ [LOCKED]: Class 12, Subject 31, theory -> Teacher 22
+   READ [LOCKED]: Class 12, Subject 31, lab -> Teacher 22
+   READ [LOCKED]: Class 11, Subject 16, theory -> Teacher 46
+   READ [LOCKED]: Class 12, Subject 16, theory -> Teacher 47
+   READ [LOCKED]: Class 13, Subject 16, theory -> Teacher 48
+   READ [LOCKED]: Class 5, Subject 12, theory -> Teacher 38
+   READ [LOCKED]: Class 6, Subject 12, theory -> Teacher 38
+   READ [LOCKED]: Class 7, Subject 12, theory -> Teacher 38
+   READ [LOCKED]: Class 5, Subject 12, lab -> Teacher 38
+   READ [LOCKED]: Class 6, Subject 12, lab -> Teacher 38
+   READ [LOCKED]: Class 7, Subject 12, lab -> Teacher 38
+   READ [LOCKED]: Class 18, Subject 59, theory -> Teacher 52
+   READ [LOCKED]: Class 18, Subject 63, lab -> Teacher 52
+   READ [LOCKED]: Class 18, Subject 60, theory -> Teacher 55
+   READ [LOCKED]: Class 18, Subject 64, theory -> Teacher 55
+   READ [LOCKED]: Class 18, Subject 64, lab -> Teacher 55
+   READ [LOCKED]: Class 18, Subject 61, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 61, lab -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 66, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 69, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 72, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 73, theory -> Teacher 56
+   READ [LOCKED]: Class 18, Subject 62, theory -> Teacher 57
+   READ [LOCKED]: Class 18, Subject 62, lab -> Teacher 57
+   READ [LOCKED]: Class 18, Subject 65, theory -> Teacher 57
+   READ [LOCKED]: Class 18, Subject 70, theory -> Teacher 58
+   READ [LOCKED]: Class 17, Subject 53, theory -> Teacher 59
+   READ [LOCKED]: Class 17, Subject 56, lab -> Teacher 59
+   READ [LOCKED]: Class 17, Subject 54, theory -> Teacher 56
+   READ [LOCKED]: Class 17, Subject 58, lab -> Teacher 56
+   READ [LOCKED]: Class 17, Subject 55, theory -> Teacher 58
+   READ [LOCKED]: Class 17, Subject 57, lab -> Teacher 58
+   READ [LOCKED]: Class 17, Subject 74, theory -> Teacher 60
+   READ [LOCKED]: Class 17, Subject 74, lab -> Teacher 60
+   READ [LOCKED]: Class 17, Subject 75, theory -> Teacher 52
+   READ [LOCKED]: Class 17, Subject 75, lab -> Teacher 52
+   READ [LOCKED]: Class 17, Subject 7, theory -> Teacher 62
+   READ [LOCKED]: Class 5, Subject 7, theory -> Teacher 24
+   READ [LOCKED]: Class 6, Subject 7, theory -> Teacher 62
+   READ [LOCKED]: Class 6, Subject 8, theory -> Teacher 63
+   READ [LOCKED]: Class 7, Subject 8, theory -> Teacher 25
+   READ [LOCKED]: Class 17, Subject 8, theory -> Teacher 25
+   READ [LOCKED]: Class 17, Subject 2, theory -> Teacher 61
+   READ [LOCKED]: Class 17, Subject 27, theory -> Teacher 42
+   READ [LOCKED]: Class 5, Subject 13, lab -> Teacher 15
+   READ [LOCKED]: Class 6, Subject 13, lab -> Teacher 23
+   READ [LOCKED]: Class 7, Subject 13, lab -> Teacher 31
+   READ [LOCKED]: Class 7, Subject 9, theory -> Teacher 30
+   READ [LOCKED]: Class 6, Subject 9, theory -> Teacher 22
+   READ [LOCKED]: Class 5, Subject 9, theory -> Teacher 11
+   READ [LOCKED]: Class 5, Subject 8, theory -> Teacher 63
+   READ [LOCKED]: Class 7, Subject 7, theory -> Teacher 62
+   TOTAL LOCKED MAPPINGS: 154
+
+PHASE 0: PRE-SCHEDULING ELECTIVE BASKETS
+   [PLAN] Basket 1 (Year 4) needs: 2 Theory, 1 Lab Blocks
+   [PLAN] Basket 2 (Year 6) needs: 2 Theory, 1 Lab Blocks
+   [PLAN] Basket 3 (Year 6) needs: 2 Theory, 1 Lab Blocks
+   [PLAN] Basket 4 (Year 6) needs: 3 Theory, 0 Lab Blocks
+   [GLOBAL] Locked 4 theory groups and 4 lab groups
+python : Traceback (most recent call 
+last):
+At line:1 char:1
++ python verify_electives.py > 
+verification.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo          : NotSpecifie 
+   d: (Traceback (most recent call last)  
+  ::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeComma 
+   ndError
+ 
+  File "C:\Users\navee\.gemini\antigravity
+\scratch\timetable_generator\backend\verif
+y_electives.py", line 17, in run_test
+    success, msg, allocs, duration = 
+gen.generate(clear_existing=True)
+                                     
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\navee\.gemini\antigravity
+\scratch\timetable_generator\backend\app\s
+ervices\generator.py", line 481, in 
+generate
+    print(f"\n\u26a1 STARTING PHASE 1: 
+{dept_name} ({len(batch_semesters)} 
+classes)")
+  File "C:\Users\navee\AppData\Local\Progr
+ams\Python\Python311\Lib\encodings\cp1252.
+py", line 19, in encode
+    return codecs.charmap_encode(input,sel
+f.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't 
+encode character '\u26a1' in position 2: 
+character maps to <undefined>
+
+During handling of the above exception, 
+another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\navee\.gemini\antigravity
+\scratch\timetable_generator\backend\verif
+y_electives.py", line 63, in <module>
+    run_test()
+  File "C:\Users\navee\.gemini\antigravity
+\scratch\timetable_generator\backend\verif
+y_electives.py", line 21, in run_test
+    traceback.print_exc(file=f)
+  File "C:\Users\navee\AppData\Local\Progr
+ams\Python\Python311\Lib\traceback.py", 
+line 183, in print_exc
+    print_exception(*sys.exc_info(), 
+limit=limit, file=file, chain=chain)
+  File "C:\Users\navee\AppData\Local\Progr
+ams\Python\Python311\Lib\traceback.py", 
+line 125, in print_exception
+    te.print(file=file, chain=chain)
+  File "C:\Users\navee\AppData\Local\Progr
+ams\Python\Python311\Lib\traceback.py", 
+line 982, in print
+    print(line, file=file, end="")
+  File "C:\Users\navee\AppData\Local\Progr
+ams\Python\Python311\Lib\encodings\cp1252.
+py", line 19, in encode
+    return codecs.charmap_encode(input,sel
+f.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't 
+encode character '\u26a1' in position 
+144: character maps to <undefined>

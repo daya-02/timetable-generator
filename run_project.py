@@ -101,7 +101,10 @@ def is_port_available(port: int, host: str = "127.0.0.1") -> bool:
     """Return True if the given TCP port can be bound to (is truly available)."""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # On Windows, SO_REUSEADDR can allow binding to a port that is already in use by another process.
+            # We remove it to ensure we strictly check for available ports.
+            if not IS_WINDOWS:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((host, port))
             return True
     except Exception:

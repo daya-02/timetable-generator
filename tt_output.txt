@@ -1,0 +1,20 @@
+﻿
+========================================================================================================================
+  TIMETABLE: 3rd Semester - Section A (CS3A)
+========================================================================================================================
+Day           P1        
+------------------------
+python : Traceback (most recent call last):
+At line:1 char:1
++ python show_timetable.py 2>&1 | Out-File -FilePath 
+tt_output.txt -Enc ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most  
+   recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\navee\.gemini\antigravity\scratch\timetable_g
+enerator\show_timetable.py", line 57, in <module>
+    slot_map[s["slot"]] = s
+             ~^^^^^^^^
+KeyError: 'slot'

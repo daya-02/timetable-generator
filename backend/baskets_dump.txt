@@ -1,0 +1,34 @@
+=== ELECTIVE BASKET ANALYSIS ===
+Found 3 Baskets:
+  [1] Emerging Elective 1
+  [2] Emerging Elective
+  [3] Professional Elective
+
+=== ALL ELECTIVE SUBJECTS ===
+
+Basket ID 1 (Emerging Elective 1): 4 subjects
+  - GEN AI (CGI1257) -> [Sem4(Y2,DNone): Murugavalli | Sem4(Y2,DNone): Murugavalli | Sem4(Y2,DNone): Murugavalli | Sem4(Y2,DNone): Murugavalli | Sem4(Y2,DNone): Murugavalli | Sem4(Y2,DNone): Murugavalli]
+  - Business Analytics (CGI1252) -> [Sem4(Y2,DNone): Deena Rose | Sem4(Y2,DNone): Deena Rose | Sem4(Y2,DNone): Deena Rose | Sem4(Y2,DNone): Deena Rose | Sem4(Y2,DNone): Deena Rose | Sem4(Y2,DNone): Deena Rose]
+  - Digital Marketing (CGI1253) -> [Sem4(Y2,DNone): Vasunthara Devi | Sem4(Y2,DNone): Vasunthara Devi | Sem4(Y2,DNone): Vasunthara Devi | Sem4(Y2,DNone): Vasunthara Devi | Sem4(Y2,DNone): Vasunthara Devi | Sem4(Y2,DNone): Vasunthara Devi]
+  - SCRUM (ITC1291) -> [Sem4(Y2,D4): Mr.V.Sakthivel		 | Sem4(Y2,D4): Mr.V.Sakthivel		]
+
+Basket ID 3 (Professional Elective): 3 subjects
+  - Microsoft Azure Fundamentals (CGI1351) -> [Sem6(Y3,DNone): Swetha Bharathi | Sem6(Y3,DNone): Swetha Bharathi | Sem6(Y3,DNone): Swetha Bharathi | Sem6(Y3,DNone): Swetha Bharathi | Sem6(Y3,DNone): Swetha Bharathi | Sem6(Y3,DNone): Swetha Bharathi]
+  - Advanced AI and Ethical Practices (CGI1352) -> [Sem6(Y3,DNone): Vasunthara Devi | Sem6(Y3,DNone): Vasunthara Devi | Sem6(Y3,DNone): Vasunthara Devi | Sem6(Y3,DNone): Vasunthara Devi | Sem6(Y3,DNone): Vasunthara Devi | Sem6(Y3,DNone): Vasunthara Devi]
+  - Advanced Cyber Security (CGI1355) -> [Sem6(Y3,DNone): ShyamSundar T | Sem6(Y3,DNone): ShyamSundar T | Sem6(Y3,DNone): ShyamSundar T | Sem6(Y3,DNone): ShyamSundar T | Sem6(Y3,DNone): ShyamSundar T | Sem6(Y3,DNone): ShyamSundar T]
+
+Basket ID 2 (Emerging Elective): 3 subjects
+  - Microsoft Azure Infrastructure (CGI1353) -> [Sem6(Y3,DNone): Avadiappan | Sem6(Y3,DNone): Avadiappan | Sem6(Y3,DNone): Avadiappan | Sem6(Y3,DNone): Avadiappan | Sem6(Y3,DNone): Avadiappan | Sem6(Y3,DNone): Avadiappan]
+  - Building RAG (CGI1354) -> [Sem6(Y3,DNone): Harish Ragavendhar | Sem6(Y3,DNone): Harish Ragavendhar | Sem6(Y3,DNone): Harish Ragavendhar | Sem6(Y3,DNone): Harish Ragavendhar | Sem6(Y3,DNone): Harish Ragavendhar | Sem6(Y3,DNone): Harish Ragavendhar]
+  - Advanced Cyber Attack (CGI1356) -> [Sem6(Y3,DNone): Joshuva Issac | Sem6(Y3,DNone): Joshuva Issac | Sem6(Y3,DNone): Joshuva Issac | Sem6(Y3,DNone): Joshuva Issac | Sem6(Y3,DNone): Joshuva Issac | Sem6(Y3,DNone): Joshuva Issac]
+
+Basket ID None (Unknown/None): 9 subjects
+  - Advanced Construction Techniques (EE) (CEC1291) -> []
+  - Renewable Energy System (EE) (CEC1293) -> []
+  - Fluid and Hydraulic Engineering Laboratory (CEB1231) -> []
+  - Material Behaviour and Analysis Laboratory (CEB1232) -> []
+  - Prestressed Concrete Strutures (PRBL) (CEC1371) -> []
+  - Introduction to Lean Construction (CEC1391) -> []
+  - Environmental Impact Assessment (CEC1393) -> []
+  - Quality Control in Construction (20CE8925) -> []
+  - Repair and Rehabilitation of Structures (20CE8926) -> []

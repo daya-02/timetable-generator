@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { Calendar, Lock, Unlock, AlertCircle, RefreshCw, Trash2, Settings, User, GraduationCap } from 'lucide-react';
 import { timetableApi, semestersApi, fixedSlotsApi } from '../services/api';
+import { useDepartmentContext } from '../context/DepartmentContext';
 import LockSlotModal from '../components/LockSlotModal';
 import './ManageTimetablePage.css';
 
@@ -26,6 +27,7 @@ const PERIODS = [
 ];
 
 export default function ManageTimetablePage() {
+    const { deptId } = useDepartmentContext();
     const [semesters, setSemesters] = useState([]);
     const [selectedSemesterId, setSelectedSemesterId] = useState(null);
     const [selectedSemester, setSelectedSemester] = useState(null);
@@ -41,7 +43,7 @@ export default function ManageTimetablePage() {
 
     useEffect(() => {
         fetchSemesters();
-    }, []);
+    }, [deptId]);
 
     useEffect(() => {
         if (selectedSemesterId) {
@@ -51,11 +53,19 @@ export default function ManageTimetablePage() {
 
     const fetchSemesters = async () => {
         try {
-            const res = await semestersApi.getAll();
+            const params = {};
+            if (deptId) params.deptId = deptId;
+            const res = await semestersApi.getAll(params);
             setSemesters(res.data || []);
             if (res.data?.length > 0) {
                 setSelectedSemesterId(res.data[0].id);
                 setSelectedSemester(res.data[0]);
+            }
+            if (!res.data?.length) {
+                setSelectedSemesterId(null);
+                setSelectedSemester(null);
+                setTimetable(null);
+                setFixedSlots([]);
             }
         } catch (err) {
             console.error('Failed to load semesters:', err);
@@ -166,6 +176,8 @@ export default function ManageTimetablePage() {
 
         // If there's a fixed slot, show it with lock indicator
         if (fixedSlot) {
+            const comp = fixedSlot.academic_component;
+            const showComp = comp && !['theory', 'lab', 'tutorial'].includes(comp);
             return (
                 <div className="manage-slot-cell locked" key={`${day}-${slot}`}>
                     <div className="slot-lock-indicator">
@@ -174,6 +186,11 @@ export default function ManageTimetablePage() {
                     <div className="slot-content">
                         <div className="slot-subject">{fixedSlot.subject_name}</div>
                         <div className="slot-code">{fixedSlot.subject_code}</div>
+                        {showComp && (
+                            <div className="slot-code" style={{ fontSize: '11px', opacity: 0.9 }}>
+                                {comp.toUpperCase()}
+                            </div>
+                        )}
                         <div className="slot-teacher">{fixedSlot.teacher_name}</div>
                     </div>
                     <button
@@ -192,9 +209,11 @@ export default function ManageTimetablePage() {
 
         // If there's an allocation from existing timetable
         if (slotData && slotData.subject_name) {
-            const isLab = slotData.is_lab || slotData.component_type === 'lab';
+            const academicComponent = slotData.academic_component || slotData.component_type;
+            const isLab = slotData.is_lab || academicComponent === 'lab';
             const isElective = slotData.is_elective;
-            const isTutorial = slotData.component_type === 'tutorial';
+            const isTutorial = academicComponent === 'tutorial';
+            const showComp = academicComponent && !['theory', 'lab', 'tutorial'].includes(academicComponent);
 
             let typeClass = 'theory';
             if (isLab) typeClass = 'lab';
@@ -206,6 +225,11 @@ export default function ManageTimetablePage() {
                     <div className="slot-content">
                         <div className="slot-subject">{slotData.subject_name}</div>
                         <div className="slot-code">{slotData.subject_code}</div>
+                        {showComp && (
+                            <div className="slot-code" style={{ fontSize: '11px', opacity: 0.9 }}>
+                                {academicComponent.toUpperCase()}
+                            </div>
+                        )}
                         <div className="slot-teacher">{slotData.teacher_name}</div>
                         {slotData.room_name && (
                             <div className="slot-room">{slotData.room_name}</div>

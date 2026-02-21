@@ -1,6 +1,7 @@
 /**
  * Dashboard Page
  * Displays statistics and quick actions
+ * Department-scoped when a department is selected
  */
 import { useEffect, useState } from 'react';
 import {
@@ -16,9 +17,11 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { dashboardApi, substitutionApi } from '../services/api';
+import { useDepartmentContext } from '../context/DepartmentContext';
 import './Dashboard.css';
 
 export default function Dashboard() {
+    const { deptId, departments, selectedDeptId } = useDepartmentContext();
     const [stats, setStats] = useState(null);
     const [recentSubs, setRecentSubs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -26,14 +29,14 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [deptId]); // Refetch when department changes
 
     const fetchData = async () => {
         setLoading(true);
         setError(null);
         try {
             const [statsRes, subsRes] = await Promise.all([
-                dashboardApi.getStats(),
+                dashboardApi.getStats(deptId),
                 dashboardApi.getRecentSubstitutions(),
             ]);
             setStats(statsRes.data);
@@ -46,10 +49,25 @@ export default function Dashboard() {
         }
     };
 
+    // Get current department name for display
+    const currentDeptName = deptId
+        ? departments.find(d => d.id === deptId)?.name || `Dept ${deptId}`
+        : null;
+
     if (loading) {
         return (
-            <div className="loading">
-                <div className="spinner"></div>
+            <div className="dashboard">
+                <div className="page-header">
+                    <div>
+                        <div className="skeleton skeleton-title" style={{ width: '200px', marginBottom: '0.5rem' }}></div>
+                        <div className="skeleton skeleton-text" style={{ width: '300px' }}></div>
+                    </div>
+                </div>
+                <div className="stats-grid">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="skeleton skeleton-card"></div>
+                    ))}
+                </div>
             </div>
         );
     }
@@ -113,7 +131,10 @@ export default function Dashboard() {
             <div className="page-header">
                 <div>
                     <h1>Dashboard</h1>
-                    <p>Welcome to the KR Timetable Generator</p>
+                    <p>
+                        Welcome to the KR Timetable Generator
+                        {currentDeptName && <span style={{ fontWeight: 600, color: 'var(--accent)' }}> — {currentDeptName}</span>}
+                    </p>
                 </div>
                 <button className="btn btn-secondary" onClick={fetchData}>
                     <RefreshCw size={16} />

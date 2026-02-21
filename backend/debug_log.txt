@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\verify_electives.py", line 17, in run_test
+    success, msg, allocs, duration = gen.generate(clear_existing=True)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

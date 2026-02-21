@@ -1,0 +1,83 @@
+﻿============================================================
+  COLLEGE TIMETABLE DEMO DATA SEEDER
+============================================================
+
+[0] Clearing existing timetable allocations...
+
+[1] Creating Department...
+  ERROR 400 on POST /departments/: {"detail":"Department code already exists"}
+  Department: Computer Science & Engineering (ID=1)
+
+[2] Creating Rooms...
+  Room exists: CSE Lecture Hall 1 (ID=7)
+  Room exists: CSE Lecture Hall 2 (ID=8)
+  Room exists: CSE Lab 1 (DBMS) (ID=9)
+  Room exists: CSE Lab 2 (OS) (ID=10)
+  Room exists: CSE Lab 3 (Networks) (ID=11)
+
+[3] Creating Semesters (Classes)...
+  Semester exists: CSE 3rd Sem - Section A (ID=1)
+  Semester exists: CSE 5th Sem - Section A (ID=3)
+
+[4] Creating Subjects...
+  Subject exists: CS301 - Data Structures & Algorithms (ID=8)
+  Subject exists: CS302 - DBMS (ID=9)
+  Subject exists: CS303 - Operating Systems (ID=10)
+  Subject exists: CS304 - Discrete Mathematics (ID=11)
+  Subject exists: CS305 - Computer Networks (ID=12)
+  Subject exists: CS501 - Compiler Design (ID=19)
+  Subject exists: CS502 - Software Engineering (ID=20)
+  Subject exists: CS503 - Web Technologies (ID=21)
+  Subject exists: CSOE1 - Machine Learning (ID=22)
+  Subject exists: CSOE2 - Cyber Security (ID=23)
+
+[5] Creating Teachers...
+  Teacher exists: Dr. Arun Sharma (AS01) (ID=9)
+  Teacher exists: Prof. Kavitha Nair (KN02) (ID=10)
+  Teacher exists: Dr. Rajesh Kumar (RK03) (ID=11)
+  Teacher exists: Prof. Priya Singh (PS04) (ID=12)
+  Teacher exists: Dr. Manoj Patel (MP05) (ID=13)
+  Teacher exists: Prof. Deepa Iyer (DI06) (ID=14)
+  Teacher exists: Dr. Suresh Menon (SM07) (ID=15)
+  Teacher exists: Prof. Anita Rao (AR08) (ID=16)
+
+[6] Creating Teacher Assignments...
+  Assigned: AS01 -> CS301 (theory)
+  Assigned: KN02 -> CS302 (theory)
+  Assigned: RK03 -> CS303 (theory)
+  Assigned: PS04 -> CS304 (theory)
+  Assigned: MP05 -> CS305 (theory)
+  Assigned: MP05 -> CS305 (lab)
+
+  --- Parallel Lab Group 'G1': DBMS Lab (B1) + OS Lab (B2) ---
+  Assigned: KN02 -> CS302 (lab) [parallel=G1]
+  Assigned: RK03 -> CS303 (lab) [parallel=G1]
+  Assigned: DI06 -> CS501 (theory)
+  Assigned: SM07 -> CS502 (theory)
+  Assigned: AR08 -> CS503 (theory)
+  Assigned: AR08 -> CS503 (lab)
+  Assigned: AS01 -> CSOE1 (theory)
+  Assigned: PS04 -> CSOE2 (theory)
+
+[7] Creating Elective Basket...
+  ERROR 400 on POST /elective-baskets/: {"detail":"Elective basket with this code already exists"}
+  Basket exists: OEB1 (ID=1)
+
+[8] Generating Timetable...
+  Success: False
+  Message: No active semesters found
+  Allocations: 0
+  Time: 0.00s
+
+[9] Fetching Generated Timetables...
+  ERROR 404 on GET /timetable/semester/1: {"detail":"Not Found"}
+
+  No timetable for CSE 3rd Sem A
+  ERROR 404 on GET /timetable/semester/3: {"detail":"Not Found"}
+
+  No timetable for CSE 5th Sem A
+
+================================================================================
+  DEMO DATA SEEDED SUCCESSFULLY!
+  Open http://localhost:5173 to view in the browser.
+================================================================================

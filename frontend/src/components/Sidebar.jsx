@@ -8,6 +8,7 @@ import {
     Users,
     BookOpen,
     GraduationCap,
+    Building,
     Building2,
     Calendar,
     Lock,
@@ -16,13 +17,19 @@ import {
     Menu,
     X,
     Layers,
+    FileText,
+    Gauge,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useDepartmentContext } from '../context/DepartmentContext';
 import './Sidebar.css';
 import logo from '../assets/logo.png';
 
 const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/departments', label: 'Departments', icon: Building },
+    { path: '/teacher-load', label: 'Teacher Load', icon: Gauge },
+    { path: '/reports', label: 'Reports', icon: FileText },
     { path: '/teachers', label: 'Teachers', icon: Users },
     { path: '/subjects', label: 'Subjects', icon: BookOpen },
     { path: '/electives', label: 'Elective Baskets', icon: Layers },
@@ -36,6 +43,7 @@ const navItems = [
 
 export default function Sidebar() {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { departments, selectedDeptId, setSelectedDeptId } = useDepartmentContext();
     const location = useLocation();
 
     return (
@@ -68,6 +76,22 @@ export default function Sidebar() {
                             <span className="logo-title">KR Timetable</span>
                             <span className="logo-subtitle">Generator</span>
                         </div>
+                    </div>
+
+                    <div className="dept-switcher">
+                        <label className="dept-label">Department</label>
+                        <select
+                            className="dept-select"
+                            value={selectedDeptId || ''}
+                            onChange={(e) => setSelectedDeptId(e.target.value)}
+                        >
+                            <option value="">All Departments</option>
+                            {departments.map((dept) => (
+                                <option key={dept.id} value={dept.id}>
+                                    {dept.name} ({dept.code})
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

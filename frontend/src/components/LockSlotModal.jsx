@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { Lock, X, Calendar, Clock, BookOpen, User, AlertTriangle, CheckCircle } from 'lucide-react';
 import { fixedSlotsApi, subjectsApi, teachersApi } from '../services/api';
+import { useDepartmentContext } from '../context/DepartmentContext';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -31,6 +32,7 @@ export default function LockSlotModal({
     existingTeachers = [],  // Teachers already teaching this class
     classSubjects = [],     // Subjects assigned to this class
 }) {
+    const { deptId } = useDepartmentContext();
     const [subjects, setSubjects] = useState([]);
     const [teachers, setTeachers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -42,6 +44,7 @@ export default function LockSlotModal({
     const [selectedSubjectId, setSelectedSubjectId] = useState('');
     const [selectedTeacherId, setSelectedTeacherId] = useState('');
     const [componentType, setComponentType] = useState('theory');
+    const [academicComponent, setAcademicComponent] = useState('');
     const [lockReason, setLockReason] = useState('');
 
     useEffect(() => {
@@ -49,14 +52,14 @@ export default function LockSlotModal({
             fetchData();
             resetForm();
         }
-    }, [isOpen, semesterId]);
+    }, [isOpen, semesterId, deptId]);
 
     const fetchData = async () => {
         try {
             setLoading(true);
             const [subjectsRes, teachersRes] = await Promise.all([
-                subjectsApi.getAll(),
-                teachersApi.getAll(),
+                subjectsApi.getAll({ deptId }),
+                teachersApi.getAll(true, deptId),
             ]);
 
             // Filter subjects to only show those assigned to this class
@@ -79,6 +82,7 @@ export default function LockSlotModal({
         setSelectedSubjectId('');
         setSelectedTeacherId('');
         setComponentType('theory');
+        setAcademicComponent('');
         setLockReason('');
         setValidation(null);
         setError(null);
@@ -129,6 +133,7 @@ export default function LockSlotModal({
                 subject_id: parseInt(selectedSubjectId),
                 teacher_id: parseInt(selectedTeacherId),
                 component_type: componentType,
+                academic_component: academicComponent || null,
             });
 
             setValidation(res.data);
@@ -157,6 +162,7 @@ export default function LockSlotModal({
                 subject_id: parseInt(selectedSubjectId),
                 teacher_id: parseInt(selectedTeacherId),
                 component_type: componentType,
+                academic_component: academicComponent || null,
                 lock_reason: lockReason || null,
                 locked_by: 'admin',
             });
@@ -275,6 +281,24 @@ export default function LockSlotModal({
                                     <option value="lab">Lab</option>
                                     <option value="tutorial">Tutorial</option>
                                 </select>
+                            </div>
+
+                            {/* Academic Component (Optional) */}
+                            <div className="lock-slot-form-group">
+                                <label>Academic Component (Optional)</label>
+                                <select
+                                    value={academicComponent}
+                                    onChange={(e) => setAcademicComponent(e.target.value)}
+                                >
+                                    <option value="">Same as component type</option>
+                                    <option value="project">Project</option>
+                                    <option value="report">Report</option>
+                                    <option value="seminar">Seminar</option>
+                                    <option value="internship">Internship / IT</option>
+                                </select>
+                                <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: 'var(--gray-600)' }}>
+                                    Used for labels and reports. Constraints still follow the selected component type.
+                                </p>
                             </div>
 
                             {/* Lock Reason (Optional) */}

@@ -1,0 +1,19 @@
+﻿=== Fixing semester dept_id ===
+  Fixed: CS3A -> dept_id=1
+  Fixed: CS3B -> dept_id=1
+  Fixed: CS5A -> dept_id=1
+  Fixed: CS7A -> dept_id=1
+
+=== Generating Timetable (dept_id=1) ===
+  Success: True
+  Message: Dept 1: Generated 35 slots (105 free)
+
+=== GENERATED TIMETABLES ===
+  ERROR 404 on GET /timetable/semester/1: {"detail":"Not Found"}
+  ERROR 404 on GET /timetable/semester/2: {"detail":"Not Found"}
+  ERROR 404 on GET /timetable/semester/3: {"detail":"Not Found"}
+  ERROR 404 on GET /timetable/semester/4: {"detail":"Not Found"}
+
+====================================================================================================
+  OPEN http://localhost:5173 to view in browser
+====================================================================================================
