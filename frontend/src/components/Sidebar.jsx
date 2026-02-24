@@ -33,6 +33,7 @@ const navItems = [
     { path: '/teachers', label: 'Teachers', icon: Users },
     { path: '/subjects', label: 'Subjects', icon: BookOpen },
     { path: '/electives', label: 'Elective Baskets', icon: Layers },
+    { path: '/parallel-labs', label: 'Parallel Labs', icon: Layers },
     { path: '/semesters', label: 'Classes', icon: GraduationCap },
     { path: '/rooms', label: 'Rooms', icon: Building2 },
     { path: '/timetable', label: 'View Timetable', icon: Calendar },

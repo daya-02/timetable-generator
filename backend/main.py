@@ -49,6 +49,7 @@ from app.api import (
     departments,
     reports,
     rule_toggles,
+    parallel_lab_baskets,
 )
 
 settings = get_settings()
@@ -148,6 +149,7 @@ app.include_router(fixed_slots.router, prefix="/api")
 app.include_router(departments.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(rule_toggles.router, prefix="/api")
+app.include_router(parallel_lab_baskets.router, prefix="/api")
 
 
 @app.get("/")

@@ -49,7 +49,8 @@ def generate_timetable(
         success, message, allocations, gen_time = generator.generate(
             semester_ids=request.semester_ids,
             dept_id=request.dept_id,
-            clear_existing=request.clear_existing
+            clear_existing=request.clear_existing,
+            semester_type=request.semester_type
         )
 
         return GenerationResult(
@@ -176,7 +177,8 @@ def get_semester_timetable(
                 batch_allocations = []
                 for alloc in slot_allocs:
                     if alloc.batch_id or len(slot_allocs) > 1:
-                        batch_name_str = alloc.batch.name if alloc.batch else f"Batch {alloc.batch_id}" if alloc.batch_id else None
+                        # Find the batch name directly or through db, fallback to batch_id or empty
+                        batch_name_str = alloc.batch.name if getattr(alloc, 'batch', None) else f"B{alloc.batch_id}" if getattr(alloc, 'batch_id', None) else "Batch"
                         batch_allocations.append(
                             {
                                 "batch_id": alloc.batch_id,
@@ -191,8 +193,13 @@ def get_semester_timetable(
                 # Build combined subject name for parallel multi-subject labs
                 unique_subjects = list({a.subject_id: a for a in slot_allocs}.values())
                 if len(unique_subjects) > 1:
-                    combined_name = " / ".join(a.subject.name for a in unique_subjects) + " (Batch Split)"
-                    combined_code = " / ".join(a.subject.code for a in unique_subjects)
+                    if not any(getattr(a, 'is_elective', False) for a in slot_allocs):
+                        # Parallel Lab format
+                        combined_name = " / ".join(f"{a.subject.code}:{a.batch.name if a.batch else 'B'} (PL)" for a in unique_subjects)
+                        combined_code = " / ".join(f"{a.subject.code} (PL)" for a in unique_subjects)
+                    else:
+                        combined_name = " / ".join(a.subject.name for a in unique_subjects) + " (Batch Split)"
+                        combined_code = " / ".join(a.subject.code for a in unique_subjects)
                 else:
                     combined_name = primary_alloc.subject.name
                     combined_code = primary_alloc.subject.code
@@ -224,11 +231,33 @@ def get_semester_timetable(
             slots=slots
         ))
 
+    # Default template logic - infer from existing allocations
+    # If slot 4 has allocations, it's likely ODD (no break after period 5)
+    has_slot_4_allocs = any(a.slot == 4 for a in allocations)
+    
+    # Simple heuristic to determine which template to show
+    preferred_type = "ODD" if has_slot_4_allocs else "EVEN"
+    
+    from app.db.models import SemesterTemplate
+    import json
+    template = db.query(SemesterTemplate).filter(SemesterTemplate.semester_type == preferred_type).first()
+    
+    break_slots = []
+    lunch_slot = 3
+    if template:
+        try:
+            break_slots = json.loads(template.break_slots)
+        except:
+            break_slots = []
+        lunch_slot = template.lunch_slot
+
     return TimetableView(
         entity_type="semester",
         entity_id=semester.id,
         entity_name=f"{semester.name} ({semester.code})",
-        days=days
+        days=days,
+        break_slots=break_slots,
+        lunch_slot=lunch_slot
     )
 
 
@@ -306,11 +335,29 @@ def get_teacher_timetable(
             slots=slots
         ))
 
+    has_slot_4_allocs = any(a.slot == 4 for a in allocations)
+    preferred_type = "ODD" if has_slot_4_allocs else "EVEN"
+    
+    from app.db.models import SemesterTemplate
+    import json
+    template = db.query(SemesterTemplate).filter(SemesterTemplate.semester_type == preferred_type).first()
+    
+    break_slots = []
+    lunch_slot = 3
+    if template:
+        try:
+            break_slots = json.loads(template.break_slots)
+        except:
+            break_slots = []
+        lunch_slot = template.lunch_slot
+
     return TimetableView(
         entity_type="teacher",
         entity_id=teacher.id,
         entity_name=teacher.name,
-        days=days
+        days=days,
+        break_slots=break_slots,
+        lunch_slot=lunch_slot
     )
 
 
@@ -479,7 +526,8 @@ def _run_generation_task(task_id: str, request_data: dict):
         success, message, allocations, gen_time = generator.generate(
             semester_ids=request_data.get("semester_ids"),
             dept_id=request_data.get("dept_id"),
-            clear_existing=request_data.get("clear_existing", True)
+            clear_existing=request_data.get("clear_existing", True),
+            semester_type=request_data.get("semester_type", "EVEN")
         )
         
         _generation_tasks[task_id].update({
@@ -530,7 +578,8 @@ def generate_timetable_async(
     request_data = {
         "semester_ids": request.semester_ids,
         "dept_id": request.dept_id,
-        "clear_existing": request.clear_existing
+        "clear_existing": request.clear_existing,
+        "semester_type": request.semester_type
     }
     
     thread = threading.Thread(

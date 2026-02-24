@@ -64,6 +64,11 @@ class SubstitutionStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class SemesterType(str, enum.Enum):
+    ODD = "ODD"
+    EVEN = "EVEN"
+
+
 # ============================================================================
 # ASSOCIATION TABLES
 # ============================================================================
@@ -759,3 +764,81 @@ class FixedSlot(Base):
     
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# ============================================================================
+# SEMESTER TEMPLATE MODEL
+# ============================================================================
+
+class SemesterTemplate(Base):
+    """
+    Template for time slots and breaks based on semester type (Odd/Even).
+    """
+    __tablename__ = "semester_templates"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    semester_type: Mapped[SemesterType] = mapped_column(SQLEnum(SemesterType), unique=True)
+    total_periods: Mapped[int] = mapped_column(Integer, default=7)
+    
+    # Store JSON-like string arrays: "[1, 3]" means breaks after period 2 and 4 (0-indexed 1 and 3)
+    # Actually, as per requirement, "Break after period 2" -> break_slots=[1]
+    break_slots: Mapped[str] = mapped_column(String(50), default="[]")
+    lunch_slot: Mapped[int] = mapped_column(Integer, default=3) # e.g. after period 4, array index 3
+    
+    # E.g. [{"start": "09:00", "end": "09:55"}, ...] stored as string (can be parsed later if needed)
+    timing_structure: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# ============================================================================
+# PARALLEL LAB BASKET MODEL
+# ============================================================================
+
+class ParallelLabBasket(Base):
+    """
+    Groups multiple lab subjects to be scheduled in the SAME period for the SAME class.
+    Behaves similar to ElectiveBasket but for regular labs running in parallel batches.
+    """
+    __tablename__ = "parallel_lab_baskets"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    
+    dept_id: Mapped[int] = mapped_column(ForeignKey("departments.id", ondelete="CASCADE"), index=True)
+    year: Mapped[int] = mapped_column(Integer)
+    section: Mapped[str] = mapped_column(String(10))
+    
+    # Time slot
+    slot_day: Mapped[int] = mapped_column(Integer)    # 0=Monday, 4=Friday
+    slot_period_start: Mapped[int] = mapped_column(Integer)
+    slot_period_count: Mapped[int] = mapped_column(Integer, default=2)
+
+    # Relationships
+    basket_subjects: Mapped[List["ParallelLabBasketSubject"]] = relationship(
+        back_populates="basket", cascade="all, delete-orphan"
+    )
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ParallelLabBasketSubject(Base):
+    """
+    A specific subject and batch within a Parallel Lab Basket.
+    """
+    __tablename__ = "parallel_lab_basket_subjects"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    basket_id: Mapped[int] = mapped_column(ForeignKey("parallel_lab_baskets.id", ondelete="CASCADE"), index=True)
+    
+    subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    batch_name: Mapped[str] = mapped_column(String(50)) # e.g. B1, B2
+    teacher_id: Mapped[int] = mapped_column(ForeignKey("teachers.id", ondelete="CASCADE"), index=True)
+    room_id: Mapped[Optional[int]] = mapped_column(ForeignKey("rooms.id", ondelete="SET NULL"), nullable=True)
+
+    basket: Mapped["ParallelLabBasket"] = relationship(back_populates="basket_subjects")
+    subject: Mapped["Subject"] = relationship()
+    teacher: Mapped["Teacher"] = relationship()
+    room: Mapped[Optional["Room"]] = relationship()
+

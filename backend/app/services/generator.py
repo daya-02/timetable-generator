@@ -137,8 +137,14 @@ class TimetableState:
     # (semester_id, day, slot) -> True if this slot is fixed and cannot be changed
     fixed_slots: Set[Tuple[int, int, int]] = field(default_factory=set)
     
+    # NEW: Blocked slots across all entities (e.g. breaks, lunch)
+    # Set of integers representing blocked slot indices (0-6)
+    global_blocked_slots: Set[int] = field(default_factory=set)
+    
     def is_slot_fixed(self, semester_id: int, day: int, slot: int) -> bool:
         """Check if a slot is fixed/locked and cannot be modified."""
+        if slot in self.global_blocked_slots:
+            return True
         return (semester_id, day, slot) in self.fixed_slots
     
     def mark_slot_as_fixed(self, semester_id: int, day: int, slot: int):
@@ -197,6 +203,8 @@ class TimetableState:
     
     def is_teacher_free(self, teacher_id: int, day: int, slot: int) -> bool:
         """Check if teacher is free (in-memory check)."""
+        if slot in self.global_blocked_slots:
+            return False
         if teacher_id not in self.teacher_slots:
             return True
         return (day, slot) not in self.teacher_slots[teacher_id]
@@ -375,11 +383,15 @@ class TimetableState:
         return True
     
     def is_room_free(self, room_id: int, day: int, slot: int) -> bool:
+        if slot in self.global_blocked_slots:
+            return False
         if room_id not in self.room_slots:
             return True
         return (day, slot) not in self.room_slots[room_id]
     
     def is_semester_free(self, semester_id: int, day: int, slot: int) -> bool:
+        if slot in self.global_blocked_slots:
+            return False
         if semester_id not in self.semester_slots:
             return True
         return (day, slot) not in self.semester_slots[semester_id]
@@ -436,7 +448,8 @@ class TimetableGenerator:
         self,
         semester_ids: Optional[List[int]] = None,
         dept_id: Optional[int] = None,
-        clear_existing: bool = True
+        clear_existing: bool = True,
+        semester_type: str = "EVEN"
     ) -> Tuple[bool, str, List[AllocationEntry], float]:
         """
         MAIN ENTRY POINT: Generate timetable for COLLEGE (Multi-Department).
@@ -488,6 +501,23 @@ class TimetableGenerator:
         all_rooms = self._read_rooms()
         teacher_assignment_map_global = self._read_teacher_assignment_map()
         
+        # Handle Semester Template
+        from app.db.models import SemesterTemplate
+        import json
+        template = self.db.query(SemesterTemplate).filter(SemesterTemplate.semester_type == semester_type).first()
+        blocked_slots = set()
+        if template:
+            try:
+                breaks = json.loads(template.break_slots)
+                blocked_slots.update(breaks)
+            except:
+                pass
+            if template.lunch_slot is not None:
+                blocked_slots.add(template.lunch_slot)
+        else:
+            blocked_slots.update([1, 4, 3] if semester_type == "EVEN" else [1, 3])
+
+        print(f"   [TEMPLATE] Using {semester_type} template. Blocked slots: {blocked_slots}")
         
         print("\nPHASE 0: PRE-SCHEDULING ELECTIVE BASKETS")
         # Find global elective slots for ALL baskets involved in this run
@@ -495,7 +525,8 @@ class TimetableGenerator:
             target_semesters, 
             all_teachers, 
             all_subjects, 
-            teacher_assignment_map_global
+            teacher_assignment_map_global,
+            blocked_slots
         )
         print(f"   [GLOBAL] Locked {len(global_theory_map)} theory groups and {len(global_lab_map)} lab groups")
         
@@ -522,8 +553,9 @@ class TimetableGenerator:
                     all_rooms,
                     teacher_assignment_map_global,
                     clear_existing=clear_existing,
-                    global_elective_theory_plan=global_theory_map, # Inject theory plan
-                    global_elective_lab_plan=global_lab_map,       # Inject lab plan
+                    global_elective_theory_plan=global_theory_map, 
+                    global_elective_lab_plan=global_lab_map,
+                    blocked_slots=blocked_slots
                 )
                 
                 all_allocations.extend(batch_allocs)
@@ -573,6 +605,7 @@ class TimetableGenerator:
         clear_existing: bool = True,
         global_elective_theory_plan: Dict[Tuple[int, Optional[int]], Set[Tuple[int, int]]] = None,
         global_elective_lab_plan: Dict[Tuple[int, Optional[int]], Set[Tuple[int, int]]] = None,
+        blocked_slots: Set[int] = None
     ) -> Tuple[bool, str, List[AllocationEntry]]:
         """
         Internal: Generate for a specific batch of classes (Department).
@@ -583,6 +616,8 @@ class TimetableGenerator:
         # Initialize State
         state = TimetableState()
         state.teacher_assignment_map = teacher_assignment_map
+        if blocked_slots:
+            state.global_blocked_slots = blocked_slots
         
         # 0. CLEAR EXISTING ALLOCATIONS FOR THIS BATCH (if requested)
         if clear_existing:
@@ -664,7 +699,10 @@ class TimetableGenerator:
         ]
         self._schedule_day_based_internships_readonly(state, day_based_internship_reqs, lecture_rooms)
 
-        # 8c. PARALLEL MULTI-SUBJECT LABS (before regular labs)
+        # 8c. DATABASE-BACKED PARALLEL LAB BASKETS
+        self._schedule_parallel_lab_baskets_readonly(state, semesters, rooms)
+
+        # 8d. PARALLEL MULTI-SUBJECT LABS (LEGACY, before regular labs)
         if parallel_lab_reqs:
             print(f"   [PARALLEL-MULTI] Scheduling {len(parallel_lab_reqs)} parallel multi-subject lab reqs")
             added, failed_parallel = self._schedule_parallel_multi_subject_labs(state, parallel_lab_reqs, rooms)
@@ -698,13 +736,17 @@ class TimetableGenerator:
         target_semesters: List[Semester],
         teachers: List[Teacher],
         subjects: List[Subject],
-        teacher_assignment_map: Dict[Tuple[int, int, str], int]
+        teacher_assignment_map: Dict[Tuple[int, int, str], int],
+        blocked_slots: Set[int] = None
     ) -> Tuple[Dict[Tuple[int, Optional[int]], Set[Tuple[int, int]]], Dict[Tuple[int, Optional[int]], Set[Tuple[int, int]]], Dict[int, Set[Tuple[int, int]]]]:
         """
         Pre-calculate elective slots based on Baskets.
         Returns (TheoryPlan, LabPlan, TeacherLocks).
         TeacherLocks: TeacherID -> Set[(Day, Slot)] to reserve global slots.
         """
+        if blocked_slots is None:
+            blocked_slots = set()
+            
         # Deterministic behavior for global electives
         random.seed(42)
         
@@ -763,6 +805,9 @@ class TimetableGenerator:
                 if len(allocated_theory) >= theory_hours_needed:
                     break
                     
+                if slot in blocked_slots:
+                    continue
+                    
                 # Constraint: Max 1 elective theory per day (User preference)
                 assigned_days = {d for d, s in allocated_theory}
                 if day in assigned_days:
@@ -812,6 +857,9 @@ class TimetableGenerator:
                 for day, s1, s2 in lab_candidates:
                     if blocks_found >= lab_blocks_needed:
                         break
+                        
+                    if s1 in blocked_slots or s2 in blocked_slots:
+                        continue
                         
                     # Check collision for Student Year
                     if (year, day, s1) in year_slots_used or (year, day, s2) in year_slots_used:
@@ -2024,7 +2072,123 @@ class TimetableGenerator:
         return allocations_added
     
     # ============================================================
-    # PARALLEL MULTI-SUBJECT LAB SCHEDULING
+    # PARALLEL LAB BASKET SCHEDULING (DATABASE-BACKED SYSTEM)
+    # ============================================================
+    
+    def _schedule_parallel_lab_baskets_readonly(
+        self,
+        state: TimetableState,
+        semesters: List[Semester],
+        rooms: List[Room]
+    ) -> int:
+        from app.db.models import ParallelLabBasket, ParallelLabBasketSubject, Batch
+        from sqlalchemy.orm import joinedload
+        
+        allocations_added = 0
+        semester_ids = [s.id for s in semesters]
+        
+        # Map of (dept_id, year, section) -> Semester
+        sem_map = {}
+        for s in semesters:
+            if hasattr(s, 'dept_id') and hasattr(s, 'year') and hasattr(s, 'section'):
+                sem_map[(s.dept_id, s.year, s.section)] = s
+                
+        if not sem_map: return 0
+                
+        dept_ids = list(set(s.dept_id for s in semesters if hasattr(s, 'dept_id')))
+        if not dept_ids: return 0
+        
+        baskets = self.db.query(ParallelLabBasket).options(
+            joinedload(ParallelLabBasket.basket_subjects).joinedload(ParallelLabBasketSubject.subject)
+        ).filter(
+            ParallelLabBasket.dept_id.in_(dept_ids)
+        ).all()
+        
+        if not baskets: return 0
+        
+        print(f"   [DB-PARALLEL-LAB] Processing {len(baskets)} parallel lab baskets")
+        
+        for basket in baskets:
+            sem = sem_map.get((basket.dept_id, basket.year, basket.section))
+            if not sem:
+                continue # Basket not for this batch
+                
+            day = basket.slot_day
+            start_slot = basket.slot_period_start
+            count = basket.slot_period_count
+            
+            # Check availability for all slots in the block
+            can_schedule = True
+            for i in range(count):
+                slot = start_slot + i
+                if state.is_slot_fixed(sem.id, day, slot) or not state.is_semester_free(sem.id, day, slot):
+                    can_schedule = False
+                    break
+                    
+            if not can_schedule:
+                msg = f"[DB-PARALLEL-LAB] Conflict for Basket {basket.id} at Day {day} Slot {start_slot}"
+                print(f"      {msg}")
+                self.allocation_failures.append(msg)
+                continue
+                
+            # Check teachers and rooms
+            resources_ok = True
+            for b_sub in basket.basket_subjects:
+                for i in range(count):
+                    slot = start_slot + i
+                    if not state.is_teacher_free(b_sub.teacher_id, day, slot):
+                        resources_ok = False
+                        break
+                    if b_sub.room_id and not state.is_room_free(b_sub.room_id, day, slot):
+                        resources_ok = False
+                        break
+                if not resources_ok: break
+                
+            if not resources_ok:
+                msg = f"[DB-PARALLEL-LAB] Target Teachers/Rooms busy for Basket {basket.id} at Day {day} Slot {start_slot}"
+                print(f"      {msg}")
+                self.allocation_failures.append(msg)
+                continue
+                
+            # Allocate
+            for b_sub in basket.basket_subjects:
+                batch_id = None
+                b = self.db.query(Batch).filter_by(semester_id=sem.id, name=b_sub.batch_name).first()
+                if b:
+                    batch_id = b.id
+                
+                # Assume fallback room if empty
+                alloc_room_id = b_sub.room_id
+                if not alloc_room_id:
+                    lab_rooms = [r for r in rooms if r.room_type == RoomType.LAB]
+                    if lab_rooms:
+                        alloc_room_id = lab_rooms[0].id
+                    elif rooms:
+                        alloc_room_id = rooms[0].id
+                
+                for i in range(count):
+                    slot = start_slot + i
+                    state.add_allocation(AllocationEntry(
+                        semester_id=sem.id,
+                        subject_id=b_sub.subject_id,
+                        teacher_id=b_sub.teacher_id,
+                        room_id=alloc_room_id,
+                        day=day,
+                        slot=slot,
+                        component_type=ComponentType.LAB,
+                        academic_component="lab",
+                        is_lab_continuation=(i > 0),
+                        is_elective=False,
+                        batch_id=batch_id
+                    ), force_parallel=True)
+                    allocations_added += 1
+            
+            print(f"      [OK] Scheduled DB-Basket {basket.id} at Day {day} Slot {start_slot} for {len(basket.basket_subjects)} subjects")
+            
+        return allocations_added
+
+    # ============================================================
+    # PARALLEL MULTI-SUBJECT LAB SCHEDULING (LEGACY)
     # ============================================================
 
     def _schedule_parallel_multi_subject_labs(

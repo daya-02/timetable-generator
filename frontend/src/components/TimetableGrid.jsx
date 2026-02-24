@@ -19,43 +19,6 @@ import './TimetableGrid.css';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-// Exactly 7 periods with college timings
-const PERIODS = [
-    { period: 1, time: '08:45 - 09:45', label: '1st Period' },
-    { period: 2, time: '09:45 - 10:45', label: '2nd Period' },
-    { type: 'break', time: '10:45 - 11:00', label: 'Break' },
-    { period: 3, time: '11:00 - 12:00', label: '3rd Period' },
-    { type: 'lunch', time: '12:00 - 01:00', label: 'Lunch' },
-    { period: 4, time: '01:00 - 02:00', label: '4th Period' },
-    { period: 5, time: '02:00 - 02:50', label: '5th Period' },
-    { type: 'break', time: '02:50 - 03:05', label: 'Break' },
-    { period: 6, time: '03:05 - 03:55', label: '6th Period' },
-    { period: 7, time: '03:55 - 04:45', label: '7th Period' },
-];
-
-// Map slot index (0-6) to period index in PERIODS array
-const SLOT_TO_PERIOD_INDEX = {
-    0: 0,   // Slot 0 -> Period 1 (index 0)
-    1: 1,   // Slot 1 -> Period 2 (index 1)
-    2: 3,   // Slot 2 -> Period 3 (index 3, after break)
-    3: 5,   // Slot 3 -> Period 4 (index 5, after lunch)
-    4: 6,   // Slot 4 -> Period 5 (index 6)
-    5: 8,   // Slot 5 -> Period 6 (index 8, after break)
-    6: 9,   // Slot 6 -> Period 7 (index 9)
-};
-
-// Subject colors based on hash of subject code
-function getSubjectColor(code) {
-    if (!code) return 'var(--gray-100)';
-
-    let hash = 0;
-    for (let i = 0; i < code.length; i++) {
-        hash = code.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const colorIndex = Math.abs(hash % 10) + 1;
-    return `var(--subject-${colorIndex})`;
-}
-
 export default function TimetableGrid({ timetable, viewType = 'semester' }) {
     if (!timetable || !timetable.days) {
         return (
@@ -67,9 +30,80 @@ export default function TimetableGrid({ timetable, viewType = 'semester' }) {
         );
     }
 
+    // Dynamic Periods computation based on template
+    const breakSlots = timetable.break_slots || [1, 4]; // Default EVEN
+    const lunchSlot = timetable.lunch_slot !== undefined ? timetable.lunch_slot : 3;
+
+    const PERIODS = [];
+    const SLOT_TO_PERIOD_INDEX = {};
+    let currentPeriodIdx = 0;
+
+    // Simplistic time simulation
+    let currentHour = 8;
+    let currentMinute = 45;
+
+    const addMinutes = (h, m, mins) => {
+        let newM = m + mins;
+        let newH = h + Math.floor(newM / 60);
+        newM = newM % 60;
+        return { h: newH, m: newM };
+    };
+
+    const formatTime = (h, m) => {
+        let displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        return `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+    };
+
+    for (let slot = 0; slot < 7; slot++) {
+        const isLastTwoPeriods = slot >= 4;
+        const duration = isLastTwoPeriods ? 50 : 60; // Just mimic the current static
+
+        const startTimeStr = formatTime(currentHour, currentMinute);
+        const endTime = addMinutes(currentHour, currentMinute, duration);
+        const endTimeStr = formatTime(endTime.h, endTime.m);
+
+        PERIODS.push({
+            period: slot + 1,
+            time: `${startTimeStr} - ${endTimeStr}`,
+            label: `${slot + 1}${slot === 0 ? 'st' : slot === 1 ? 'nd' : slot === 2 ? 'rd' : 'th'} Period`
+        });
+
+        SLOT_TO_PERIOD_INDEX[slot] = currentPeriodIdx;
+        currentPeriodIdx++;
+
+        currentHour = endTime.h;
+        currentMinute = endTime.m;
+
+        // Add Break if needed (AFTER this slot)
+        if (breakSlots.includes(slot)) {
+            const breakEnd = addMinutes(currentHour, currentMinute, 15);
+            PERIODS.push({
+                type: 'break',
+                time: `${formatTime(currentHour, currentMinute)} - ${formatTime(breakEnd.h, breakEnd.m)}`,
+                label: 'Break'
+            });
+            currentHour = breakEnd.h;
+            currentMinute = breakEnd.m;
+            currentPeriodIdx++;
+        }
+
+        // Add Lunch if needed (AFTER this slot)
+        if (lunchSlot === slot) {
+            const lunchEnd = addMinutes(currentHour, currentMinute, 60);
+            PERIODS.push({
+                type: 'lunch',
+                time: `${formatTime(currentHour, currentMinute)} - ${formatTime(lunchEnd.h, lunchEnd.m)}`,
+                label: 'Lunch'
+            });
+            currentHour = lunchEnd.h;
+            currentMinute = lunchEnd.m;
+            currentPeriodIdx++;
+        }
+    }
+
     // Function to get slot data for a specific period
     const getSlotData = (day, periodIndex) => {
-        // Find which slot index corresponds to this period
         for (const [slotIdx, pIdx] of Object.entries(SLOT_TO_PERIOD_INDEX)) {
             if (pIdx === periodIndex) {
                 return day.slots[parseInt(slotIdx)];

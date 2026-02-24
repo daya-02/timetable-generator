@@ -15,6 +15,7 @@ import RoomsPage from './pages/RoomsPage';
 import TimetablePage from './pages/TimetablePage';
 import ManageTimetablePage from './pages/ManageTimetablePage';
 import ElectivesPage from './pages/ElectivesPage';
+import ParallelLabsPage from './pages/ParallelLabsPage';
 import GeneratePage from './pages/GeneratePage';
 import SubstitutionPage from './pages/SubstitutionPage';
 import ReportsPage from './pages/ReportsPage';
@@ -34,6 +35,7 @@ function App() {
                 <Route path="/teachers" element={<TeachersPage />} />
                 <Route path="/subjects" element={<SubjectsPage />} />
                 <Route path="/electives" element={<ElectivesPage />} />
+                <Route path="/parallel-labs" element={<ParallelLabsPage />} />
                 <Route path="/semesters" element={<SemestersPage />} />
                 <Route path="/rooms" element={<RoomsPage />} />
                 <Route path="/timetable" element={<TimetablePage />} />

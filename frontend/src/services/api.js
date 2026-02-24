@@ -252,6 +252,18 @@ export const roomsApi = {
 };
 
 // ============================================================================
+// Parallel Lab Baskets
+// ============================================================================
+export const parallelLabBasketsApi = {
+  getAll: (deptId = null) => {
+    const params = deptId ? `?dept_id=${deptId}` : '';
+    return api.get(`/parallel-lab-baskets/${params}`);
+  },
+  create: (data) => api.post('/parallel-lab-baskets/', data),
+  delete: (id) => api.delete(`/parallel-lab-baskets/${id}`),
+};
+
+// ============================================================================
 // Timetable
 // ============================================================================
 export const timetableApi = {

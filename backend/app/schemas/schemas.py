@@ -522,6 +522,8 @@ class TimetableView(BaseModel):
     entity_id: int
     entity_name: str
     days: List[TimetableDay]
+    break_slots: List[int] = []
+    lunch_slot: Optional[int] = None
 
 
 # ============================================================================
@@ -589,6 +591,7 @@ class GenerationRequest(BaseModel):
     """Request to generate timetable."""
     semester_ids: Optional[List[int]] = None  # If None, generate for all
     dept_id: Optional[int] = None # Department-wise generation
+    semester_type: Optional[str] = "EVEN"
     clear_existing: bool = True
 
 

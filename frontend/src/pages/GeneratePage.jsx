@@ -24,6 +24,7 @@ export default function GeneratePage() {
     const [semesters, setSemesters] = useState([]);
     const [selectedSemesters, setSelectedSemesters] = useState([]);
     const [clearExisting, setClearExisting] = useState(true);
+    const [semesterType, setSemesterType] = useState('EVEN');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
@@ -99,6 +100,7 @@ export default function GeneratePage() {
                 semester_ids: selectedSemesters.length > 0 ? selectedSemesters : null,
                 dept_id: deptId ?? null,
                 clear_existing: clearExisting,
+                semester_type: semesterType,
             });
 
             const taskId = res.data.task_id;
@@ -110,6 +112,7 @@ export default function GeneratePage() {
                     semester_ids: selectedSemesters.length > 0 ? selectedSemesters : null,
                     dept_id: deptId ?? null,
                     clear_existing: clearExisting,
+                    semester_type: semesterType,
                 });
                 setResult(res.data);
                 setGenStatus(res.data.success ? 'completed' : 'failed');
@@ -166,6 +169,18 @@ export default function GeneratePage() {
                             {departments.map(d => (
                                 <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
                             ))}
+                        </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Semester Type</label>
+                        <select
+                            className="form-input"
+                            value={semesterType}
+                            onChange={(e) => setSemesterType(e.target.value)}
+                        >
+                            <option value="ODD">Odd Semester</option>
+                            <option value="EVEN">Even Semester</option>
                         </select>
                     </div>
 
