@@ -293,8 +293,8 @@ export default function LockSlotModal({
                                     <option value="">Same as component type</option>
                                     <option value="project">Project</option>
                                     <option value="report">Report</option>
-                                    <option value="seminar">Seminar</option>
-                                    <option value="internship">Internship / IT</option>
+                                    <option value="self_study">Self Study</option>
+                                    <option value="self_study">Self Study</option>
                                 </select>
                                 <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: 'var(--gray-600)' }}>
                                     Used for labels and reports. Constraints still follow the selected component type.

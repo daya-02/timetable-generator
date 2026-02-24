@@ -46,10 +46,10 @@ yarn-error.log*
 Thumbs.db
 Desktop.ini
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
+# Database files are usually ignored, but we want to track them as per user request
+# *.db
+# *.sqlite
+# *.sqlite3
 
 # Logs
 logs/

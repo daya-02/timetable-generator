@@ -232,7 +232,7 @@ export default function RoomsPage() {
                     <option value="">All Types</option>
                     <option value="lecture">Lecture</option>
                     <option value="lab">Lab</option>
-                    <option value="seminar">Seminar</option>
+                    <option value="self_study">Self Study</option>
                 </select>
                 <select
                     className="form-select"
@@ -522,7 +522,7 @@ export default function RoomsPage() {
                                         >
                                             <option value="lecture">Lecture Hall</option>
                                             <option value="lab">Laboratory</option>
-                                            <option value="seminar">Seminar Room</option>
+                                            <option value="self_study">Self Study Room</option>
                                         </select>
                                     </div>
                                 </div>

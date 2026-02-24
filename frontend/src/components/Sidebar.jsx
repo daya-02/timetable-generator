@@ -30,6 +30,7 @@ const navItems = [
     { path: '/departments', label: 'Departments', icon: Building },
     { path: '/teacher-load', label: 'Teacher Load', icon: Gauge },
     { path: '/reports', label: 'Reports', icon: FileText },
+    { path: '/master-lab', label: 'Lab Master View', icon: Layers },
     { path: '/teachers', label: 'Teachers', icon: Users },
     { path: '/subjects', label: 'Subjects', icon: BookOpen },
     { path: '/electives', label: 'Elective Baskets', icon: Layers },

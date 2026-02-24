@@ -116,8 +116,8 @@ def build_teacher_workload_report(db: Session, dept_id: Optional[int] = None) ->
                 "tutorial_hours": 0,
                 "project_hours": 0,
                 "report_hours": 0,
+                "self_study_hours": 0,
                 "seminar_hours": 0,
-                "internship_hours": 0,
                 "elective_hours": 0,
                 "max_consecutive_periods": 0,
                 "free_periods": 0,
@@ -149,10 +149,10 @@ def build_teacher_workload_report(db: Session, dept_id: Optional[int] = None) ->
             data["project_hours"] += 1
         elif comp == "report":
             data["report_hours"] += 1
+        elif comp == "self_study":
+            data["self_study_hours"] += 1
         elif comp == "seminar":
             data["seminar_hours"] += 1
-        elif comp == "internship":
-            data["internship_hours"] += 1
         else:
             data["theory_hours"] += 1
 
@@ -387,8 +387,8 @@ def build_teacher_load_dashboard(
                 "tutorial_hours": 0,
                 "project_hours": 0,
                 "report_hours": 0,
+                "self_study_hours": 0,
                 "seminar_hours": 0,
-                "internship_hours": 0,
                 "elective_hours": 0,
                 "max_consecutive_periods": 0,
                 "days_with_overload": 0,
@@ -424,10 +424,10 @@ def build_teacher_load_dashboard(
             data["project_hours"] += 1
         elif comp == "report":
             data["report_hours"] += 1
+        elif comp == "self_study":
+            data["self_study_hours"] += 1
         elif comp == "seminar":
             data["seminar_hours"] += 1
-        elif comp == "internship":
-            data["internship_hours"] += 1
         else:
             data["theory_hours"] += 1
 

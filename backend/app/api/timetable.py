@@ -161,6 +161,7 @@ def get_semester_timetable(
             if slot_allocs:
                 # Use the first allocation as the "primary" one for general slot info
                 primary_alloc = slot_allocs[0]
+                is_pure_elective_slot = all(getattr(a, 'is_elective', False) for a in slot_allocs)
 
                 is_substituted = primary_alloc.id in substitutions_map
                 sub_teacher_name = None
@@ -178,21 +179,29 @@ def get_semester_timetable(
                 for alloc in slot_allocs:
                     if alloc.batch_id or len(slot_allocs) > 1:
                         # Find the batch name directly or through db, fallback to batch_id or empty
-                        batch_name_str = alloc.batch.name if getattr(alloc, 'batch', None) else f"B{alloc.batch_id}" if getattr(alloc, 'batch_id', None) else "Batch"
+                        if getattr(alloc, 'batch', None):
+                            batch_name_str = alloc.batch.name
+                        elif getattr(alloc, 'batch_id', None):
+                            batch_name_str = f"B{alloc.batch_id}"
+                        else:
+                            batch_name_str = "Elective" if is_pure_elective_slot else "Batch"
                         batch_allocations.append(
                             {
                                 "batch_id": alloc.batch_id,
                                 "batch_name": batch_name_str,
                                 "teacher_name": alloc.teacher.name,
                                 "room_name": alloc.room.name if alloc.room else None,
-                                "subject_name": alloc.subject.name,
-                                "subject_code": alloc.subject.code
+                                "subject_name": None if is_pure_elective_slot else alloc.subject.name,
+                                "subject_code": None if is_pure_elective_slot else alloc.subject.code
                             }
                         )
 
                 # Build combined subject name for parallel multi-subject labs
                 unique_subjects = list({a.subject_id: a for a in slot_allocs}.values())
-                if len(unique_subjects) > 1:
+                if is_pure_elective_slot:
+                    combined_name = "Elective"
+                    combined_code = "ELECTIVE"
+                elif len(unique_subjects) > 1:
                     if not any(getattr(a, 'is_elective', False) for a in slot_allocs):
                         # Parallel Lab format
                         combined_name = " / ".join(f"{a.subject.code}:{a.batch.name if a.batch else 'B'} (PL)" for a in unique_subjects)

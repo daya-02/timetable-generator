@@ -147,7 +147,7 @@ export default function ReportsPage() {
                                 <th>Tutorial</th>
                                 <th>Project</th>
                                 <th>Report</th>
-                                <th>Seminar</th>
+                                <th>Self Study</th>
                                 <th>Internship</th>
                                 <th>Elective</th>
                                 <th>Max Consecutive</th>
@@ -169,8 +169,8 @@ export default function ReportsPage() {
                                             <td>{row.tutorial_hours}</td>
                                             <td>{row.project_hours}</td>
                                             <td>{row.report_hours}</td>
-                                            <td>{row.seminar_hours}</td>
-                                            <td>{row.internship_hours}</td>
+                                            <td>{row.self_study_hours}</td>
+                                            <td>{row.self_study_hours}</td>
                                             <td>{row.elective_hours}</td>
                                             <td>{row.max_consecutive_periods}</td>
                                             <td>{row.free_periods}</td>

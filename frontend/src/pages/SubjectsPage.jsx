@@ -34,10 +34,10 @@ export default function SubjectsPage() {
         project_block_size: 1,
         report_hours_per_week: 0,
         report_block_size: 1,
-        seminar_hours_per_week: 0,
-        internship_hours_per_week: 0,
-        internship_block_size: 2,
-        internship_day_based: false,
+        self_study_hours_per_week: 0,
+        self_study_hours_per_week: 0,
+        seminar_block_size: 2,
+        seminar_day_based: false,
         // Legacy fields
         weekly_hours: 3,
         subject_type: 'regular',
@@ -104,10 +104,10 @@ export default function SubjectsPage() {
                 project_block_size: subject.project_block_size ?? 1,
                 report_hours_per_week: subject.report_hours_per_week ?? 0,
                 report_block_size: subject.report_block_size ?? 1,
-                seminar_hours_per_week: subject.seminar_hours_per_week ?? 0,
-                internship_hours_per_week: subject.internship_hours_per_week ?? 0,
-                internship_block_size: subject.internship_block_size ?? 2,
-                internship_day_based: subject.internship_day_based ?? false,
+                self_study_hours_per_week: subject.self_study_hours_per_week ?? 0,
+                self_study_hours_per_week: subject.self_study_hours_per_week ?? 0,
+                seminar_block_size: subject.seminar_block_size ?? 2,
+                seminar_day_based: subject.seminar_day_based ?? false,
                 weekly_hours: subject.weekly_hours ?? 3,
                 subject_type: subject.subject_type || 'regular',
                 consecutive_slots: subject.consecutive_slots || 1,
@@ -129,10 +129,10 @@ export default function SubjectsPage() {
                 project_block_size: 1,
                 report_hours_per_week: 0,
                 report_block_size: 1,
-                seminar_hours_per_week: 0,
-                internship_hours_per_week: 0,
-                internship_block_size: 2,
-                internship_day_based: false,
+                self_study_hours_per_week: 0,
+                self_study_hours_per_week: 0,
+                seminar_block_size: 2,
+                seminar_day_based: false,
                 weekly_hours: 3,
                 subject_type: 'regular',
                 consecutive_slots: 1,
@@ -175,13 +175,13 @@ export default function SubjectsPage() {
         const reportBlock = formData.report_block_size >= 2 ? 2 : 1;
         if (!validateBlock('Report', formData.report_hours_per_week, reportBlock)) return;
 
-        const internshipDayBased = !!formData.internship_day_based;
-        const internshipBlock = internshipDayBased ? 7 : (formData.internship_block_size >= 2 ? 2 : 1);
-        if (internshipDayBased && formData.internship_hours_per_week > 0 && formData.internship_hours_per_week < 7) {
+        const seminarDayBased = !!formData.seminar_day_based;
+        const seminarBlock = seminarDayBased ? 7 : (formData.seminar_block_size >= 2 ? 2 : 1);
+        if (seminarDayBased && formData.self_study_hours_per_week > 0 && formData.self_study_hours_per_week < 7) {
             alert('Internship day-based mode requires at least 7 periods per week.');
             return;
         }
-        if (!internshipDayBased && !validateBlock('Internship', formData.internship_hours_per_week, internshipBlock)) return;
+        if (!seminarDayBased && !validateBlock('Internship', formData.self_study_hours_per_week, seminarBlock)) return;
 
         // Calculate total weekly hours from components
         const totalHours =
@@ -190,8 +190,8 @@ export default function SubjectsPage() {
             formData.tutorial_hours_per_week +
             formData.project_hours_per_week +
             formData.report_hours_per_week +
-            formData.seminar_hours_per_week +
-            formData.internship_hours_per_week;
+            formData.self_study_hours_per_week +
+            formData.self_study_hours_per_week;
 
         if (totalHours === 0) {
             alert("Subject must have at least 1 hour per week (any component).");
@@ -204,7 +204,7 @@ export default function SubjectsPage() {
             dept_id: deptId ?? formData.dept_id ?? null,
             project_block_size: projectBlock,
             report_block_size: reportBlock,
-            internship_block_size: internshipBlock,
+            seminar_block_size: seminarBlock,
         };
 
         try {
@@ -239,8 +239,8 @@ export default function SubjectsPage() {
             formData.tutorial_hours_per_week +
             formData.project_hours_per_week +
             formData.report_hours_per_week +
-            formData.seminar_hours_per_week +
-            formData.internship_hours_per_week;
+            formData.self_study_hours_per_week +
+            formData.self_study_hours_per_week;
     };
 
     const getLabBlocks = () => {
@@ -256,7 +256,7 @@ export default function SubjectsPage() {
             <div className="page-header">
                 <div>
                     <h1>Subjects</h1>
-                    <p>Manage courses with component hours (Theory, Lab, Tutorial, Project, Report, Seminar, Internship)</p>
+                    <p>Manage courses with component hours (Theory, Lab, Tutorial, Project, Report, Self Study, Internship)</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => openModal()}>
                     <Plus size={18} />
@@ -346,8 +346,8 @@ export default function SubjectsPage() {
                     const tutorialHours = subject.tutorial_hours_per_week ?? 0;
                     const projectHours = subject.project_hours_per_week ?? 0;
                     const reportHours = subject.report_hours_per_week ?? 0;
-                    const seminarHours = subject.seminar_hours_per_week ?? 0;
-                    const internshipHours = subject.internship_hours_per_week ?? 0;
+                    const seminarHours = subject.self_study_hours_per_week ?? 0;
+                    const internshipHours = subject.self_study_hours_per_week ?? 0;
                     const totalHours =
                         theoryHours +
                         labHours +
@@ -472,7 +472,7 @@ export default function SubjectsPage() {
                                     </span>
                                 )}
                                 {seminarHours > 0 && (
-                                    <span className="component-badge seminar" style={{
+                                    <span className="component-badge self-study" style={{
                                         display: 'inline-flex',
                                         alignItems: 'center',
                                         gap: '4px',
@@ -483,11 +483,11 @@ export default function SubjectsPage() {
                                         background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
                                         color: 'white'
                                     }}>
-                                        {seminarHours}h Seminar
+                                        {seminarHours}h Self Study
                                     </span>
                                 )}
                                 {internshipHours > 0 && (
-                                    <span className="component-badge internship" style={{
+                                    <span className="component-badge self-study" style={{
                                         display: 'inline-flex',
                                         alignItems: 'center',
                                         gap: '4px',
@@ -498,7 +498,7 @@ export default function SubjectsPage() {
                                         background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
                                         color: 'white'
                                     }}>
-                                        {internshipHours}h Internship
+                                        {internshipHours}h Self Study
                                     </span>
                                 )}
                             </div>
@@ -765,21 +765,21 @@ export default function SubjectsPage() {
                                             </select>
                                         </div>
 
-                                        {/* Seminar */}
+                                        {/* Self Study */}
                                         <div style={{
                                             background: 'white',
                                             borderRadius: '8px',
                                             padding: '12px',
                                             border: '2px solid #a855f7'
                                         }}>
-                                            <div className="text-xs font-bold text-gray-600 mb-2">Seminar</div>
+                                            <div className="text-xs font-bold text-gray-600 mb-2">Self Study</div>
                                             <input
                                                 type="number"
                                                 className="form-input"
-                                                value={formData.seminar_hours_per_week}
+                                                value={formData.self_study_hours_per_week}
                                                 onChange={(e) => setFormData({
                                                     ...formData,
-                                                    seminar_hours_per_week: parseInt(e.target.value) || 0
+                                                    self_study_hours_per_week: parseInt(e.target.value) || 0
                                                 })}
                                                 min={0}
                                                 max={10}
@@ -796,14 +796,14 @@ export default function SubjectsPage() {
                                             padding: '12px',
                                             border: '2px solid #f97316'
                                         }}>
-                                            <div className="text-xs font-bold text-gray-600 mb-2">Internship / IT</div>
+                                            <div className="text-xs font-bold text-gray-600 mb-2">Self Study</div>
                                             <input
                                                 type="number"
                                                 className="form-input"
-                                                value={formData.internship_hours_per_week}
+                                                value={formData.self_study_hours_per_week}
                                                 onChange={(e) => setFormData({
                                                     ...formData,
-                                                    internship_hours_per_week: parseInt(e.target.value) || 0
+                                                    self_study_hours_per_week: parseInt(e.target.value) || 0
                                                 })}
                                                 min={0}
                                                 max={35}
@@ -814,10 +814,10 @@ export default function SubjectsPage() {
                                             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '12px' }}>
                                                 <input
                                                     type="checkbox"
-                                                    checked={!!formData.internship_day_based}
+                                                    checked={!!formData.seminar_day_based}
                                                     onChange={(e) => setFormData({
                                                         ...formData,
-                                                        internship_day_based: e.target.checked
+                                                        seminar_day_based: e.target.checked
                                                     })}
                                                 />
                                                 Day-based (7 periods)
@@ -825,17 +825,17 @@ export default function SubjectsPage() {
 
                                             <select
                                                 className="form-input mt-2"
-                                                value={formData.internship_block_size}
+                                                value={formData.seminar_block_size}
                                                 onChange={(e) => setFormData({
                                                     ...formData,
-                                                    internship_block_size: parseInt(e.target.value) || 2
+                                                    seminar_block_size: parseInt(e.target.value) || 2
                                                 })}
-                                                disabled={!!formData.internship_day_based}
+                                                disabled={!!formData.seminar_day_based}
                                             >
                                                 <option value={1}>Single period</option>
                                                 <option value={2}>Continuous (2)</option>
                                             </select>
-                                            {formData.internship_day_based && (
+                                            {formData.seminar_day_based && (
                                                 <div className="text-xs text-muted mt-1">
                                                     Day-based overrides block size.
                                                 </div>

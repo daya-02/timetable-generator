@@ -6,7 +6,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db
-from app.db.models import Teacher, Subject, Room, RoomType, teacher_subjects, ClassSubjectTeacher, Semester, ComponentType
+from app.db.models import (
+    Teacher,
+    Subject,
+    Room,
+    RoomType,
+    teacher_subjects,
+    ClassSubjectTeacher,
+    Semester,
+    ComponentType,
+    Batch,
+)
 from app.schemas.schemas import TeacherCreate, TeacherUpdate, TeacherResponse, ClassSubjectTeacherCreate, ClassSubjectTeacherResponse
 
 router = APIRouter(prefix="/teachers", tags=["Teachers"])
@@ -221,6 +231,29 @@ def add_teacher_assignment(
     subject = db.query(Subject).filter(Subject.id == assignment_data.subject_id).first()
     if not subject:
         raise HTTPException(status_code=404, detail="Subject not found")
+
+    # Ensure the subject is actually mapped to the selected class
+    if not any(s.id == semester.id for s in subject.semesters):
+        raise HTTPException(
+            status_code=400,
+            detail="Subject is not assigned to this class. Assign the subject to this class first."
+        )
+
+    # Validate component against subject configured hours
+    if assignment_data.component_type == ComponentType.THEORY and (subject.theory_hours_per_week or 0) <= 0:
+        raise HTTPException(status_code=400, detail="This subject has 0 theory hours configured")
+    if assignment_data.component_type == ComponentType.LAB and (subject.lab_hours_per_week or 0) <= 0:
+        raise HTTPException(status_code=400, detail="This subject has 0 lab hours configured")
+    if assignment_data.component_type == ComponentType.TUTORIAL and (subject.tutorial_hours_per_week or 0) <= 0:
+        raise HTTPException(status_code=400, detail="This subject has 0 tutorial hours configured")
+
+    # Validate batch belongs to the selected class
+    if assignment_data.batch_id is not None:
+        batch = db.query(Batch).filter(Batch.id == assignment_data.batch_id).first()
+        if not batch:
+            raise HTTPException(status_code=404, detail="Batch not found")
+        if batch.semester_id != assignment_data.semester_id:
+            raise HTTPException(status_code=400, detail="Selected batch does not belong to the selected class")
 
     # Optional room assignment (primarily for labs)
     if getattr(assignment_data, "room_id", None):

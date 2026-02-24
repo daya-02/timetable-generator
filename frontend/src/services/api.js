@@ -173,6 +173,12 @@ export const reportsApi = {
     `${api.defaults.baseURL}/reports/room-utilization/pdf${buildDeptQuery(deptId)}`,
   getSubjectCoveragePdfUrl: (deptId = null) =>
     `${api.defaults.baseURL}/reports/subject-coverage/pdf${buildDeptQuery(deptId)}`,
+  getMasterLabTimetable: (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.deptId) params.append('dept_id', filters.deptId);
+    if (filters.semesterType) params.append('semester_type', filters.semesterType);
+    return api.get(`/reports/master-lab?${params.toString()}`);
+  }
 };
 
 // ============================================================================
@@ -260,6 +266,7 @@ export const parallelLabBasketsApi = {
     return api.get(`/parallel-lab-baskets/${params}`);
   },
   create: (data) => api.post('/parallel-lab-baskets/', data),
+  update: (id, data) => api.put(`/parallel-lab-baskets/${id}`, data),
   delete: (id) => api.delete(`/parallel-lab-baskets/${id}`),
 };
 

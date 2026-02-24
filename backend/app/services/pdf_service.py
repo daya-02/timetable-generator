@@ -118,10 +118,10 @@ class TimetablePDFService:
             return "(PRJ)"
         if comp == "report":
             return "(RPT)"
+        if comp == "self_study":
+            return "(SS)"
         if comp == "seminar":
             return "(SEM)"
-        if comp == "internship":
-            return "(INT)"
 
         return "(L)"
     

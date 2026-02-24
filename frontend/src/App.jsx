@@ -19,6 +19,7 @@ import ParallelLabsPage from './pages/ParallelLabsPage';
 import GeneratePage from './pages/GeneratePage';
 import SubstitutionPage from './pages/SubstitutionPage';
 import ReportsPage from './pages/ReportsPage';
+import MasterLabTimetablePage from './pages/MasterLabTimetablePage';
 import TeacherLoadDashboard from './pages/TeacherLoadDashboard';
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/substitution" element={<SubstitutionPage />} />
                 <Route path="/teacher-load" element={<TeacherLoadDashboard />} />
                 <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/master-lab" element={<MasterLabTimetablePage />} />
               </Routes>
             </main>
           </div>

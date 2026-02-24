@@ -15,6 +15,8 @@ from app.schemas.schemas import (
     RoomUtilizationReport,
     SubjectCoverageReport,
 )
+from app.db.models import Room, RoomType, Allocation, Semester
+from sqlalchemy.orm import joinedload
 from app.services.reporting import (
     build_teacher_workload_report,
     build_room_utilization_report,
@@ -204,3 +206,73 @@ def subject_coverage_report_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+@router.get("/master-lab")
+def master_lab_timetable(
+    dept_id: Optional[int] = None,
+    semester_type: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Master Lab Timetable (READ-ONLY)."""
+    # 1. Get all Lab Rooms
+    rooms_query = db.query(Room).filter(Room.room_type == RoomType.LAB)
+    lab_rooms = rooms_query.order_by(Room.name).all()
+    room_ids = [r.id for r in lab_rooms]
+
+    if not room_ids:
+        return {"rooms": [], "grid": {}}
+
+    # 2. Base query for allocations in these lab rooms
+    query = db.query(Allocation).options(
+        joinedload(Allocation.subject),
+        joinedload(Allocation.semester),
+        joinedload(Allocation.teacher),
+        joinedload(Allocation.batch)
+    ).filter(Allocation.room_id.in_(room_ids))
+
+    # Apply filters
+    if dept_id:
+        dept_sem_ids = [sid for (sid,) in db.query(Semester.id).filter(Semester.dept_id == dept_id).all()]
+        if dept_sem_ids:
+            query = query.filter(Allocation.semester_id.in_(dept_sem_ids))
+        else:
+            query = query.filter(Allocation.id < 0)  # Empty
+
+    if semester_type == "ODD":
+        query = query.join(Semester).filter(Semester.semester_number % 2 != 0)
+    elif semester_type == "EVEN":
+        query = query.join(Semester).filter(Semester.semester_number % 2 == 0)
+
+    allocations = query.all()
+
+    # 3. Build the Grid View
+    # Structure: grid[day][slot][room_id] = [alloc1, alloc2, ...]
+    grid = {}
+    for d in range(5):
+        grid[str(d)] = {}
+        for s in range(7):
+            grid[str(d)][str(s)] = {}
+            for r in lab_rooms:
+                grid[str(d)][str(s)][str(r.id)] = []
+
+    for a in allocations:
+        day_str = str(a.day)
+        slot_str = str(a.slot)
+        room_str = str(a.room_id)
+        
+        if day_str not in grid: grid[day_str] = {}
+        if slot_str not in grid[day_str]: grid[day_str][slot_str] = {}
+        if room_str not in grid[day_str][slot_str]: grid[day_str][slot_str][room_str] = []
+        
+        grid[day_str][slot_str][room_str].append({
+            "class_name": a.semester.name,
+            "subject_code": a.subject.code,
+            "batch": a.batch.name if a.batch else "",
+            "teacher": a.teacher.teacher_code or a.teacher.name
+        })
+
+    return {
+        "rooms": [{"id": r.id, "name": r.name} for r in lab_rooms],
+        "grid": grid
+    }

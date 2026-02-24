@@ -41,6 +41,7 @@ class ComponentType(str, enum.Enum):
     THEORY = "theory"
     LAB = "lab"
     TUTORIAL = "tutorial"
+    SELF_STUDY = "self_study"
 
 
 class SubjectType(str, enum.Enum):
@@ -255,11 +256,11 @@ class Subject(Base):
     report_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)
     report_block_size: Mapped[int] = mapped_column(Integer, default=1)  # 1 or 2
 
-    seminar_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)  # Single period sessions
+    self_study_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)  # Single period sessions
 
-    internship_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)
-    internship_block_size: Mapped[int] = mapped_column(Integer, default=2)  # 1 or 2 (or 7 for day-based)
-    internship_day_based: Mapped[bool] = mapped_column(Boolean, default=False)
+    seminar_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)
+    seminar_block_size: Mapped[int] = mapped_column(Integer, default=2)  # 1 or 2 (or 7 for day-based)
+    seminar_day_based: Mapped[bool] = mapped_column(Boolean, default=False)
     
     # Total weekly hours (computed from components)
     @property
@@ -270,8 +271,8 @@ class Subject(Base):
             + self.tutorial_hours_per_week
             + (self.project_hours_per_week or 0)
             + (self.report_hours_per_week or 0)
+            + (self.self_study_hours_per_week or 0)
             + (self.seminar_hours_per_week or 0)
-            + (self.internship_hours_per_week or 0)
         )
     
     # Legacy compatibility field (deprecated, but kept for DB compatibility)
@@ -409,10 +410,10 @@ class Allocation(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     
     # Foreign keys
-    teacher_id: Mapped[int] = mapped_column(ForeignKey("teachers.id", ondelete="CASCADE"), index=True)
-    subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    teacher_id: Mapped[Optional[int]] = mapped_column(ForeignKey("teachers.id", ondelete="CASCADE"), index=True, nullable=True)
+    subject_id: Mapped[Optional[int]] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True, nullable=True)
     semester_id: Mapped[int] = mapped_column(ForeignKey("semesters.id", ondelete="CASCADE"), index=True)
-    room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id", ondelete="CASCADE"), index=True)
+    room_id: Mapped[Optional[int]] = mapped_column(ForeignKey("rooms.id", ondelete="CASCADE"), index=True, nullable=True)
     
     # Time slot info
     day: Mapped[int] = mapped_column(Integer, index=True)  # 0=Monday, 4=Friday
@@ -424,7 +425,7 @@ class Allocation(Base):
     )
 
     # Extended academic component label (optional).
-    # When set, this provides the "real" academic component type (project/report/seminar/internship/etc)
+    # When set, this provides the "real" academic component type (project/report/self_study/seminar/etc)
     # while `component_type` continues to drive scheduling behavior (theory/lab/tutorial).
     academic_component: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     
@@ -625,6 +626,7 @@ class ElectiveBasket(Base):
     theory_hours_per_week: Mapped[int] = mapped_column(Integer, default=3)
     lab_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)  # 2 = 1 lab block
     tutorial_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)
+    self_study_hours_per_week: Mapped[int] = mapped_column(Integer, default=0)
     
     # Scheduling state
     is_scheduled: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -37,8 +37,8 @@ class AcademicComponentType(str, Enum):
     TUTORIAL = "tutorial"
     PROJECT = "project"
     REPORT = "report"
+    SELF_STUDY = "self_study"
     SEMINAR = "seminar"
-    INTERNSHIP = "internship"
 
 
 class SubjectType(str, Enum):
@@ -154,11 +154,11 @@ class SubjectBase(BaseModel):
     report_hours_per_week: int = Field(default=0, ge=0, le=26, description="Report periods per week")
     report_block_size: int = Field(default=1, ge=1, le=2, description="Report block size (1 or 2)")
 
-    seminar_hours_per_week: int = Field(default=0, ge=0, le=26, description="Seminar periods per week")
+    self_study_hours_per_week: int = Field(default=0, ge=0, le=26, description="Self Study periods per week")
 
-    internship_hours_per_week: int = Field(default=0, ge=0, le=35, description="Internship/IT periods per week")
-    internship_block_size: int = Field(default=2, ge=1, le=7, description="Internship block size (1, 2, or 7 for day-based)")
-    internship_day_based: bool = Field(default=False, description="Prefer day-based internship scheduling when enabled")
+    seminar_hours_per_week: int = Field(default=0, ge=0, le=35, description="Seminar periods per week")
+    seminar_block_size: int = Field(default=2, ge=1, le=7, description="Seminar block size (1, 2, or 7 for day-based)")
+    seminar_day_based: bool = Field(default=False, description="Prefer day-based seminar scheduling when enabled")
     
     # Elective flag (NEW)
     is_elective: bool = Field(default=False, description="Is this an elective subject?")
@@ -194,11 +194,11 @@ class SubjectUpdate(BaseModel):
     report_hours_per_week: Optional[int] = Field(None, ge=0, le=26)
     report_block_size: Optional[int] = Field(None, ge=1, le=2)
 
-    seminar_hours_per_week: Optional[int] = Field(None, ge=0, le=26)
+    self_study_hours_per_week: Optional[int] = Field(None, ge=0, le=26)
 
-    internship_hours_per_week: Optional[int] = Field(None, ge=0, le=35)
-    internship_block_size: Optional[int] = Field(None, ge=1, le=7)
-    internship_day_based: Optional[bool] = None
+    seminar_hours_per_week: Optional[int] = Field(None, ge=0, le=35)
+    seminar_block_size: Optional[int] = Field(None, ge=1, le=7)
+    seminar_day_based: Optional[bool] = None
     
     is_elective: Optional[bool] = None
 
@@ -255,6 +255,7 @@ class ElectiveBasketBase(BaseModel):
     theory_hours_per_week: int = Field(default=3, ge=0, le=10)
     lab_hours_per_week: int = Field(default=0, ge=0, le=10)
     tutorial_hours_per_week: int = Field(default=0, ge=0, le=4)
+    self_study_hours_per_week: int = Field(default=0, ge=0, le=10)
 
 
 class ElectiveBasketCreate(ElectiveBasketBase):
@@ -266,6 +267,7 @@ class ElectiveBasketUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     theory_hours_per_week: Optional[int] = None
     lab_hours_per_week: Optional[int] = None
+    self_study_hours_per_week: Optional[int] = None
     subject_ids: Optional[List[int]] = None
     semester_ids: Optional[List[int]] = None
 
@@ -450,10 +452,10 @@ class TeacherResponse(TeacherBase):
 # ============================================================================
 
 class AllocationBase(BaseModel):
-    teacher_id: int
-    subject_id: int
+    teacher_id: Optional[int] = None
+    subject_id: Optional[int] = None
     semester_id: int
-    room_id: int
+    room_id: Optional[int] = None
     batch_id: Optional[int] = None  # NEW
     day: int = Field(..., ge=0, le=4)  # 0=Monday, 4=Friday
     slot: int = Field(..., ge=0, le=6)  # 7 periods (0-6)
@@ -468,10 +470,10 @@ class AllocationCreate(AllocationBase):
 
 class AllocationResponse(AllocationBase):
     id: int
-    teacher: TeacherBrief
-    subject: SubjectResponse
+    teacher: Optional[TeacherBrief] = None
+    subject: Optional[SubjectResponse] = None
     semester: SemesterResponse
-    room: RoomResponse
+    room: Optional[RoomResponse] = None
     batch: Optional[BatchResponse] = None
     is_elective: bool = False
     created_at: datetime
@@ -502,7 +504,7 @@ class TimetableSlot(BaseModel):
     batch_name: Optional[str] = None  # NEW
     batch_allocations: List[BatchAllocationData] = []  # NEW: For parallel batches
     component_type: Optional[str] = None  # theory/lab/tutorial
-    academic_component: Optional[str] = None  # extended label (project/report/seminar/internship)
+    academic_component: Optional[str] = None  # extended label (project/report/self_study/seminar)
     is_lab: bool = False
     is_elective: bool = False
     is_substituted: bool = False
@@ -806,8 +808,8 @@ class TeacherWorkloadReportRow(BaseModel):
     tutorial_hours: int
     project_hours: int = 0
     report_hours: int = 0
+    self_study_hours: int = 0
     seminar_hours: int = 0
-    internship_hours: int = 0
     elective_hours: int
     max_consecutive_periods: int
     free_periods: int

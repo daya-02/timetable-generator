@@ -91,10 +91,10 @@ def update_schema():
                 ("project_block_size", "INTEGER", 1),
                 ("report_hours_per_week", "INTEGER", 0),
                 ("report_block_size", "INTEGER", 1),
+                ("self_study_hours_per_week", "INTEGER", 0),
                 ("seminar_hours_per_week", "INTEGER", 0),
-                ("internship_hours_per_week", "INTEGER", 0),
-                ("internship_block_size", "INTEGER", 2),
-                ("internship_day_based", "BOOLEAN", 0),
+                ("seminar_block_size", "INTEGER", 2),
+                ("seminar_day_based", "BOOLEAN", 0),
             ]
 
             for col_name, col_type, default_value in subject_new_columns:

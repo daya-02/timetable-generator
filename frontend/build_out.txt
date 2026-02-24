@@ -1,0 +1,55 @@
+
+> frontend@0.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[33m[plugin vite:esbuild] src/pages/SubjectsPage.jsx: [33mDuplicate key "self_study_hours_per_week" in object literal[33m
+36 |          report_block_size: 1,
+37 |          self_study_hours_per_week: 0,
+38 |          self_study_hours_per_week: 0,
+   |          ^
+39 |          seminar_block_size: 2,
+40 |          seminar_day_based: false,
+[39m
+[33m[plugin vite:esbuild] src/pages/SubjectsPage.jsx: [33mDuplicate key "self_study_hours_per_week" in object literal[33m
+106 |                  report_block_size: subject.report_block_size ?? 1,
+107 |                  self_study_hours_per_week: subject.self_study_hours_per_week ?? 0,
+108 |                  self_study_hours_per_week: subject.self_study_hours_per_week ?? 0,
+    |                  ^
+109 |                  seminar_block_size: subject.seminar_block_size ?? 2,
+110 |                  seminar_day_based: subject.seminar_day_based ?? false,
+[39m
+[33m[plugin vite:esbuild] src/pages/SubjectsPage.jsx: [33mDuplicate key "self_study_hours_per_week" in object literal[33m
+131 |                  report_block_size: 1,
+132 |                  self_study_hours_per_week: 0,
+133 |                  self_study_hours_per_week: 0,
+    |                  ^
+134 |                  seminar_block_size: 2,
+135 |                  seminar_day_based: false,
+[39m
+[32m✓[39m 1728 modules transformed.
+[31m✗[39m Build failed in 2.49s
+[31merror during build:
+[31m[vite:esbuild] Transform failed with 1 error:
+C:/Users/navee/.gemini/antigravity/scratch/timetable_generator/frontend/src/components/TimetableGrid.jsx:186:46: ERROR: The symbol "isSelfStudy" has already been declared[31m
+file: [36mC:/Users/navee/.gemini/antigravity/scratch/timetable_generator/frontend/src/components/TimetableGrid.jsx:186:46[31m
+[33m
+[33mThe symbol "isSelfStudy" has already been declared[33m
+184 |                                          const isReport = academicComponent === 'report';
+185 |                                          const isSelfStudy = academicComponent === 'self_study';
+186 |                                          const isSelfStudy = academicComponent === 'self_study';
+    |                                                ^
+187 |                                          const isElective = slot?.is_elective;
+188 |                                          const isSubstituted = slot?.is_substituted;
+[31m
+    at failureErrorWithLog (C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\frontend\node_modules\esbuild\lib\main.js:1467:15)
+    at C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\frontend\node_modules\esbuild\lib\main.js:736:50
+    at responseCallbacks.<computed> (C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\frontend\node_modules\esbuild\lib\main.js:603:9)
+    at handleIncomingPacket (C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\frontend\node_modules\esbuild\lib\main.js:658:12)
+    at Socket.readFromStdout (C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\frontend\node_modules\esbuild\lib\main.js:581:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)[39m

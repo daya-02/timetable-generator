@@ -21,9 +21,9 @@ class ParallelLabBasketCreate(BaseModel):
     dept_id: int
     year: int
     section: str
-    slot_day: int
-    slot_period_start: int
-    slot_period_count: int
+    slot_day: int = -1
+    slot_period_start: int = -1
+    slot_period_count: int = 4
     subjects: List[ParallelLabBasketSubjectCreate]
 
 class ParallelLabBasketSubjectResponse(BaseModel):
@@ -94,3 +94,33 @@ def delete_basket(basket_id: int, db: Session = Depends(get_db)):
     db.delete(basket)
     db.commit()
     return None
+
+@router.put("/{basket_id}", response_model=ParallelLabBasketResponse)
+def update_basket(basket_id: int, basket_data: ParallelLabBasketCreate, db: Session = Depends(get_db)):
+    basket = db.query(ParallelLabBasket).filter(ParallelLabBasket.id == basket_id).first()
+    if not basket:
+        raise HTTPException(status_code=404, detail="Basket not found")
+    
+    basket.dept_id = basket_data.dept_id
+    basket.year = basket_data.year
+    basket.section = basket_data.section
+    basket.slot_day = basket_data.slot_day
+    basket.slot_period_start = basket_data.slot_period_start
+    basket.slot_period_count = basket_data.slot_period_count
+    
+    # Delete old subjects
+    db.query(ParallelLabBasketSubject).filter(ParallelLabBasketSubject.basket_id == basket_id).delete()
+    
+    for subj in basket_data.subjects:
+        basket_subj = ParallelLabBasketSubject(
+            basket_id=basket.id,
+            subject_id=subj.subject_id,
+            batch_name=subj.batch_name,
+            teacher_id=subj.teacher_id,
+            room_id=subj.room_id
+        )
+        db.add(basket_subj)
+        
+    db.commit()
+    db.refresh(basket)
+    return basket

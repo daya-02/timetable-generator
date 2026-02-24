@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { parallelLabBasketsApi, departmentsApi, subjectsApi, teachersApi, roomsApi } from '../services/api';
-import { Plus, Trash2, Save, X } from 'lucide-react';
+import { Plus, Trash2, Save, X, Edit2 } from 'lucide-react';
 import './ParallelLabsPage.css';
 
 export default function ParallelLabsPage() {
@@ -10,13 +10,11 @@ export default function ParallelLabsPage() {
 
     // For Form
     const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({
         dept_id: '',
         year: 1,
         section: 'A',
-        slot_day: 0,
-        slot_period_start: 0,
-        slot_period_count: 2,
         subjects: [{ subject_id: '', batch_name: '', teacher_id: '', room_id: '' }]
     });
 
@@ -81,6 +79,33 @@ export default function ParallelLabsPage() {
         }
     };
 
+    const handleEdit = (basket) => {
+        setEditingId(basket.id);
+        setFormData({
+            dept_id: basket.dept_id,
+            year: basket.year,
+            section: basket.section,
+            subjects: basket.basket_subjects.map(s => ({
+                subject_id: s.subject_id,
+                batch_name: s.batch_name,
+                teacher_id: s.teacher_id,
+                room_id: s.room_id || ''
+            }))
+        });
+        setShowForm(true);
+    };
+
+    const handleCancel = () => {
+        setShowForm(false);
+        setEditingId(null);
+        setFormData({
+            dept_id: selectedDeptId,
+            year: 1,
+            section: 'A',
+            subjects: [{ subject_id: '', batch_name: '', teacher_id: '', room_id: '' }]
+        });
+    };
+
     const addSubjectRow = () => {
         setFormData({
             ...formData,
@@ -111,17 +136,19 @@ export default function ParallelLabsPage() {
                     room_id: s.room_id ? parseInt(s.room_id) : null
                 }))
             };
-            await parallelLabBasketsApi.create(payload);
+            if (editingId) {
+                await parallelLabBasketsApi.update(editingId, payload);
+            } else {
+                await parallelLabBasketsApi.create(payload);
+            }
             setShowForm(false);
+            setEditingId(null);
             fetchBaskets();
             // Reset form
             setFormData({
                 dept_id: selectedDeptId,
                 year: 1,
                 section: 'A',
-                slot_day: 0,
-                slot_period_start: 0,
-                slot_period_count: 2,
                 subjects: [{ subject_id: '', batch_name: '', teacher_id: '', room_id: '' }]
             });
         } catch (err) {
@@ -137,7 +164,10 @@ export default function ParallelLabsPage() {
                     <h1>Parallel Lab Baskets</h1>
                     <p>Manage multi-subject coordinated practical sessions</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+                <button className="btn btn-primary" onClick={() => {
+                    handleCancel();
+                    setShowForm(true);
+                }}>
                     <Plus size={16} /> New Basket
                 </button>
             </div>
@@ -157,7 +187,7 @@ export default function ParallelLabsPage() {
             {showForm && (
                 <div className="card form-card">
                     <form onSubmit={handleSubmit}>
-                        <h3>Create Parallel Lab Basket</h3>
+                        <h3>{editingId ? "Edit" : "Create"} Parallel Lab Basket</h3>
                         <div className="form-grid">
                             <div className="form-group">
                                 <label>Department</label>
@@ -178,25 +208,6 @@ export default function ParallelLabsPage() {
                             <div className="form-group">
                                 <label>Section</label>
                                 <input type="text" className="form-input" value={formData.section} onChange={e => setFormData({ ...formData, section: e.target.value })} required />
-                            </div>
-                            <div className="form-group">
-                                <label>Day</label>
-                                <select className="form-input" value={formData.slot_day} onChange={e => setFormData({ ...formData, slot_day: parseInt(e.target.value) })} required>
-                                    <option value="0">Monday</option>
-                                    <option value="1">Tuesday</option>
-                                    <option value="2">Wednesday</option>
-                                    <option value="3">Thursday</option>
-                                    <option value="4">Friday</option>
-                                    <option value="5">Saturday</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Start Period (0-index)</label>
-                                <input type="number" className="form-input" value={formData.slot_period_start} onChange={e => setFormData({ ...formData, slot_period_start: parseInt(e.target.value) })} required />
-                            </div>
-                            <div className="form-group">
-                                <label>Period Count</label>
-                                <input type="number" className="form-input" value={formData.slot_period_count} onChange={e => setFormData({ ...formData, slot_period_count: parseInt(e.target.value) })} required />
                             </div>
                         </div>
 
@@ -226,8 +237,8 @@ export default function ParallelLabsPage() {
                         <button type="button" className="btn btn-secondary mt-2" onClick={addSubjectRow}>+ Add Subject</button>
 
                         <div className="form-actions mt-4">
-                            <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}><X size={16} /> Cancel</button>
-                            <button type="submit" className="btn btn-primary"><Save size={16} /> Save Basket</button>
+                            <button type="button" className="btn btn-secondary" onClick={handleCancel}><X size={16} /> Cancel</button>
+                            <button type="submit" className="btn btn-primary"><Save size={16} /> {editingId ? "Update" : "Save"} Basket</button>
                         </div>
                     </form>
                 </div>
@@ -238,18 +249,16 @@ export default function ParallelLabsPage() {
                     <thead>
                         <tr>
                             <th>Dept/Year/Sec</th>
-                            <th>Time Slot</th>
                             <th>Allocated Subjects</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {baskets.length === 0 ? (
-                            <tr><td colSpan="4" className="text-center text-muted">No baskets found.</td></tr>
+                            <tr><td colSpan="3" className="text-center text-muted">No baskets found.</td></tr>
                         ) : baskets.map(b => (
                             <tr key={b.id}>
                                 <td>Dept {b.dept_id} / Yr {b.year} / Sec {b.section}</td>
-                                <td>Day {b.slot_day} | Start: {b.slot_period_start} | Dur: {b.slot_period_count}</td>
                                 <td>
                                     <ul style={{ margin: 0, paddingLeft: '1rem' }}>
                                         {b.basket_subjects.map(s => (
@@ -258,9 +267,14 @@ export default function ParallelLabsPage() {
                                     </ul>
                                 </td>
                                 <td>
-                                    <button className="btn btn-icon btn-danger" onClick={() => handleDelete(b.id)}>
-                                        <Trash2 size={16} />
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button className="btn btn-icon btn-secondary" onClick={() => handleEdit(b)}>
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button className="btn btn-icon btn-danger" onClick={() => handleDelete(b.id)}>
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
