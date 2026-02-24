@@ -191,8 +191,8 @@ def get_semester_timetable(
                                 "batch_name": batch_name_str,
                                 "teacher_name": alloc.teacher.name,
                                 "room_name": alloc.room.name if alloc.room else None,
-                                "subject_name": None if is_pure_elective_slot else alloc.subject.name,
-                                "subject_code": None if is_pure_elective_slot else alloc.subject.code
+                                "subject_name": alloc.subject.name if alloc.subject else "Elective",
+                                "subject_code": alloc.subject.code if alloc.subject else "ELECTIVE"
                             }
                         )
 

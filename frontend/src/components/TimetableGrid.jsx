@@ -206,7 +206,7 @@ export default function TimetableGrid({ timetable, viewType = 'semester' }) {
                                                     <div className="slot-content">
                                                         <div className="slot-subject">
                                                             <BookOpen size={14} />
-                                                            <span>{isElective && viewType === 'semester' ? 'ELECTIVE' : slot.subject_name}</span>
+                                                            <span>{isElective && viewType === 'semester' ? (slot.batch_allocations?.length > 1 ? 'PARALLEL ELECTIVES' : 'ELECTIVE') : slot.subject_name}</span>
                                                         </div>
                                                         {(!isElective || viewType !== 'semester') && slot.subject_code && (
                                                             <span className="slot-code">{slot.subject_code}</span>
@@ -228,6 +228,11 @@ export default function TimetableGrid({ timetable, viewType = 'semester' }) {
                                                                             </div>
                                                                             {batch.room_name && <span className="batch-room"><MapPin size={10} /> {batch.room_name}</span>}
                                                                         </div>
+                                                                        {batch.subject_name && batch.subject_name !== 'Elective' && (
+                                                                            <div className="batch-subject-full" style={{ fontSize: '0.65rem', opacity: 0.8, fontStyle: 'italic', marginBottom: '2px' }}>
+                                                                                {batch.subject_name}
+                                                                            </div>
+                                                                        )}
                                                                         <div className="batch-teacher">
                                                                             <User size={10} /> {batch.teacher_name}
                                                                         </div>

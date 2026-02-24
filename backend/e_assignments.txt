@@ -1,0 +1,76 @@
+Murugavalli | 1 | Gen Ai
+Murugavalli | 1 | Gen Ai
+Avudaiappan | 1 | Digital Marketing
+Avudaiappan | 2 | Digital Marketing
+Avudaiappan | 3 | Digital Marketing
+Avudaiappan | 4 | Digital Marketing
+Avudaiappan | 5 | Digital Marketing
+Avudaiappan | 6 | Digital Marketing
+Avudaiappan | 7 | Digital Marketing
+Deena Rose | 1 | Business Analytics 
+Deena Rose | 2 | Business Analytics 
+Deena Rose | 3 | Business Analytics 
+Deena Rose | 4 | Business Analytics 
+Deena Rose | 5 | Business Analytics 
+Deena Rose | 6 | Business Analytics 
+Deena Rose | 7 | Business Analytics 
+Sakthivel | 4 | Agile Scrum Master
+Sakthivel | 4 | Agile Scrum Master
+Sakthivel | 2 | Agile Scrum Master
+Sakthivel | 1 | Agile Scrum Master
+Sakthivel | 3 | Agile Scrum Master
+Sakthivel | 5 | Agile Scrum Master
+Sakthivel | 6 | Agile Scrum Master
+Sakthivel | 7 | Agile Scrum Master
+Sakthivel | 1 | Agile Scrum Master
+Sakthivel | 2 | Agile Scrum Master
+Sakthivel | 3 | Agile Scrum Master
+Sakthivel | 5 | Agile Scrum Master
+Sakthivel | 6 | Agile Scrum Master
+Sakthivel | 7 | Agile Scrum Master
+Valli Priyadharshini | 1 | Microsoft Azure
+Valli Priyadharshini | 1 | Microsoft Azure
+Valli Priyadharshini | 2 | Microsoft Azure
+Valli Priyadharshini | 2 | Microsoft Azure
+Valli Priyadharshini | 3 | Microsoft Azure
+Valli Priyadharshini | 3 | Microsoft Azure
+Valli Priyadharshini | 4 | Microsoft Azure
+Valli Priyadharshini | 4 | Microsoft Azure
+Valli Priyadharshini | 5 | Microsoft Azure
+Valli Priyadharshini | 6 | Microsoft Azure
+Valli Priyadharshini | 5 | Microsoft Azure
+Valli Priyadharshini | 6 | Microsoft Azure
+Valli Priyadharshini | 7 | Microsoft Azure
+Valli Priyadharshini | 7 | Microsoft Azure
+Saravanan | 1 | Devops
+Saravanan | 1 | Devops
+Saravanan | 2 | Devops
+Saravanan | 2 | Devops
+Saravanan | 3 | Devops
+Saravanan | 3 | Devops
+Saravanan | 4 | Devops
+Saravanan | 4 | Devops
+Saravanan | 5 | Devops
+Saravanan | 5 | Devops
+Saravanan | 6 | Devops
+Saravanan | 6 | Devops
+Saravanan | 7 | Devops
+Saravanan | 7 | Devops
+DivyaBarathi | 1 | Software Development
+DivyaBarathi | 1 | Software Development
+DivyaBarathi | 2 | Software Development
+DivyaBarathi | 2 | Software Development
+DivyaBarathi | 3 | Software Development
+DivyaBarathi | 3 | Software Development
+DivyaBarathi | 4 | Software Development
+DivyaBarathi | 4 | Software Development
+DivyaBarathi | 5 | Software Development
+DivyaBarathi | 5 | Software Development
+DivyaBarathi | 6 | Software Development
+DivyaBarathi | 6 | Software Development
+DivyaBarathi | 7 | Software Development
+DivyaBarathi | 7 | Software Development
+Geerthana | 8 | Integrated Optoelectronic Devices
+Geerthana | 9 | Integrated Optoelectronic Devices
+Manjunathan | 8 | Privacy and Security in IOT
+Manjunathan | 9 | Privacy and Security in IOT

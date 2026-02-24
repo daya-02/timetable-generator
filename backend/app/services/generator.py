@@ -1865,18 +1865,15 @@ class TimetableGenerator:
                 # Track daily allocations for this component-group to enforce distribution
                 group_daily_counts = {d: 0 for d in range(DAYS_PER_WEEK)}
 
-                # Map each class to a specific distinct elective subject/teacher for the whole week
-                class_to_req: Dict[int, ComponentRequirement] = {}
-                used_teachers_for_map = set()
-                sorted_classes = sorted(scheduled_classes, key=lambda sid: len(set(r.assigned_teacher_id for r in reqs_by_class.get(sid, []) if r.assigned_teacher_id)))
-                for sem_id in sorted_classes:
-                    r_candidates = reqs_by_class.get(sem_id, [])
-                    selected = next((r for r in r_candidates if r.assigned_teacher_id and r.assigned_teacher_id not in used_teachers_for_map), None)
-                    if not selected and r_candidates:
-                        selected = r_candidates[0]
-                    class_to_req[sem_id] = selected
-                    if selected and selected.assigned_teacher_id:
-                        used_teachers_for_map.add(selected.assigned_teacher_id)
+                # Identify distinct elective sessions (Subject + Teacher pairs) across all classes.
+                # In a parallel elective system, every unique assigned option must run together.
+                distinct_sessions: List[ComponentRequirement] = []
+                _seen_sessions = set()
+                for r in comp_reqs:
+                    s_key = (r.subject_id, r.assigned_teacher_id)
+                    if s_key not in _seen_sessions:
+                        _seen_sessions.add(s_key)
+                        distinct_sessions.append(r)
 
                 # DETERMINE SLOT ORDER
                 slot_candidates = []
@@ -1937,46 +1934,58 @@ class TimetableGenerator:
                             if room_obj:
                                 shared_room_by_teacher[a.teacher_id] = room_obj
 
-                    for sem_id in active_classes:
-                        req = class_to_req.get(sem_id)
-                        
-                        teacher_id = req.assigned_teacher_id if req else None
+                    for req in distinct_sessions:
+                        teacher_id = req.assigned_teacher_id
                         room = None
                         used_shared_room = False
                         
-                        if teacher_id and state.is_teacher_eligible_for_elective_group(teacher_id, day, slot, year, basket_id):
-                            existing_alloc = next((r for r_q, r, tid, _ in slot_allocs if tid == teacher_id), None)
-                            room = existing_alloc
-                            used_shared_room = bool(existing_alloc)
-                            
-                            if not room:
-                                room = shared_room_by_teacher.get(teacher_id)
-                                if room:
-                                    used_shared_room = True
+                        # Check teacher eligibility
+                        if teacher_id and not state.is_teacher_eligible_for_elective_group(teacher_id, day, slot, year, basket_id):
+                            teacher_id = None # Fallback
 
-                            if not room and req and req.assigned_room_id and req.assigned_room_id not in used_rooms:
-                                r_obj = room_by_id.get(req.assigned_room_id)
-                                if r_obj and r_obj.capacity >= req.min_room_capacity and state.is_room_free(r_obj.id, day, slot) and (not req.preferred_room_types or r_obj.room_type in req.preferred_room_types):
-                                    room = r_obj
+                        # 1. Try to join an existing session (sharing room) if same teacher
+                        existing_alloc = next((r for r_q, r, tid, _ in slot_allocs if tid == teacher_id), None)
+                        room = existing_alloc
+                        used_shared_room = bool(existing_alloc)
+                        
+                        if not room and teacher_id:
+                            room = shared_room_by_teacher.get(teacher_id)
+                            if room:
+                                used_shared_room = True
 
-                            if not room and req:
-                                for r in rooms:
-                                    if r.id not in used_rooms and r.capacity >= req.min_room_capacity and state.is_room_free(r.id, day, slot):
-                                        if req.preferred_room_types and r.room_type not in req.preferred_room_types:
-                                            continue
-                                        room = r
-                                        break
-                                        
-                            if not room:
-                                teacher_id = None # fallback to unassigned if no room
-                        else:
-                            teacher_id = None
+                        # 2. Try assigned room
+                        if not room and req and req.assigned_room_id and req.assigned_room_id not in used_rooms:
+                            r_obj = room_by_id.get(req.assigned_room_id)
+                            if (r_obj and r_obj.capacity >= req.min_room_capacity 
+                                and state.is_room_free(r_obj.id, day, slot) 
+                                and (not req.preferred_room_types or r_obj.room_type in req.preferred_room_types)):
+                                room = r_obj
+
+                        # 3. Random room
+                        if not room and req:
+                            for r in rooms:
+                                if r.id not in used_rooms and r.capacity >= req.min_room_capacity and state.is_room_free(r.id, day, slot):
+                                    if req.preferred_room_types and r.room_type not in req.preferred_room_types:
+                                        continue
+                                    room = r
+                                    break
+                                    
+                        if not room:
+                            teacher_id = None # fallback to unassigned if no room
                             
                         if room and not used_shared_room:
                             used_rooms.add(room.id)
                         
-                        # Add even if unassigned
-                        slot_allocs.append((req, room, teacher_id, sem_id))
+                        # Find all classes participating in THIS subject-teacher session
+                        participating_classes = [
+                            sid for sid in active_classes 
+                            if any(r.subject_id == req.subject_id and r.assigned_teacher_id == req.assigned_teacher_id 
+                                   for r in reqs_by_class.get(sid, []))
+                        ]
+                        
+                        for sem_id in participating_classes:
+                            # Add allocation for each participating class
+                            slot_allocs.append((req, room, teacher_id, sem_id))
 
                     # since we added everyone (even failures), we can always schedule this global slot
                     state.reserve_elective_slot_for_group(day, slot, year, basket_id, group_teachers)
@@ -2061,6 +2070,15 @@ class TimetableGenerator:
             if blocks_needed == 0:
                 continue
             
+            # Identify distinct elective lab sessions (Subject + Teacher pairs) inside basket
+            distinct_lab_sessions: List[ComponentRequirement] = []
+            _seen_lab_sessions = set()
+            for r in group_reqs:
+                s_key = (r.subject_id, r.assigned_teacher_id)
+                if s_key not in _seen_lab_sessions:
+                    _seen_lab_sessions.add(s_key)
+                    distinct_lab_sessions.append(r)
+            
             # Sub-group requirements by class for one-option-per-class selection.
             reqs_by_class: Dict[int, List[ComponentRequirement]] = {}
             for req in group_reqs:
@@ -2102,19 +2120,6 @@ class TimetableGenerator:
                 candidates = [(d, s1, s2) for d in range(DAYS_PER_WEEK) for s1, s2 in self.valid_lab_blocks]
                 random.shuffle(candidates)
             
-            # Map each class to a specific distinct elective subject/teacher for the whole week
-            class_to_req: Dict[int, ComponentRequirement] = {}
-            used_teachers_for_map = set()
-            sorted_classes = sorted(scheduled_classes, key=lambda sid: len(set(r.assigned_teacher_id for r in reqs_by_class.get(sid, []) if r.assigned_teacher_id)))
-            for sem_id in sorted_classes:
-                r_candidates = reqs_by_class.get(sem_id, [])
-                selected = next((r for r in r_candidates if r.assigned_teacher_id and r.assigned_teacher_id not in used_teachers_for_map), None)
-                if not selected and r_candidates:
-                    selected = r_candidates[0]
-                class_to_req[sem_id] = selected
-                if selected and selected.assigned_teacher_id:
-                    used_teachers_for_map.add(selected.assigned_teacher_id)
-                    
             blocks_scheduled = 0
             
             for day, s1, s2 in candidates:
@@ -2160,27 +2165,28 @@ class TimetableGenerator:
                         if room_obj:
                             shared_lab_room_by_teacher[tid] = room_obj
                 
-                for sem_id in scheduled_classes:
-                    req = class_to_req.get(sem_id)
-                    teacher_id = req.assigned_teacher_id if req else None
+                for req in distinct_lab_sessions:
+                    teacher_id = req.assigned_teacher_id
                     room = None
                     used_shared_room = False
                     
                     if teacher_id and state.is_teacher_eligible_for_elective_group(teacher_id, day, s1, year, basket_id) and state.is_teacher_eligible_for_elective_group(teacher_id, day, s2, year, basket_id):
+                        # Join session
                         existing_alloc = next((r for r_q, r, tid, _ in all_allocations_to_make if tid == teacher_id), None)
                         room = existing_alloc
                         used_shared_room = bool(existing_alloc)
                         
                         if not room:
                             room = shared_lab_room_by_teacher.get(teacher_id)
-                            if room:
-                                used_shared_room = True
-
-                        if not room and req and req.assigned_room_id and req.assigned_room_id not in rooms_used_here:
+                            if room: used_shared_room = True
+                        
+                        # Assigned room
+                        if not room and req.assigned_room_id and req.assigned_room_id not in rooms_used_here:
                             r_obj = room_by_id.get(req.assigned_room_id)
                             if r_obj and r_obj.capacity >= req.min_room_capacity and state.is_room_free(r_obj.id, day, s1) and state.is_room_free(r_obj.id, day, s2) and (not req.preferred_room_types or r_obj.room_type in req.preferred_room_types):
                                 room = r_obj
-
+                        
+                        # Fallback room
                         if not room and req:
                             for r in rooms:
                                 if r.id not in rooms_used_here and r.capacity >= req.min_room_capacity and state.is_room_free(r.id, day, s1) and state.is_room_free(r.id, day, s2):
@@ -2188,16 +2194,24 @@ class TimetableGenerator:
                                         continue
                                     room = r
                                     break
-
+                        
                         if not room:
-                            teacher_id = None # Fallback to unassigned
+                            teacher_id = None # Fallback
                     else:
                         teacher_id = None
                         
                     if room and not used_shared_room:
                         rooms_used_here.add(room.id)
-                        
-                    all_allocations_to_make.append((req, room, teacher_id, sem_id))
+                    
+                    # Find all classes participating in THIS subject-teacher session
+                    participating_classes = [
+                        sid for sid in scheduled_classes 
+                        if any(r.subject_id == req.subject_id and r.assigned_teacher_id == req.assigned_teacher_id 
+                               for r in reqs_by_class.get(sid, []))
+                    ]
+                    
+                    for sem_id in participating_classes:
+                        all_allocations_to_make.append((req, room, teacher_id, sem_id))
 
                 # 3. Commit one elective lab option per class at this synchronized block.
                 for req, room, teacher_id, sem_id in all_allocations_to_make:
