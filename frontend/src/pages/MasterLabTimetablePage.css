@@ -1,138 +1,493 @@
+/* ================================================================
+   Lab Master View — Classic College Timetable Format
+   Each lab gets a separate table. Days as rows, periods as columns
+   with Break/Lunch separator columns.
+   ================================================================ */
+
 .lab-master-page {
+    padding: 1.5rem;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.lm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.lm-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lm-header p {
+    color: var(--gray-500);
+    font-size: 0.85rem;
+    margin: 0.15rem 0 0;
+}
+
+.lm-dept-tag {
+    font-weight: 600;
+    color: #4338ca;
+}
+
+.lm-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* ── Filter Bar ─────────────────────────────────────────────────── */
+.lm-filter-bar {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.lm-filter-group {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 3px;
 }
 
-.master-timetable-container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    padding: 1.5rem;
-    overflow-x: auto;
-}
-
-.print-header {
-    display: none;
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.print-header h2 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+.lm-filter-group label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--gray-500);
     text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
-.print-header h3 {
-    font-size: 1.25rem;
-    color: #4b5563;
-    margin-bottom: 1rem;
+.lm-filter-group select,
+.lm-filter-group input[type="number"] {
+    font-size: 0.82rem;
+    padding: 0.38rem 0.6rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-300);
+    background: var(--gray-50);
+    min-width: 140px;
+    transition: border-color 0.2s;
 }
 
-.print-meta {
+.lm-filter-group select:focus,
+.lm-filter-group input:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.lm-filter-group input[type="number"] {
+    width: 80px;
+    min-width: 80px !important;
+}
+
+.lm-filter-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--gray-200);
+    align-self: center;
+}
+
+.lm-view-toggle {
     display: flex;
-    justify-content: space-around;
-    font-weight: 500;
-    color: #374151;
-    border-bottom: 2px solid #e5e7eb;
-    padding-bottom: 1rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    overflow: hidden;
+    align-self: flex-end;
 }
 
-.master-lab-table {
+.lm-view-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: none;
+    background: white;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.lm-view-btn:first-child {
+    border-right: 1px solid var(--gray-300);
+}
+
+.lm-view-btn.active {
+    background: #6366f1;
+    color: white;
+}
+
+.lm-view-btn:hover:not(.active) {
+    background: var(--gray-100);
+}
+
+.lm-room-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-left: auto;
+    align-self: flex-end;
+}
+
+/* ── Empty & Error States ─────────────────────────────────────── */
+.lm-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 4rem 2rem;
+    color: var(--gray-500);
+    text-align: center;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+}
+
+.lm-empty-state h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--gray-700);
+}
+
+.lm-empty-state p {
+    margin: 0;
+    font-size: 0.85rem;
+    max-width: 400px;
+}
+
+.lm-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 1px solid #fecaca;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    color: #991b1b;
+}
+
+/* ================================================================
+   STACKED LABS CONTAINER
+   ================================================================ */
+.lm-stacked-labs {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* ================================================================
+   INDIVIDUAL LAB CARD
+   ================================================================ */
+.lm-lab-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.lm-lab-card-header {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: white;
+    padding: 12px 20px;
+    text-align: center;
+}
+
+.lm-college-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+}
+
+.lm-dept-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-bottom: 4px;
+}
+
+.lm-lab-meta {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    font-size: 0.72rem;
+    opacity: 0.75;
+    margin-bottom: 6px;
+}
+
+.lm-lab-room-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.12);
+    padding: 4px 16px;
+    border-radius: 20px;
+    margin-top: 4px;
+}
+
+/* ================================================================
+   CLASSIC TABLE — The main timetable grid
+   ================================================================ */
+.lm-classic-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
+    font-size: 0.78rem;
 }
 
-.master-lab-table th,
-.master-lab-table td {
-    border: 1px solid #e5e7eb;
-    padding: 0.75rem;
+.lm-classic-table th,
+.lm-classic-table td {
+    border: 1px solid #d1d5db;
     text-align: center;
     vertical-align: middle;
 }
 
-.master-lab-table th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    color: #374151;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+/* ── Column Headers ── */
+.lm-day-col-header {
+    background: #1e293b;
+    color: white;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 8px 12px;
+    min-width: 60px;
+    letter-spacing: 0.03em;
 }
 
-.day-cell {
-    font-weight: 600;
-    text-transform: uppercase;
-    background-color: #f9fafb;
+.lm-period-col-header {
+    background: #4f46e5;
+    color: white;
+    font-weight: 700;
+    padding: 6px 8px;
+    min-width: 90px;
+}
+
+.lm-break-header {
+    background: #fbbf24;
+    color: #92400e;
+    font-weight: 700;
+    padding: 6px 4px;
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+}
+
+.lm-lunch-header {
+    background: #fb923c;
+    color: #7c2d12;
+    font-weight: 700;
+    padding: 6px 4px;
+    width: 35px;
+    min-width: 35px;
+    max-width: 35px;
+}
+
+.lm-col-label {
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.lm-col-time {
+    font-size: 0.62rem;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-top: 1px;
+}
+
+.lm-break-header .lm-col-label {
+    font-size: 0.62rem;
     writing-mode: vertical-rl;
     text-orientation: mixed;
     transform: rotate(180deg);
 }
 
-.new-day-row td {
-    border-top: 2px solid #9ca3af;
+.lm-break-header .lm-col-time,
+.lm-lunch-header .lm-col-time {
+    display: none;
 }
 
-.free-cell {
-    color: #9ca3af;
-    font-style: italic;
-    background-color: #f9fafb;
+.lm-lunch-header .lm-col-label {
+    font-size: 0.62rem;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
 }
 
-.alloc-cell {
-    background-color: #fff;
-    min-width: 140px;
+/* ── Day Cell ── */
+.lm-day-cell {
+    background: #f1f5f9;
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: #1e293b;
+    letter-spacing: 0.06em;
+    padding: 8px 10px;
+    min-width: 60px;
 }
 
-.alloc-single .class-name {
+/* ── Break / Lunch Cells ── */
+.lm-break-cell {
+    background: #fef9c3;
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    padding: 0;
+}
+
+.lm-lunch-cell {
+    background: #ffedd5;
+    width: 35px;
+    min-width: 35px;
+    max-width: 35px;
+    padding: 0;
+}
+
+.lm-break-text {
+    font-size: 0.55rem;
     font-weight: 600;
-    color: #111827;
-    margin-bottom: 0.25rem;
+    color: #92400e;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    margin: 0 auto;
+    opacity: 0.6;
 }
 
-.alloc-single .subject-line {
-    font-size: 0.8rem;
-    color: #4b5563;
+/* ── Empty Cell ── */
+.lm-empty-cell {
+    background: #f9fafb;
+    min-height: 56px;
+    padding: 4px;
 }
 
-.teacher-code {
-    font-size: 0.75rem;
+/* ── Allocated Cell ── */
+.lm-alloc-cell {
+    background: #ffffff;
+    padding: 4px 6px;
+    min-height: 56px;
+}
+
+.lm-alloc-entry {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 4px 4px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    border: 1px solid #c7d2fe;
+    margin-bottom: 2px;
+}
+
+.lm-alloc-entry:last-child {
+    margin-bottom: 0;
+}
+
+.lm-alloc-subject {
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: #1e293b;
+    line-height: 1.2;
+    text-align: center;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.lm-alloc-class {
+    font-weight: 600;
+    font-size: 0.68rem;
+    color: #4f46e5;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.lm-alloc-batch {
+    font-weight: 500;
     color: #6b7280;
 }
 
-.alloc-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.lm-alloc-teacher {
+    font-weight: 600;
+    font-size: 0.62rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
-.stack-item {
-    display: flex;
-    flex-direction: column;
-    padding: 0.25rem;
-    background-color: #f3f4f6;
-    border-radius: 4px;
-    font-size: 0.8rem;
-}
-
-.stack-item strong {
-    color: #111827;
-}
-
-.small-code {
-    color: #4b5563;
-    font-size: 0.75rem;
-}
-
-/* Landscape Print Settings */
-@media print {
-    @page {
-        size: landscape;
-        margin: 10mm;
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .lab-master-page {
+        padding: 0.75rem;
     }
 
+    .lm-header {
+        flex-direction: column;
+    }
+
+    .lm-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .lm-filter-divider {
+        display: none;
+    }
+
+    .lm-filter-group select {
+        width: 100%;
+    }
+
+    .lm-classic-table {
+        font-size: 0.65rem;
+    }
+
+    .lm-period-col-header {
+        min-width: 65px;
+    }
+}
+
+/* ================================================================
+   PRINT STYLES
+   ================================================================ */
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 8mm;
+    }
+
+    /* Hide everything except lab cards */
     body * {
         visibility: hidden;
     }
@@ -141,39 +496,104 @@
         display: none !important;
     }
 
-    .master-timetable-container,
-    .master-timetable-container * {
+    .lm-stacked-labs,
+    .lm-stacked-labs * {
         visibility: visible;
     }
 
-    .master-timetable-container {
+    .lm-stacked-labs {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
-        box-shadow: none;
+    }
+
+    .lab-master-page {
         padding: 0;
     }
 
-    .print-header {
-        display: block;
+    .lm-lab-card {
+        box-shadow: none;
+        border: 1px solid #000;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin-bottom: 12px;
     }
 
-    .master-lab-table th {
-        background-color: #f3f4f6 !important;
+    .lm-lab-card-header {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
 
-    .stack-item {
-        background-color: #f3f4f6 !important;
+    .lm-college-name,
+    .lm-dept-name,
+    .lm-lab-room-name {
+        color: #1e293b !important;
+    }
+
+    .lm-lab-meta {
+        color: #475569 !important;
+        opacity: 1 !important;
+    }
+
+    .lm-lab-room-name {
+        background: rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .lm-day-col-header {
+        background: #e2e8f0 !important;
+        color: #1e293b !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
 
-    .day-cell {
-        background-color: #eee !important;
+    .lm-period-col-header {
+        background: #e0e7ff !important;
+        color: #1e293b !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+    }
+
+    .lm-break-header {
+        background: #fef3c7 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .lm-lunch-header {
+        background: #ffedd5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .lm-break-cell {
+        background: #fef9c3 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .lm-lunch-cell {
+        background: #ffedd5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .lm-day-cell {
+        background: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .lm-alloc-entry {
+        background: #eef2ff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .lm-classic-table th,
+    .lm-classic-table td {
+        border: 1px solid #000;
     }
 }

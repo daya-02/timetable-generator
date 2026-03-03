@@ -129,9 +129,10 @@ def create_room(room_data: RoomCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Room with this name already exists")
     
-    # HARD CONSTRAINT: default classroom uniqueness
+    # HARD CONSTRAINT: default classroom uniqueness (scoped per department)
+    dept_ids = room_data.dept_ids or []
     if room_data.is_default_classroom and room_data.assigned_year and room_data.assigned_section:
-        _validate_default_classroom(db, room_data.assigned_year, room_data.assigned_section, exclude_room_id=None)
+        _validate_default_classroom(db, room_data.assigned_year, room_data.assigned_section, dept_ids=dept_ids, exclude_room_id=None)
     
     # Extract dept_ids before creating the Room ORM object
     dept_ids = room_data.dept_ids or []
@@ -169,9 +170,10 @@ def update_room(room_id: int, room_data: RoomUpdate, db: Session = Depends(get_d
     result_section = update_data.get("assigned_section", room.assigned_section)
     result_is_default = update_data.get("is_default_classroom", room.is_default_classroom)
     
-    # HARD CONSTRAINT: validate default classroom uniqueness
+    # HARD CONSTRAINT: validate default classroom uniqueness (scoped per department)
+    result_dept_ids = dept_ids if dept_ids is not None else [d.id for d in room.departments] if room.departments else ([room.dept_id] if room.dept_id else [])
     if result_is_default and result_year and result_section:
-        _validate_default_classroom(db, result_year, result_section, exclude_room_id=room_id)
+        _validate_default_classroom(db, result_year, result_section, dept_ids=result_dept_ids, exclude_room_id=room_id)
     
     for key, value in update_data.items():
         setattr(room, key, value)
@@ -209,11 +211,15 @@ def _validate_default_classroom(
     db: Session,
     year: int,
     section: str,
+    dept_ids: Optional[List[int]] = None,
     exclude_room_id: Optional[int] = None
 ):
     """
     Enforce: only ONE room can be the default classroom for a given
-    (year, section) combination.
+    (dept, year, section) combination.
+
+    Different departments MAY have the same section letter (e.g. AIML-2A
+    and AIDS-2A are separate classes and each needs its own default room).
     """
     query = db.query(Room).filter(
         Room.is_default_classroom == True,
@@ -222,7 +228,22 @@ def _validate_default_classroom(
     )
     if exclude_room_id is not None:
         query = query.filter(Room.id != exclude_room_id)
-    
+
+    # Scope to the same department(s) — only conflict if they share a dept
+    if dept_ids:
+        # A conflict exists only if another default room is assigned to
+        # one of the same departments for that year/section.
+        overlapping_room_ids = (
+            db.query(room_departments.c.room_id)
+            .filter(room_departments.c.dept_id.in_(dept_ids))
+            .subquery()
+        )
+        from sqlalchemy import select
+        query = query.filter(
+            (Room.id.in_(select(overlapping_room_ids.c.room_id)))
+            | (Room.dept_id.in_(dept_ids))
+        )
+
     existing = query.first()
     if existing:
         raise HTTPException(

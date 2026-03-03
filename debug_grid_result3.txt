@@ -1,0 +1,49 @@
+=== SEMESTERS FOR DEPT 10 ===
+  id=13 name=I-A code=IA dept_id=10 sem_num=2 year=1 section=A
+  id=14 name=I-B code=IB dept_id=10 sem_num=2 year=1 section=B
+  id=15 name=I-C code=IC dept_id=10 sem_num=2 year=1 section=C
+  id=16 name=I-D code=ID dept_id=10 sem_num=2 year=1 section=D
+  id=17 name=I-E code=IE dept_id=10 sem_num=2 year=1 section=E
+  id=18 name=I-F code=IF dept_id=10 sem_num=2 year=1 section=F
+  id=19 name=I-G code=IG dept_id=10 sem_num=2 year=1 section=G
+  id=20 name=I-H code=IH dept_id=10 sem_num=2 year=1 section=H
+  id=21 name=I-I code=II dept_id=10 sem_num=2 year=1 section=I
+  id=22 name=I-J code=IJ dept_id=10 sem_num=2 year=1 section=J
+  id=23 name=I-K code=IK dept_id=10 sem_num=2 year=1 section=K
+  id=24 name=I-L code=IL dept_id=10 sem_num=2 year=1 section=L
+  Total: 12
+
+=== ALLOCATIONS FOR DEPT 10 SEMESTERS (ids: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]) ===
+  Total allocations: 0
+
+=== ALL ALLOCATIONS SUMMARY ===
+  semester_id=1 (dept=2, AIML-II YEAR): 35 allocations
+  semester_id=2 (dept=3, AI&DS-II 'A' YEAR): 35 allocations
+  semester_id=3 (dept=3, AI&DS-II 'B' YEAR): 35 allocations
+  semester_id=4 (dept=4, IT-II YEAR): 39 allocations
+  semester_id=5 (dept=1, CSE-II 'A' YEAR): 39 allocations
+  semester_id=6 (dept=1, CSE-II 'B' YEAR): 39 allocations
+  semester_id=7 (dept=1, CSE-II 'C' YEAR): 39 allocations
+  semester_id=8 (dept=6, ECE-II 'A' YEAR): 39 allocations
+  semester_id=9 (dept=6, ECE-II 'B' YEAR): 39 allocations
+  semester_id=10 (dept=9, EEE-II YEAR): 39 allocations
+  semester_id=11 (dept=7, ME-II YEAR): 43 allocations
+  semester_id=12 (dept=8, CIVIL-II YEAR): 43 allocations
+  GRAND TOTAL: 464
+
+=== BACKEND DB ALLOCATION COLUMNS ===
+  id (INTEGER)
+  teacher_id (INTEGER)
+  subject_id (INTEGER)
+  semester_id (INTEGER)
+  room_id (INTEGER)
+  day (INTEGER)
+  slot (INTEGER)
+  component_type (VARCHAR(8))
+  academic_component (VARCHAR(20))
+  is_lab_continuation (BOOLEAN)
+  is_elective (BOOLEAN)
+  elective_basket_id (INTEGER)
+  batch_id (INTEGER)
+  created_at (DATETIME)
+  updated_at (DATETIME)

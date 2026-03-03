@@ -215,13 +215,31 @@ def master_lab_timetable(
     db: Session = Depends(get_db)
 ):
     """Master Lab Timetable (READ-ONLY)."""
-    # 1. Get all Lab Rooms
+    from app.core.config import get_settings
+    from app.db.models import Department
+    settings = get_settings()
+
+    # 1. Get Lab Rooms (filter by department if specified)
     rooms_query = db.query(Room).filter(Room.room_type == RoomType.LAB)
+    if dept_id:
+        rooms_query = rooms_query.filter(Room.dept_id == dept_id)
     lab_rooms = rooms_query.order_by(Room.name).all()
     room_ids = [r.id for r in lab_rooms]
 
+    # Get department info
+    dept_info = None
+    if dept_id:
+        dept = db.query(Department).filter(Department.id == dept_id).first()
+        if dept:
+            dept_info = {"id": dept.id, "name": dept.name, "code": dept.code}
+
     if not room_ids:
-        return {"rooms": [], "grid": {}}
+        return {
+            "rooms": [], "grid": {},
+            "department": dept_info,
+            "slot_timings": settings.SLOT_TIMINGS,
+            "breaks": settings.BREAKS,
+        }
 
     # 2. Base query for allocations in these lab rooms
     query = db.query(Allocation).options(
@@ -267,12 +285,18 @@ def master_lab_timetable(
         
         grid[day_str][slot_str][room_str].append({
             "class_name": a.semester.name,
-            "subject_code": a.subject.code,
+            "subject_name": a.subject.name if a.subject else "",
+            "subject_code": a.subject.code if a.subject else "",
             "batch": a.batch.name if a.batch else "",
-            "teacher": a.teacher.teacher_code or a.teacher.name
+            "teacher": a.teacher.teacher_code or a.teacher.name,
+            "component_type": a.component_type.value if a.component_type else "lab",
         })
 
     return {
         "rooms": [{"id": r.id, "name": r.name} for r in lab_rooms],
-        "grid": grid
+        "grid": grid,
+        "department": dept_info,
+        "slot_timings": settings.SLOT_TIMINGS,
+        "breaks": settings.BREAKS,
     }
+

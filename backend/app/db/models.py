@@ -70,6 +70,13 @@ class SemesterType(str, enum.Enum):
     EVEN = "EVEN"
 
 
+class ImportanceLevel(str, enum.Enum):
+    """Academic importance level for scheduling priority bias."""
+    LOW = "LOW"
+    NORMAL = "NORMAL"
+    HIGH = "HIGH"
+
+
 # ============================================================================
 # ASSOCIATION TABLES
 # ============================================================================
@@ -294,6 +301,39 @@ class Subject(Base):
     
     # Year (1, 2, 3, 4) - Explicit field for filtering
     year: Mapped[int] = mapped_column(Integer, default=1)
+    
+    # ACADEMIC IMPORTANCE & PRIORITY (Optional, backward-compatible)
+    # Used as soft scheduling weight for morning slot preference
+    importance_level: Mapped[Optional[str]] = mapped_column(
+        String(10), nullable=True, default="NORMAL"
+    )
+    previous_year_pass_percentage: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )
+    computed_priority_score: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True, default=0
+    )
+    
+    @staticmethod
+    def calculate_priority_score(
+        importance_level: str = "NORMAL",
+        pass_percentage: int = None
+    ) -> int:
+        """Compute scheduling priority weight.
+        
+        This is a SOFT WEIGHT, not a hard constraint.
+        Higher score = prefer earlier (morning) slots.
+        """
+        if pass_percentage is not None:
+            if pass_percentage < 50:
+                return 3
+            elif pass_percentage < 70:
+                return 2
+            elif pass_percentage < 85:
+                return 1
+            else:
+                return 0
+        return 0
     
     # Scalability
     dept_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
@@ -530,10 +570,12 @@ class Substitution(Base):
 
 class ClassSubjectTeacher(Base):
     """
-    Fixed one-to-one mapping of (semester, subject, component) -> teacher.
-    
-    HARD CONSTRAINT: For any (semester_id, subject_id, component_type) triplet, 
-    EXACTLY ONE teacher is assigned for ALL slots throughout the week.
+    Fixed mapping of teacher -> (semester, subject, component, optional batch).
+
+    APPEND MODE:
+    - Multiple teachers can be mapped to the same (semester, subject, component)
+      without overwriting existing rows.
+    - Exact duplicate mappings are blocked.
     """
     __tablename__ = "class_subject_teachers"
     
@@ -575,12 +617,16 @@ class ClassSubjectTeacher(Base):
     room: Mapped[Optional["Room"]] = relationship()
     batch: Mapped[Optional["Batch"]] = relationship()
     
-    # Unique constraint: One teacher per (semester, subject, component, batch)
-    # Note: If batch_id is NULL (Whole Class), it conflicts with nothing else in DB constraint terms,
-    # but application logic must handle it.
+    # Prevent exact duplicate mapping rows.
     __table_args__ = (
-        UniqueConstraint("semester_id", "subject_id", "component_type", "batch_id",
-                         name="uq_semester_subject_component_batch_teacher"),
+        UniqueConstraint(
+            "teacher_id",
+            "semester_id",
+            "subject_id",
+            "component_type",
+            "batch_id",
+            name="uq_cst_teacher_sem_subj_comp_batch",
+        ),
     )
     
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -843,4 +889,64 @@ class ParallelLabBasketSubject(Base):
     subject: Mapped["Subject"] = relationship()
     teacher: Mapped["Teacher"] = relationship()
     room: Mapped[Optional["Room"]] = relationship()
+
+
+# ============================================================================
+# STRUCTURED COMPOSITE BASKET MODEL (SCB)
+# ============================================================================
+
+scb_departments = Table(
+    "scb_departments",
+    Base.metadata,
+    Column("scb_id", Integer, ForeignKey("structured_composite_baskets.id", ondelete="CASCADE"), primary_key=True),
+    Column("dept_id", Integer, ForeignKey("departments.id", ondelete="CASCADE"), primary_key=True),
+)
+
+class StructuredCompositeBasket(Base):
+    """
+    Structured Composite Basket (SCB) for mixed Theory + Lab multi-day handling.
+    """
+    __tablename__ = "structured_composite_baskets"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    
+    name: Mapped[str] = mapped_column(String(200)) # e.g. "PP Basket"
+    semester: Mapped[int] = mapped_column(Integer) # e.g. 5
+    
+    theory_hours: Mapped[int] = mapped_column(Integer, default=3)
+    lab_hours: Mapped[int] = mapped_column(Integer, default=2)
+    continuous_lab_periods: Mapped[int] = mapped_column(Integer, default=2)
+    
+    same_slot_across_departments: Mapped[bool] = mapped_column(Boolean, default=True)
+    allow_lab_parallel: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # State
+    is_scheduled: Mapped[bool] = mapped_column(Boolean, default=False)
+    scheduled_slots: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+
+    # Relationships
+    departments_involved: Mapped[List["Department"]] = relationship(secondary=scb_departments)
+    linked_subjects: Mapped[List["StructuredCompositeBasketSubject"]] = relationship(
+        back_populates="basket", cascade="all, delete-orphan"
+    )
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class StructuredCompositeBasketSubject(Base):
+    """
+    Links subjects (like Survey, Survey Lab) to an SCB.
+    """
+    __tablename__ = "scb_subjects"
+    
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    basket_id: Mapped[int] = mapped_column(ForeignKey("structured_composite_baskets.id", ondelete="CASCADE"), index=True)
+    subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    
+    # Relationships
+    basket: Mapped["StructuredCompositeBasket"] = relationship(back_populates="linked_subjects")
+    subject: Mapped["Subject"] = relationship()
+
+
 

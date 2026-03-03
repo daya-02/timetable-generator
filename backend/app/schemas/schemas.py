@@ -58,6 +58,13 @@ class SubstitutionStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+class ImportanceLevel(str, Enum):
+    """Academic importance level for scheduling priority bias."""
+    LOW = "LOW"
+    NORMAL = "NORMAL"
+    HIGH = "HIGH"
+
+
 # ============================================================================
 # DEPARTMENT SCHEMAS
 # ============================================================================
@@ -172,6 +179,11 @@ class SubjectBase(BaseModel):
     dept_id: Optional[int] = None
     year: int = Field(default=1, ge=1, le=4)
     semester: int = Field(default=1, ge=1, le=8)
+    
+    # Academic Importance & Priority (Optional, backward-compatible)
+    importance_level: Optional[str] = Field(default="NORMAL", description="LOW / NORMAL / HIGH")
+    previous_year_pass_percentage: Optional[int] = Field(default=None, ge=0, le=100, description="Previous year pass %")
+    computed_priority_score: Optional[int] = Field(default=0, description="Auto-calculated, not user editable")
 
 
 class SubjectCreate(SubjectBase):
@@ -207,6 +219,10 @@ class SubjectUpdate(BaseModel):
     year: Optional[int] = Field(None, ge=1, le=4)
     semester: Optional[int] = Field(None, ge=1, le=8)
     
+    # Academic Importance (optional)
+    importance_level: Optional[str] = None
+    previous_year_pass_percentage: Optional[int] = Field(None, ge=0, le=100)
+    
     # Legacy
     weekly_hours: Optional[int] = Field(None, ge=1, le=35)
     subject_type: Optional[SubjectType] = None
@@ -219,6 +235,9 @@ class SubjectResponse(SubjectBase):
     id: int
     semesters: List["SemesterResponse"] = []
     elective_basket_id: Optional[int] = None
+    importance_level: Optional[str] = "NORMAL"
+    previous_year_pass_percentage: Optional[int] = None
+    computed_priority_score: Optional[int] = 0
     created_at: datetime
     updated_at: datetime
     
@@ -238,6 +257,9 @@ class SubjectSummary(BaseModel):
     theory_hours_per_week: int = 0
     lab_hours_per_week: int = 0
     is_elective: bool = False
+    importance_level: Optional[str] = "NORMAL"
+    previous_year_pass_percentage: Optional[int] = None
+    computed_priority_score: Optional[int] = 0
     
     class Config:
         from_attributes = True
@@ -312,6 +334,7 @@ class TeacherCreate(TeacherBase):
 
 class TeacherUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=150)
+    teacher_code: Optional[str] = Field(None, min_length=1, max_length=20)
     email: Optional[str] = None
     phone: Optional[str] = None
     max_hours_per_week: Optional[int] = Field(None, ge=1, le=40)
@@ -409,10 +432,9 @@ class SemesterResponseWithBatches(SemesterResponse):
 # FIXED TEACHER ASSIGNMENT SCHEMAS
 # ============================================================================
 
-class ClassSubjectTeacherBase(BaseModel):
+class ClassSubjectTeacherWrite(BaseModel):
     semester_id: int
     subject_id: int
-    teacher_id: int
     room_id: Optional[int] = None
     batch_id: Optional[int] = None
     component_type: ComponentType = ComponentType.THEORY
@@ -420,8 +442,11 @@ class ClassSubjectTeacherBase(BaseModel):
     parallel_lab_group: Optional[str] = None
     is_locked: bool = True
 
-class ClassSubjectTeacherCreate(ClassSubjectTeacherBase):
+class ClassSubjectTeacherCreate(ClassSubjectTeacherWrite):
     pass
+
+class ClassSubjectTeacherBase(ClassSubjectTeacherWrite):
+    teacher_id: int
 
 class ClassSubjectTeacherResponse(ClassSubjectTeacherBase):
     id: int
@@ -790,6 +815,47 @@ class DepartmentRuleToggleResponse(DepartmentRuleToggleBase):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
+    class Config:
+        from_attributes = True
+
+
+# ============================================================================
+# STRUCTURED COMPOSITE BASKET (SCB) SCHEMAS
+# ============================================================================
+
+class StructuredCompositeBasketBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
+    semester: int = Field(..., ge=1, le=8)
+    theory_hours: int = Field(default=3, ge=0, le=10)
+    lab_hours: int = Field(default=2, ge=0, le=10)
+    continuous_lab_periods: int = Field(default=2, ge=1, le=4)
+    same_slot_across_departments: bool = True
+    allow_lab_parallel: bool = False
+
+
+class StructuredCompositeBasketCreate(StructuredCompositeBasketBase):
+    department_ids: List[int] = []
+    subject_ids: List[int] = []
+
+
+class StructuredCompositeBasketUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    theory_hours: Optional[int] = Field(None, ge=0, le=10)
+    lab_hours: Optional[int] = Field(None, ge=0, le=10)
+    continuous_lab_periods: Optional[int] = Field(None, ge=1, le=4)
+    same_slot_across_departments: Optional[bool] = None
+    allow_lab_parallel: Optional[bool] = None
+    department_ids: Optional[List[int]] = None
+    subject_ids: Optional[List[int]] = None
+
+
+class StructuredCompositeBasketResponse(StructuredCompositeBasketBase):
+    id: int
+    is_scheduled: bool = False
+    scheduled_slots: Optional[str] = None
+    departments_involved: List[DepartmentSummary] = []
+    linked_subjects: List[SubjectSummary] = []
+    
     class Config:
         from_attributes = True
 

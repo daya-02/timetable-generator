@@ -1,0 +1,166 @@
+ALLOCATIONS TABLE COLUMNS:
+  DB columns: ['id', 'teacher_id', 'subject_id', 'semester_id', 'room_id', 'day', 'slot', 'component_type', 'is_lab_continuation', 'is_elective', 'elective_basket_id', 'created_at', 'updated_at']
+  Model expects: ['id', 'teacher_id', 'subject_id', 'semester_id', 'room_id', 'day', 'slot', 'component_type', 'academic_component', 'is_lab_continuation', 'is_elective', 'elective_basket_id', 'batch_id', 'created_at', 'updated_at']
+  MISSING from DB: ['academic_component', 'batch_id']
+  EXTRA in DB: []
+
+DATABASE FILES IN PROJECT:
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\timetable.db (208896 bytes)
+    -> allocations=0, departments=0, semesters=4
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\timetable.db (593920 bytes)
+    -> allocations=464, departments=11, semesters=24
+    -> dept: id=1 name=Computer Science & Engineering code=CSE
+    -> dept: id=2 name=CSE-Artifical Intelligence and Machine Learning code=AIML
+    -> dept: id=3 name=Artificial Intelligence and DataScience code=AI&DS
+    -> dept: id=4 name=Information Technology code=IT
+    -> dept: id=5 name=Mathematics code=Maths
+    -> dept: id=6 name=Electronics and Communication Engineering code=ECE
+    -> dept: id=7 name=Mechanical Engineering code=Mech
+    -> dept: id=8 name=Civil Engineering code=Civil
+    -> dept: id=9 name=Electrical and Electronics Engineering code=EEE
+    -> dept: id=10 name=SCIENCE AND HUMANITIES code=SIH
+    -> dept: id=11 name= Placement Training code=CSD
+    -> allocations for semester_id=1: 35
+    -> allocations for semester_id=2: 35
+    -> allocations for semester_id=3: 35
+    -> allocations for semester_id=4: 39
+    -> allocations for semester_id=5: 39
+    -> allocations for semester_id=6: 39
+    -> allocations for semester_id=7: 39
+    -> allocations for semester_id=8: 39
+    -> allocations for semester_id=9: 39
+    -> allocations for semester_id=10: 39
+    -> allocations for semester_id=11: 43
+    -> allocations for semester_id=12: 43
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\timetable_test_copy.db (385024 bytes)
+    -> allocations=35, departments=11, semesters=12
+    -> dept: id=1 name=Computer Science & Engineering code=CSE
+    -> dept: id=2 name=CSE-Artifical Intelligence and Machine Learning code=AIML
+    -> dept: id=3 name=Artificial Intelligence and DataScience code=AI&DS
+    -> dept: id=4 name=Information Technology code=IT
+    -> dept: id=5 name=Mathematics code=Maths
+    -> dept: id=6 name=Electronics and Communication Engineering code=ECE
+    -> dept: id=7 name=Mechanical Engineering code=Mech
+    -> dept: id=8 name=Civil Engineering code=Civil
+    -> dept: id=9 name=Electrical and Electronics Engineering code=EEE
+    -> dept: id=10 name=SCIENCE AND HUMANITIES code=SIH
+    -> dept: id=11 name= Placement Training code=CSD
+    -> allocations for semester_id=1: 35
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\timetable_test_copy2.db (385024 bytes)
+    -> allocations=101, departments=11, semesters=12
+    -> dept: id=1 name=Computer Science & Engineering code=CSE
+    -> dept: id=2 name=CSE-Artifical Intelligence and Machine Learning code=AIML
+    -> dept: id=3 name=Artificial Intelligence and DataScience code=AI&DS
+    -> dept: id=4 name=Information Technology code=IT
+    -> dept: id=5 name=Mathematics code=Maths
+    -> dept: id=6 name=Electronics and Communication Engineering code=ECE
+    -> dept: id=7 name=Mechanical Engineering code=Mech
+    -> dept: id=8 name=Civil Engineering code=Civil
+    -> dept: id=9 name=Electrical and Electronics Engineering code=EEE
+    -> dept: id=10 name=SCIENCE AND HUMANITIES code=SIH
+    -> dept: id=11 name= Placement Training code=CSD
+    -> allocations for semester_id=1: 41
+    -> allocations for semester_id=2: 30
+    -> allocations for semester_id=3: 30
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\timetable_test_copy3.db (385024 bytes)
+    -> allocations=101, departments=11, semesters=12
+    -> dept: id=1 name=Computer Science & Engineering code=CSE
+    -> dept: id=2 name=CSE-Artifical Intelligence and Machine Learning code=AIML
+    -> dept: id=3 name=Artificial Intelligence and DataScience code=AI&DS
+    -> dept: id=4 name=Information Technology code=IT
+    -> dept: id=5 name=Mathematics code=Maths
+    -> dept: id=6 name=Electronics and Communication Engineering code=ECE
+    -> dept: id=7 name=Mechanical Engineering code=Mech
+    -> dept: id=8 name=Civil Engineering code=Civil
+    -> dept: id=9 name=Electrical and Electronics Engineering code=EEE
+    -> dept: id=10 name=SCIENCE AND HUMANITIES code=SIH
+    -> dept: id=11 name= Placement Training code=CSD
+    -> allocations for semester_id=1: 41
+    -> allocations for semester_id=2: 30
+    -> allocations for semester_id=3: 30
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\timetable_test_copy4.db (385024 bytes)
+    -> allocations=101, departments=11, semesters=12
+    -> dept: id=1 name=Computer Science & Engineering code=CSE
+    -> dept: id=2 name=CSE-Artifical Intelligence and Machine Learning code=AIML
+    -> dept: id=3 name=Artificial Intelligence and DataScience code=AI&DS
+    -> dept: id=4 name=Information Technology code=IT
+    -> dept: id=5 name=Mathematics code=Maths
+    -> dept: id=6 name=Electronics and Communication Engineering code=ECE
+    -> dept: id=7 name=Mechanical Engineering code=Mech
+    -> dept: id=8 name=Civil Engineering code=Civil
+    -> dept: id=9 name=Electrical and Electronics Engineering code=EEE
+    -> dept: id=10 name=SCIENCE AND HUMANITIES code=SIH
+    -> dept: id=11 name= Placement Training code=CSD
+    -> allocations for semester_id=1: 41
+    -> allocations for semester_id=2: 30
+    -> allocations for semester_id=3: 30
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\timetable_test_copy5.db (385024 bytes)
+    -> allocations=101, departments=11, semesters=12
+    -> dept: id=1 name=Computer Science & Engineering code=CSE
+    -> dept: id=2 name=CSE-Artifical Intelligence and Machine Learning code=AIML
+    -> dept: id=3 name=Artificial Intelligence and DataScience code=AI&DS
+    -> dept: id=4 name=Information Technology code=IT
+    -> dept: id=5 name=Mathematics code=Maths
+    -> dept: id=6 name=Electronics and Communication Engineering code=ECE
+    -> dept: id=7 name=Mechanical Engineering code=Mech
+    -> dept: id=8 name=Civil Engineering code=Civil
+    -> dept: id=9 name=Electrical and Electronics Engineering code=EEE
+    -> dept: id=10 name=SCIENCE AND HUMANITIES code=SIH
+    -> dept: id=11 name= Placement Training code=CSD
+    -> allocations for semester_id=1: 41
+    -> allocations for semester_id=2: 30
+    -> allocations for semester_id=3: 30
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\timetable_test_copy6.db (385024 bytes)
+    -> allocations=101, departments=11, semesters=12
+    -> dept: id=1 name=Computer Science & Engineering code=CSE
+    -> dept: id=2 name=CSE-Artifical Intelligence and Machine Learning code=AIML
+    -> dept: id=3 name=Artificial Intelligence and DataScience code=AI&DS
+    -> dept: id=4 name=Information Technology code=IT
+    -> dept: id=5 name=Mathematics code=Maths
+    -> dept: id=6 name=Electronics and Communication Engineering code=ECE
+    -> dept: id=7 name=Mechanical Engineering code=Mech
+    -> dept: id=8 name=Civil Engineering code=Civil
+    -> dept: id=9 name=Electrical and Electronics Engineering code=EEE
+    -> dept: id=10 name=SCIENCE AND HUMANITIES code=SIH
+    -> dept: id=11 name= Placement Training code=CSD
+    -> allocations for semester_id=1: 41
+    -> allocations for semester_id=2: 30
+    -> allocations for semester_id=3: 30
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\timetable_test_copy7.db (385024 bytes)
+    -> allocations=101, departments=11, semesters=12
+    -> dept: id=1 name=Computer Science & Engineering code=CSE
+    -> dept: id=2 name=CSE-Artifical Intelligence and Machine Learning code=AIML
+    -> dept: id=3 name=Artificial Intelligence and DataScience code=AI&DS
+    -> dept: id=4 name=Information Technology code=IT
+    -> dept: id=5 name=Mathematics code=Maths
+    -> dept: id=6 name=Electronics and Communication Engineering code=ECE
+    -> dept: id=7 name=Mechanical Engineering code=Mech
+    -> dept: id=8 name=Civil Engineering code=Civil
+    -> dept: id=9 name=Electrical and Electronics Engineering code=EEE
+    -> dept: id=10 name=SCIENCE AND HUMANITIES code=SIH
+    -> dept: id=11 name= Placement Training code=CSD
+    -> allocations for semester_id=1: 41
+    -> allocations for semester_id=2: 30
+    -> allocations for semester_id=3: 30
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\backend\timetable_test_copy8.db (385024 bytes)
+    -> allocations=101, departments=11, semesters=12
+    -> dept: id=1 name=Computer Science & Engineering code=CSE
+    -> dept: id=2 name=CSE-Artifical Intelligence and Machine Learning code=AIML
+    -> dept: id=3 name=Artificial Intelligence and DataScience code=AI&DS
+    -> dept: id=4 name=Information Technology code=IT
+    -> dept: id=5 name=Mathematics code=Maths
+    -> dept: id=6 name=Electronics and Communication Engineering code=ECE
+    -> dept: id=7 name=Mechanical Engineering code=Mech
+    -> dept: id=8 name=Civil Engineering code=Civil
+    -> dept: id=9 name=Electrical and Electronics Engineering code=EEE
+    -> dept: id=10 name=SCIENCE AND HUMANITIES code=SIH
+    -> dept: id=11 name= Placement Training code=CSD
+    -> allocations for semester_id=1: 41
+    -> allocations for semester_id=2: 30
+    -> allocations for semester_id=3: 30
+  C:\Users\navee\.gemini\antigravity\scratch\timetable_generator\database\timetable.db (0 bytes)
+    -> Error: no such table: allocations
+
+BACKEND CONFIG:
+  # Database
+  DATABASE_URL: str = "sqlite:///./timetable.db"

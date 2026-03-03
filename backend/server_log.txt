@@ -1,0 +1,1503 @@
+﻿python : INFO:     Started 
+server process [14768]
+At line:1 char:86
++ ... or\backend; python -c 
+"import uvicorn; 
+uvicorn.run('main:app', 
+host=' ...
++                 ~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (INFO:    
+     Started server proces   
+ s [14768]:String) [], Re    
+moteException
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+INFO:     Waiting for 
+application startup.
+INFO:     Application 
+startup complete.
+INFO:     Uvicorn running on 
+http://127.0.0.1:8000 (Press 
+CTRL+C to quit)
+[INFO] Database tables created/verified
+teacher_code already exists in teachers.
+year already exists in subjects.
+academic_component already exists in allocations.
+academic_component already exists in fixed_slots.
+dept_id already exists in rooms.
+dept_id already exists in semesters.
+room_id already exists in class_subject_teachers.
+parallel_lab_group already exists in class_subject_teachers.
+batch_id already exists in class_subject_teachers.
+batch_id already exists in allocations.
+assigned_year already exists in rooms.
+assigned_section already exists in rooms.
+is_default_classroom already exists in rooms.
+room_departments table already exists.
+importance_level already exists in subjects.
+previous_year_pass_percentage already exists in subjects.
+computed_priority_score already exists in subjects.
+Schema update completed.
+[INFO] Database schema updates applied (if needed)
+[INFO] Checking for seed data...
+[WARN] Database already has user data. Skipping seed to protect your data.
+[INFO] Database check/seed completed
+
+============================================================
+COLLEGE TIMETABLE GENERATION ENGINE (MULTI-DEPT)
+============================================================
+TARGET: 12 classes across 8 departments
+DATA: Clearing existing allocations for target classes...
+   Cleared 152 existing allocations
+
+DATA: Loading global resources (Teachers, Subjects, Rooms)...
+   READ [LOCKED]: Class 2, Subject 1, theory -> Teacher 151
+   READ [LOCKED]: Class 3, Subject 2, theory -> Teacher 19
+   READ [LOCKED]: Class 1, Subject 2, theory -> Teacher 17
+   READ [LOCKED]: Class 2, Subject 2, theory -> Teacher 18
+   READ [LOCKED]: Class 1, Subject 3, theory -> Teacher 20
+   READ [LOCKED]: Class 1, Subject 4, theory -> Teacher 21
+   READ [LOCKED]: Class 1, Subject 4, lab -> Teacher 21
+   READ [LOCKED]: Class 1, Subject 9, theory -> Teacher 22
+   READ [LOCKED]: Class 1, Subject 9, lab -> Teacher 22
+   READ [LOCKED]: Class 1, Subject 5, theory -> Teacher 26
+   READ [LOCKED]: Class 1, Subject 5, lab -> Teacher 26
+   READ [LOCKED]: Class 1, Subject 6, lab -> Teacher 144
+   READ [LOCKED]: Class 1, Subject 7, tutorial -> Teacher 20
+   READ [LOCKED]: Class 1, Subject 15, theory -> Teacher 152
+   READ [LOCKED]: Class 1, Subject 16, theory -> Teacher 153
+   READ [LOCKED]: Class 3, Subject 6, lab -> Teacher 158
+   READ [LOCKED]: Class 2, Subject 6, lab -> Teacher 159
+   READ [LOCKED]: Class 2, Subject 16, theory -> Teacher 154
+   READ [LOCKED]: Class 3, Subject 15, theory -> Teacher 154
+   READ [LOCKED]: Class 2, Subject 15, theory -> Teacher 155
+   READ [LOCKED]: Class 3, Subject 16, theory -> Teacher 155
+   READ [LOCKED]: Class 1, Subject 8, theory -> Teacher 27
+   READ [LOCKED]: Class 2, Subject 8, theory -> Teacher 27
+   READ [LOCKED]: Class 3, Subject 8, theory -> Teacher 27
+   READ [LOCKED]: Class 4, Subject 8, theory -> Teacher 27
+   READ [LOCKED]: Class 5, Subject 8, theory -> Teacher 27
+   READ [LOCKED]: Class 6, Subject 8, theory -> Teacher 27
+   READ [LOCKED]: Class 7, Subject 8, theory -> Teacher 27
+   READ [LOCKED]: Class 1, Subject 10, theory -> Teacher 29
+   READ [LOCKED]: Class 2, Subject 10, theory -> Teacher 29
+   READ [LOCKED]: Class 3, Subject 10, theory -> Teacher 29
+   READ [LOCKED]: Class 4, Subject 10, theory -> Teacher 29
+   READ [LOCKED]: Class 5, Subject 10, theory -> Teacher 29
+   READ [LOCKED]: Class 6, Subject 10, theory -> Teacher 29
+   READ [LOCKED]: Class 7, Subject 10, theory -> Teacher 29
+   READ [LOCKED]: Class 4, Subject 19, theory -> Teacher 42
+   READ [LOCKED]: Class 4, Subject 17, theory -> Teacher 40
+   READ [LOCKED]: Class 4, Subject 18, theory -> Teacher 41
+   READ [LOCKED]: Class 4, Subject 22, lab -> Teacher 41
+   READ [LOCKED]: Class 4, Subject 11, theory -> Teacher 43
+   READ [LOCKED]: Class 4, Subject 11, lab -> Teacher 43
+   READ [LOCKED]: Class 3, Subject 4, theory -> Teacher 31
+   READ [LOCKED]: Class 3, Subject 4, lab -> Teacher 31
+   READ [LOCKED]: Class 2, Subject 3, theory -> Teacher 28
+   READ [LOCKED]: Class 2, Subject 3, lab -> Teacher 28
+   READ [LOCKED]: Class 2, Subject 5, theory -> Teacher 32
+   READ [LOCKED]: Class 2, Subject 5, lab -> Teacher 32
+   READ [LOCKED]: Class 2, Subject 7, tutorial -> Teacher 32
+   READ [LOCKED]: Class 3, Subject 1, theory -> Teacher 148
+   READ [LOCKED]: Class 3, Subject 3, theory -> Teacher 25
+   READ [LOCKED]: Class 3, Subject 3, lab -> Teacher 25
+   READ [LOCKED]: Class 3, Subject 5, theory -> Teacher 33
+   READ [LOCKED]: Class 3, Subject 5, lab -> Teacher 33
+   READ [LOCKED]: Class 3, Subject 7, tutorial -> Teacher 33
+   READ [LOCKED]: Class 2, Subject 11, theory -> Teacher 43
+   READ [LOCKED]: Class 1, Subject 11, theory -> Teacher 43
+   READ [LOCKED]: Class 3, Subject 11, theory -> Teacher 43
+   READ [LOCKED]: Class 5, Subject 11, theory -> Teacher 43
+   READ [LOCKED]: Class 6, Subject 11, theory -> Teacher 43
+   READ [LOCKED]: Class 7, Subject 11, theory -> Teacher 43
+   READ [LOCKED]: Class 1, Subject 11, lab -> Teacher 43
+   READ [LOCKED]: Class 2, Subject 11, lab -> Teacher 43
+   READ [LOCKED]: Class 3, Subject 11, lab -> Teacher 43
+   READ [LOCKED]: Class 5, Subject 11, lab -> Teacher 43
+   READ [LOCKED]: Class 6, Subject 11, lab -> Teacher 43
+   READ [LOCKED]: Class 7, Subject 11, lab -> Teacher 43
+   READ [LOCKED]: Class 4, Subject 5, theory -> Teacher 44
+   READ [LOCKED]: Class 4, Subject 5, lab -> Teacher 44
+   READ [LOCKED]: Class 4, Subject 23, theory -> Teacher 160
+   READ [LOCKED]: Class 4, Subject 2, theory -> Teacher 129
+   READ [LOCKED]: Class 4, Subject 16, theory -> Teacher 156
+   READ [LOCKED]: Class 4, Subject 15, theory -> Teacher 157
+   READ [LOCKED]: Class 5, Subject 2, theory -> Teacher 130
+   READ [LOCKED]: Class 6, Subject 2, theory -> Teacher 161
+   READ [LOCKED]: Class 5, Subject 17, theory -> Teacher 66
+   READ [LOCKED]: Class 5, Subject 24, theory -> Teacher 49
+   READ [LOCKED]: Class 5, Subject 25, lab -> Teacher 49
+   READ [LOCKED]: Class 5, Subject 19, theory -> Teacher 48
+   READ [LOCKED]: Class 5, Subject 21, lab -> Teacher 48
+   READ [LOCKED]: Class 5, Subject 5, theory -> Teacher 60
+   READ [LOCKED]: Class 5, Subject 5, lab -> Teacher 60
+   READ [LOCKED]: Class 5, Subject 20, lab -> Teacher 66
+   READ [LOCKED]: Class 5, Subject 15, theory -> Teacher 152
+   READ [LOCKED]: Class 5, Subject 16, theory -> Teacher 153
+   READ [LOCKED]: Class 5, Subject 7, tutorial -> Teacher 48
+   READ [LOCKED]: Class 1, Subject 12, theory -> Teacher 53
+   READ [LOCKED]: Class 1, Subject 12, lab -> Teacher 53
+   READ [LOCKED]: Class 2, Subject 12, theory -> Teacher 53
+   READ [LOCKED]: Class 2, Subject 12, lab -> Teacher 53
+   READ [LOCKED]: Class 3, Subject 12, lab -> Teacher 53
+   READ [LOCKED]: Class 3, Subject 12, theory -> Teacher 53
+   READ [LOCKED]: Class 4, Subject 12, theory -> Teacher 53
+   READ [LOCKED]: Class 4, Subject 12, lab -> Teacher 53
+   READ [LOCKED]: Class 5, Subject 12, theory -> Teacher 53
+   READ [LOCKED]: Class 6, Subject 12, lab -> Teacher 53
+   READ [LOCKED]: Class 5, Subject 12, lab -> Teacher 53
+   READ [LOCKED]: Class 6, Subject 12, theory -> Teacher 53
+   READ [LOCKED]: Class 7, Subject 12, theory -> Teacher 53
+   READ [LOCKED]: Class 7, Subject 12, lab -> Teacher 53
+   READ [LOCKED]: Class 1, Subject 13, theory -> Teacher 67
+   READ [LOCKED]: Class 1, Subject 13, lab -> Teacher 67
+   READ [LOCKED]: Class 2, Subject 13, theory -> Teacher 67
+   READ [LOCKED]: Class 2, Subject 13, lab -> Teacher 67
+   READ [LOCKED]: Class 3, Subject 13, theory -> Teacher 67
+   READ [LOCKED]: Class 3, Subject 13, lab -> Teacher 67
+   READ [LOCKED]: Class 4, Subject 13, theory -> Teacher 67
+   READ [LOCKED]: Class 4, Subject 13, lab -> Teacher 67
+   READ [LOCKED]: Class 5, Subject 13, theory -> Teacher 67
+   READ [LOCKED]: Class 5, Subject 13, lab -> Teacher 67
+   READ [LOCKED]: Class 6, Subject 13, theory -> Teacher 67
+   READ [LOCKED]: Class 6, Subject 13, lab -> Teacher 67
+   READ [LOCKED]: Class 7, Subject 13, theory -> Teacher 67
+   READ [LOCKED]: Class 7, Subject 13, lab -> Teacher 67
+   READ [LOCKED]: Class 1, Subject 14, theory -> Teacher 162
+   READ [LOCKED]: Class 1, Subject 14, lab -> Teacher 162
+   READ [LOCKED]: Class 2, Subject 14, theory -> Teacher 162
+   READ [LOCKED]: Class 2, Subject 14, lab -> Teacher 162
+   READ [LOCKED]: Class 3, Subject 14, theory -> Teacher 162
+   READ [LOCKED]: Class 3, Subject 14, lab -> Teacher 162
+   READ [LOCKED]: Class 4, Subject 14, theory -> Teacher 162
+   READ [LOCKED]: Class 4, Subject 14, lab -> Teacher 162
+   READ [LOCKED]: Class 5, Subject 14, theory -> Teacher 162
+   READ [LOCKED]: Class 5, Subject 14, lab -> Teacher 162
+   READ [LOCKED]: Class 6, Subject 14, theory -> Teacher 162
+   READ [LOCKED]: Class 6, Subject 14, lab -> Teacher 162
+   READ [LOCKED]: Class 7, Subject 14, theory -> Teacher 162
+   READ [LOCKED]: Class 7, Subject 14, lab -> Teacher 162
+   READ [LOCKED]: Class 6, Subject 17, theory -> Teacher 163
+   READ [LOCKED]: Class 6, Subject 20, lab -> Teacher 163
+   READ [LOCKED]: Class 6, Subject 24, theory -> Teacher 55
+   READ [LOCKED]: Class 6, Subject 25, lab -> Teacher 55
+   READ [LOCKED]: Class 6, Subject 19, theory -> Teacher 50
+   READ [LOCKED]: Class 6, Subject 21, lab -> Teacher 50
+   READ [LOCKED]: Class 6, Subject 5, theory -> Teacher 62
+   READ [LOCKED]: Class 6, Subject 5, lab -> Teacher 62
+   READ [LOCKED]: Class 6, Subject 15, theory -> Teacher 156
+   READ [LOCKED]: Class 6, Subject 16, theory -> Teacher 153
+   READ [LOCKED]: Class 6, Subject 7, tutorial -> Teacher 62
+   READ [LOCKED]: Class 7, Subject 2, theory -> Teacher 141
+   READ [LOCKED]: Class 7, Subject 17, theory -> Teacher 164
+   READ [LOCKED]: Class 7, Subject 20, lab -> Teacher 164
+   READ [LOCKED]: Class 7, Subject 24, theory -> Teacher 58
+   READ [LOCKED]: Class 7, Subject 25, lab -> Teacher 58
+   READ [LOCKED]: Class 7, Subject 19, theory -> Teacher 59
+   READ [LOCKED]: Class 7, Subject 21, lab -> Teacher 59
+   READ [LOCKED]: Class 7, Subject 5, theory -> Teacher 52
+   READ [LOCKED]: Class 7, Subject 5, lab -> Teacher 52
+   READ [LOCKED]: Class 7, Subject 15, theory -> Teacher 156
+   READ [LOCKED]: Class 7, Subject 16, theory -> Teacher 154
+   READ [LOCKED]: Class 7, Subject 7, tutorial -> Teacher 59
+   READ [LOCKED]: Class 8, Subject 27, theory -> Teacher 72
+   READ [LOCKED]: Class 8, Subject 27, tutorial -> Teacher 72
+   READ [LOCKED]: Class 8, Subject 28, theory -> Teacher 76
+   READ [LOCKED]: Class 8, Subject 28, tutorial -> Teacher 76
+   READ [LOCKED]: Class 8, Subject 29, theory -> Teacher 77
+   READ [LOCKED]: Class 8, Subject 29, tutorial -> Teacher 77
+   READ [LOCKED]: Class 8, Subject 30, theory -> Teacher 79
+   READ [LOCKED]: Class 8, Subject 30, lab -> Teacher 79
+   READ [LOCKED]: Class 8, Subject 6, lab -> Teacher 165
+   READ [LOCKED]: Class 9, Subject 6, lab -> Teacher 166
+   READ [LOCKED]: Class 8, Subject 26, theory -> Teacher 81
+   READ [LOCKED]: Class 8, Subject 26, tutorial -> Teacher 81
+   READ [LOCKED]: Class 8, Subject 16, theory -> Teacher 153
+   READ [LOCKED]: Class 8, Subject 15, theory -> Teacher 156
+   READ [LOCKED]: Class 9, Subject 26, theory -> Teacher 81
+   READ [LOCKED]: Class 9, Subject 27, theory -> Teacher 72
+   READ [LOCKED]: Class 9, Subject 27, tutorial -> Teacher 72
+   READ [LOCKED]: Class 8, Subject 33, theory -> Teacher 74
+   READ [LOCKED]: Class 9, Subject 33, theory -> Teacher 74
+   READ [LOCKED]: Class 8, Subject 34, theory -> Teacher 75
+   READ [LOCKED]: Class 9, Subject 34, theory -> Teacher 75
+   READ [LOCKED]: Class 9, Subject 16, theory -> Teacher 153
+   READ [LOCKED]: Class 9, Subject 15, theory -> Teacher 152
+   READ [LOCKED]: Class 9, Subject 28, theory -> Teacher 82
+   READ [LOCKED]: Class 9, Subject 28, tutorial -> Teacher 82
+   READ [LOCKED]: Class 9, Subject 29, theory -> Teacher 83
+   READ [LOCKED]: Class 9, Subject 29, lab -> Teacher 83
+   READ [LOCKED]: Class 9, Subject 29, tutorial -> Teacher 83
+   READ [LOCKED]: Class 9, Subject 30, theory -> Teacher 84
+   READ [LOCKED]: Class 9, Subject 30, lab -> Teacher 84
+   READ [LOCKED]: Class 9, Subject 26, tutorial -> Teacher 81
+   READ [LOCKED]: Class 12, Subject 35, theory -> Teacher 104
+   READ [LOCKED]: Class 12, Subject 36, theory -> Teacher 105
+   READ [LOCKED]: Class 12, Subject 37, theory -> Teacher 106
+   READ [LOCKED]: Class 12, Subject 38, theory -> Teacher 107
+   READ [LOCKED]: Class 12, Subject 39, theory -> Teacher 108
+   READ [LOCKED]: Class 12, Subject 39, tutorial -> Teacher 108
+   READ [LOCKED]: Class 12, Subject 40, theory -> Teacher 109
+   READ [LOCKED]: Class 12, Subject 41, theory -> Teacher 110
+   READ [LOCKED]: Class 12, Subject 6, lab -> Teacher 167
+   READ [LOCKED]: Class 12, Subject 16, theory -> Teacher 154
+   READ [LOCKED]: Class 12, Subject 15, theory -> Teacher 156
+   READ [LOCKED]: Class 11, Subject 44, theory -> Teacher 90
+   READ [LOCKED]: Class 11, Subject 45, theory -> Teacher 98
+   READ [LOCKED]: Class 11, Subject 45, tutorial -> Teacher 98
+   READ [LOCKED]: Class 11, Subject 46, theory -> Teacher 100
+   READ [LOCKED]: Class 11, Subject 47, theory -> Teacher 92
+   READ [LOCKED]: Class 11, Subject 48, theory -> Teacher 169
+   READ [LOCKED]: Class 11, Subject 49, theory -> Teacher 95
+   READ [LOCKED]: Class 11, Subject 50, theory -> Teacher 96
+   READ [LOCKED]: Class 11, Subject 53, lab -> Teacher 93
+   READ [LOCKED]: Class 11, Subject 16, theory -> Teacher 153
+   READ [LOCKED]: Class 11, Subject 15, theory -> Teacher 156
+   READ [LOCKED]: Class 11, Subject 7, tutorial -> Teacher 169
+   READ [LOCKED]: Class 10, Subject 16, theory -> Teacher 154
+   READ [LOCKED]: Class 10, Subject 15, theory -> Teacher 152
+   READ [LOCKED]: Class 10, Subject 60, theory -> Teacher 115
+   READ [LOCKED]: Class 10, Subject 54, theory -> Teacher 116
+   READ [LOCKED]: Class 10, Subject 55, theory -> Teacher 117
+   READ [LOCKED]: Class 10, Subject 56, theory -> Teacher 118
+   READ [LOCKED]: Class 10, Subject 61, theory -> Teacher 119
+   READ [LOCKED]: Class 10, Subject 62, theory -> Teacher 120
+   READ [LOCKED]: Class 10, Subject 30, theory -> Teacher 121
+   READ [LOCKED]: Class 10, Subject 30, lab -> Teacher 121
+   READ [LOCKED]: Class 10, Subject 57, lab -> Teacher 115
+   READ [LOCKED]: Class 10, Subject 58, lab -> Teacher 117
+   READ [LOCKED]: Class 10, Subject 59, lab -> Teacher 119
+   READ [LOCKED]: Class 10, Subject 30, tutorial -> Teacher 121
+   READ [INFERRED]: Class 1, Subject 1 (AGB1221), theory -> Teacher 80
+   READ [INFERRED]: Class 1, Subject 2 (CGA1221), theory -> Teacher 17
+   READ [INFERRED]: Class 1, Subject 3 (AGI1252), theory -> Teacher 20
+   READ [INFERRED]: Class 1, Subject 3 (AGI1252), lab -> Teacher 20
+   READ [INFERRED]: Class 1, Subject 4 (AGI1251), theory -> Teacher 21
+   READ [INFERRED]: Class 1, Subject 4 (AGI1251), lab -> Teacher 21
+   READ [INFERRED]: Class 1, Subject 5 (CGB1221), theory -> Teacher 26
+   READ [INFERRED]: Class 1, Subject 5 (CGB1221), lab -> Teacher 26
+   [NO TEACHER] GEA1211 in AIML-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] LB in AIML-II YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 1, Subject 8 (CGI1253), theory -> Teacher 39
+   READ [INFERRED]: Class 1, Subject 8 (CGI1253), lab -> Teacher 39
+   READ [INFERRED]: Class 1, Subject 9 (CGI1257), theory -> Teacher 22
+   READ [INFERRED]: Class 1, Subject 9 (CGI1257), lab -> Teacher 22
+   [NO TEACHER] CGI1252 in AIML-II YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 1, Subject 11 (AGIXCC), theory -> Teacher 43
+   READ [INFERRED]: Class 1, Subject 11 (AGIXCC), lab -> Teacher 43
+   READ [INFERRED]: Class 1, Subject 12 (ADIXCC), theory -> Teacher 53
+   READ [INFERRED]: Class 1, Subject 12 (ADIXCC), lab -> Teacher 53
+   READ [INFERRED]: Class 1, Subject 13 (CXC00X), theory -> Teacher 67
+   READ [INFERRED]: Class 1, Subject 13 (CXC00X), lab -> Teacher 67
+   READ [INFERRED]: Class 1, Subject 14 (SXC00X), theory -> Teacher 162
+   READ [INFERRED]: Class 1, Subject 14 (SXC00X), lab -> Teacher 162
+   [NO TEACHER] CSD(C) in AIML-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in AIML-II YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 2, Subject 2 (CGA1221), theory -> Teacher 17
+   READ [INFERRED]: Class 2, Subject 3 (AGI1252), theory -> Teacher 20
+   READ [INFERRED]: Class 2, Subject 3 (AGI1252), lab -> Teacher 20
+   READ [INFERRED]: Class 2, Subject 4 (AGI1251), theory -> Teacher 21
+   READ [INFERRED]: Class 2, Subject 4 (AGI1251), lab -> Teacher 21
+   READ [INFERRED]: Class 2, Subject 5 (CGB1221), theory -> Teacher 26
+   READ [INFERRED]: Class 2, Subject 5 (CGB1221), lab -> Teacher 26
+   [NO TEACHER] GEA1211 in AI&DS-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] LB in AI&DS-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 2, Subject 8 (CGI1253), theory -> Teacher 39
+   READ [INFERRED]: Class 2, Subject 8 (CGI1253), lab -> Teacher 39
+   READ [INFERRED]: Class 2, Subject 9 (CGI1257), theory -> Teacher 22
+   READ [INFERRED]: Class 2, Subject 9 (CGI1257), lab -> Teacher 22
+   [NO TEACHER] CGI1252 in AI&DS-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 2, Subject 11 (AGIXCC), theory -> Teacher 43
+   READ [INFERRED]: Class 2, Subject 11 (AGIXCC), lab -> Teacher 43
+   READ [INFERRED]: Class 2, Subject 12 (ADIXCC), theory -> Teacher 53
+   READ [INFERRED]: Class 2, Subject 12 (ADIXCC), lab -> Teacher 53
+   READ [INFERRED]: Class 2, Subject 13 (CXC00X), theory -> Teacher 67
+   READ [INFERRED]: Class 2, Subject 13 (CXC00X), lab -> Teacher 67
+   READ [INFERRED]: Class 2, Subject 14 (SXC00X), theory -> Teacher 162
+   READ [INFERRED]: Class 2, Subject 14 (SXC00X), lab -> Teacher 162
+   READ [INFERRED]: Class 2, Subject 1 (AGB1221), theory -> Teacher 80
+   [NO TEACHER] CSD(C) in AI&DS-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in AI&DS-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 3, Subject 2 (CGA1221), theory -> Teacher 17
+   READ [INFERRED]: Class 3, Subject 3 (AGI1252), theory -> Teacher 20
+   READ [INFERRED]: Class 3, Subject 3 (AGI1252), lab -> Teacher 20
+   READ [INFERRED]: Class 3, Subject 4 (AGI1251), theory -> Teacher 21
+   READ [INFERRED]: Class 3, Subject 4 (AGI1251), lab -> Teacher 21
+   READ [INFERRED]: Class 3, Subject 5 (CGB1221), theory -> Teacher 26
+   READ [INFERRED]: Class 3, Subject 5 (CGB1221), lab -> Teacher 26
+   [NO TEACHER] GEA1211 in AI&DS-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] LB in AI&DS-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 3, Subject 8 (CGI1253), theory -> Teacher 39
+   READ [INFERRED]: Class 3, Subject 8 (CGI1253), lab -> Teacher 39
+   READ [INFERRED]: Class 3, Subject 9 (CGI1257), theory -> Teacher 22
+   READ [INFERRED]: Class 3, Subject 9 (CGI1257), lab -> Teacher 22
+   [NO TEACHER] CGI1252 in AI&DS-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 3, Subject 11 (AGIXCC), theory -> Teacher 43
+   READ [INFERRED]: Class 3, Subject 11 (AGIXCC), lab -> Teacher 43
+   READ [INFERRED]: Class 3, Subject 12 (ADIXCC), theory -> Teacher 53
+   READ [INFERRED]: Class 3, Subject 12 (ADIXCC), lab -> Teacher 53
+   READ [INFERRED]: Class 3, Subject 13 (CXC00X), theory -> Teacher 67
+   READ [INFERRED]: Class 3, Subject 13 (CXC00X), lab -> Teacher 67
+   READ [INFERRED]: Class 3, Subject 14 (SXC00X), theory -> Teacher 162
+   READ [INFERRED]: Class 3, Subject 14 (SXC00X), lab -> Teacher 162
+   READ [INFERRED]: Class 3, Subject 1 (AGB1221), theory -> Teacher 80
+   [NO TEACHER] CSD(C) in AI&DS-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in AI&DS-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 4, Subject 2 (CGA1221), theory -> Teacher 17
+   READ [INFERRED]: Class 4, Subject 5 (CGB1221), theory -> Teacher 26
+   READ [INFERRED]: Class 4, Subject 5 (CGB1221), lab -> Teacher 26
+   READ [INFERRED]: Class 4, Subject 8 (CGI1253), theory -> Teacher 39
+   READ [INFERRED]: Class 4, Subject 8 (CGI1253), lab -> Teacher 39
+   READ [INFERRED]: Class 4, Subject 9 (CGI1257), theory -> Teacher 22
+   READ [INFERRED]: Class 4, Subject 9 (CGI1257), lab -> Teacher 22
+   [NO TEACHER] CGI1252 in IT-II YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 4, Subject 11 (AGIXCC), theory -> Teacher 43
+   READ [INFERRED]: Class 4, Subject 11 (AGIXCC), lab -> Teacher 43
+   READ [INFERRED]: Class 4, Subject 12 (ADIXCC), theory -> Teacher 53
+   READ [INFERRED]: Class 4, Subject 12 (ADIXCC), lab -> Teacher 53
+   READ [INFERRED]: Class 4, Subject 13 (CXC00X), theory -> Teacher 67
+   READ [INFERRED]: Class 4, Subject 13 (CXC00X), lab -> Teacher 67
+   READ [INFERRED]: Class 4, Subject 14 (SXC00X), theory -> Teacher 162
+   READ [INFERRED]: Class 4, Subject 14 (SXC00X), lab -> Teacher 162
+   [NO TEACHER] CSD(C) in IT-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in IT-II YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 4, Subject 17 (CGB1222), theory -> Teacher 66
+   READ [INFERRED]: Class 4, Subject 18 (ITB1221), theory -> Teacher 41
+   READ [INFERRED]: Class 4, Subject 19 (CGB1223), theory -> Teacher 42
+   [NO TEACHER] CGB1231 in IT-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER]  CGB1232 in IT-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] ITB1231 in IT-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] SPR in IT-II YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 5, Subject 2 (CGA1221), theory -> Teacher 17
+   READ [INFERRED]: Class 5, Subject 5 (CGB1221), theory -> Teacher 26
+   READ [INFERRED]: Class 5, Subject 5 (CGB1221), lab -> Teacher 26
+   READ [INFERRED]: Class 5, Subject 8 (CGI1253), theory -> Teacher 39
+   READ [INFERRED]: Class 5, Subject 8 (CGI1253), lab -> Teacher 39
+   READ [INFERRED]: Class 5, Subject 9 (CGI1257), theory -> Teacher 22
+   READ [INFERRED]: Class 5, Subject 9 (CGI1257), lab -> Teacher 22
+   [NO TEACHER] CGI1252 in CSE-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 5, Subject 11 (AGIXCC), theory -> Teacher 43
+   READ [INFERRED]: Class 5, Subject 11 (AGIXCC), lab -> Teacher 43
+   READ [INFERRED]: Class 5, Subject 12 (ADIXCC), theory -> Teacher 53
+   READ [INFERRED]: Class 5, Subject 12 (ADIXCC), lab -> Teacher 53
+   READ [INFERRED]: Class 5, Subject 13 (CXC00X), theory -> Teacher 67
+   READ [INFERRED]: Class 5, Subject 13 (CXC00X), lab -> Teacher 67
+   READ [INFERRED]: Class 5, Subject 14 (SXC00X), theory -> Teacher 162
+   READ [INFERRED]: Class 5, Subject 14 (SXC00X), lab -> Teacher 162
+   [NO TEACHER] CSD(C) in CSE-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in CSE-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CGB1231 in CSE-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 5, Subject 17 (CGB1222), theory -> Teacher 66
+   READ [INFERRED]: Class 5, Subject 19 (CGB1223), theory -> Teacher 42
+   [NO TEACHER]  CGB1232 in CSE-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 5, Subject 24 (CGB1203), theory -> Teacher 55
+   [NO TEACHER] CSB1231 in CSE-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] LB in CSE-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 6, Subject 2 (CGA1221), theory -> Teacher 17
+   READ [INFERRED]: Class 6, Subject 5 (CGB1221), theory -> Teacher 26
+   READ [INFERRED]: Class 6, Subject 5 (CGB1221), lab -> Teacher 26
+   READ [INFERRED]: Class 6, Subject 8 (CGI1253), theory -> Teacher 39
+   READ [INFERRED]: Class 6, Subject 8 (CGI1253), lab -> Teacher 39
+   READ [INFERRED]: Class 6, Subject 9 (CGI1257), theory -> Teacher 22
+   READ [INFERRED]: Class 6, Subject 9 (CGI1257), lab -> Teacher 22
+   [NO TEACHER] CGI1252 in CSE-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 6, Subject 11 (AGIXCC), theory -> Teacher 43
+   READ [INFERRED]: Class 6, Subject 11 (AGIXCC), lab -> Teacher 43
+   READ [INFERRED]: Class 6, Subject 12 (ADIXCC), theory -> Teacher 53
+   READ [INFERRED]: Class 6, Subject 12 (ADIXCC), lab -> Teacher 53
+   READ [INFERRED]: Class 6, Subject 13 (CXC00X), theory -> Teacher 67
+   READ [INFERRED]: Class 6, Subject 13 (CXC00X), lab -> Teacher 67
+   READ [INFERRED]: Class 6, Subject 14 (SXC00X), theory -> Teacher 162
+   READ [INFERRED]: Class 6, Subject 14 (SXC00X), lab -> Teacher 162
+   [NO TEACHER] CSD(C) in CSE-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in CSE-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CGB1231 in CSE-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 6, Subject 17 (CGB1222), theory -> Teacher 66
+   READ [INFERRED]: Class 6, Subject 19 (CGB1223), theory -> Teacher 42
+   [NO TEACHER]  CGB1232 in CSE-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 6, Subject 24 (CGB1203), theory -> Teacher 55
+   [NO TEACHER] CSB1231 in CSE-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] LB in CSE-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 7, Subject 2 (CGA1221), theory -> Teacher 17
+   READ [INFERRED]: Class 7, Subject 5 (CGB1221), theory -> Teacher 26
+   READ [INFERRED]: Class 7, Subject 5 (CGB1221), lab -> Teacher 26
+   READ [INFERRED]: Class 7, Subject 8 (CGI1253), theory -> Teacher 39
+   READ [INFERRED]: Class 7, Subject 8 (CGI1253), lab -> Teacher 39
+   READ [INFERRED]: Class 7, Subject 9 (CGI1257), theory -> Teacher 22
+   READ [INFERRED]: Class 7, Subject 9 (CGI1257), lab -> Teacher 22
+   [NO TEACHER] CGI1252 in CSE-II 'C' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 7, Subject 11 (AGIXCC), theory -> Teacher 43
+   READ [INFERRED]: Class 7, Subject 11 (AGIXCC), lab -> Teacher 43
+   READ [INFERRED]: Class 7, Subject 12 (ADIXCC), theory -> Teacher 53
+   READ [INFERRED]: Class 7, Subject 12 (ADIXCC), lab -> Teacher 53
+   READ [INFERRED]: Class 7, Subject 13 (CXC00X), theory -> Teacher 67
+   READ [INFERRED]: Class 7, Subject 13 (CXC00X), lab -> Teacher 67
+   READ [INFERRED]: Class 7, Subject 14 (SXC00X), theory -> Teacher 162
+   READ [INFERRED]: Class 7, Subject 14 (SXC00X), lab -> Teacher 162
+   [NO TEACHER] CSD(C) in CSE-II 'C' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in CSE-II 'C' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CGB1231 in CSE-II 'C' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 7, Subject 17 (CGB1222), theory -> Teacher 66
+   READ [INFERRED]: Class 7, Subject 19 (CGB1223), theory -> Teacher 42
+   [NO TEACHER]  CGB1232 in CSE-II 'C' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 7, Subject 24 (CGB1203), theory -> Teacher 55
+   [NO TEACHER] CSB1231 in CSE-II 'C' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] LB in CSE-II 'C' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] GEA1211 in ECE-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(C) in ECE-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in ECE-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 8, Subject 26 (ECB1221), theory -> Teacher 81
+   READ [INFERRED]: Class 8, Subject 26 (ECB1221), tutorial -> Teacher 81
+   [NO TEACHER] ECB1222 in ECE-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 8, Subject 28 (ECB1223), theory -> Teacher 76
+   READ [INFERRED]: Class 8, Subject 28 (ECB1223), lab -> Teacher 76
+   READ [INFERRED]: Class 8, Subject 28 (ECB1223), tutorial -> Teacher 76
+   [NO TEACHER] ECB1224 in ECE-II 'A' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 8, Subject 30 (EGB1221), theory -> Teacher 84
+   READ [INFERRED]: Class 8, Subject 30 (EGB1221), lab -> Teacher 84
+   READ [INFERRED]: Class 8, Subject 30 (EGB1221), tutorial -> Teacher 84
+   [NO TEACHER] ECB1231 in ECE-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] ECC1291 in ECE-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] ECC1296 in ECE-II 'A' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] GEA1211 in ECE-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(C) in ECE-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in ECE-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 9, Subject 26 (ECB1221), theory -> Teacher 81
+   READ [INFERRED]: Class 9, Subject 26 (ECB1221), tutorial -> Teacher 81
+   [NO TEACHER] ECB1222 in ECE-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 9, Subject 28 (ECB1223), theory -> Teacher 76
+   READ [INFERRED]: Class 9, Subject 28 (ECB1223), lab -> Teacher 76
+   READ [INFERRED]: Class 9, Subject 28 (ECB1223), tutorial -> Teacher 76
+   [NO TEACHER] ECB1224 in ECE-II 'B' YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 9, Subject 30 (EGB1221), theory -> Teacher 84
+   READ [INFERRED]: Class 9, Subject 30 (EGB1221), lab -> Teacher 84
+   READ [INFERRED]: Class 9, Subject 30 (EGB1221), tutorial -> Teacher 84
+   [NO TEACHER] ECB1231 in ECE-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] ECC1291 in ECE-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] ECC1296 in ECE-II 'B' YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(C) in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in EEE-II YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 10, Subject 30 (EGB1221), theory -> Teacher 84
+   READ [INFERRED]: Class 10, Subject 30 (EGB1221), lab -> Teacher 84
+   READ [INFERRED]: Class 10, Subject 30 (EGB1221), tutorial -> Teacher 84
+   [NO TEACHER] EEB1222 in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] EEB1223 in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] EEB1225 in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] EEB1231 in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] EEB1232 in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] EEB1312 in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] EEB1221 in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] EEC1295 in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] EEC1294 in EEE-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(C) in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] MEB1221 in ME-II YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 11, Subject 45 (MEB1222), theory -> Teacher 98
+   READ [INFERRED]: Class 11, Subject 45 (MEB1222), tutorial -> Teacher 98
+   [NO TEACHER] MEB1223 in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] MEC1291 in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] MEC1292 in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] MEB1224 in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] MEB1225 in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] MEB1231 in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] MEB1232 in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] MEB1233 in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] LB in ME-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(C) in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CSD(A) in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CEB1221 in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CEB1222 in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CEC1291 in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CEC1293 in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CEB1223 in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   READ [INFERRED]: Class 12, Subject 40 (CEB1224), theory -> Teacher 109
+   READ [INFERRED]: Class 12, Subject 40 (CEB1224), lab -> Teacher 109
+   [NO TEACHER] CEB1225 in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CEB1231 in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] CEB1232 in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [NO TEACHER] GEA1211 in CIVIL-II YEAR: Subject NOT eligible for scheduling
+   [INFO] Filled 28 mappings from teacher_subjects
+   TOTAL LOCKED MAPPINGS: 246
+   [TEMPLATE] Using EVEN template. Blocked slots: set()
+   [LAB] Valid continuous lab blocks: [(0, 1), (1, 2), (3, 4), (4, 5), (5, 6)]
+
+PHASE 0: PRE-SCHEDULING ELECTIVE BASKETS
+   [PLAN] Year 2 Global Elective requires: 3 Theory, 1 Lab Blocks
+   [GLOBAL] Locked 3 theory groups and 3 lab groups
+   [CLEANUP] Clearing all existing allocations for these semesters...
+   Cleared 0 existing allocations
+   [GLOBAL] Loaded 0 external allocations as constraints
+
+STARTING PHASE 1: Dept 1 (3 classes)
+   READ [ROOM]: Class 1, Subject 4, lab -> Room 10
+   READ [ROOM]: Class 1, Subject 9, lab -> Room 9
+   READ [ROOM]: Class 1, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 3, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 2, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 4, Subject 22, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 4, lab -> Room 11
+   READ [ROOM]: Class 2, Subject 3, lab -> Room 10
+   READ [ROOM]: Class 2, Subject 5, lab -> Room 12
+   READ [ROOM]: Class 3, Subject 3, lab -> Room 9
+   READ [ROOM]: Class 3, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 2, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 6, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 7, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 5, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 20, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 2, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 3, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 4, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 5, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 7, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 1, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 2, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 3, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 4, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 6, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 2, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 3, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 4, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 5, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 20, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 20, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 25, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 21, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 5, lab -> Room 24
+   READ [ROOM]: Class 8, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 8, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 29, lab -> Room 27
+   READ [ROOM]: Class 9, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 12, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 11, Subject 53, lab -> Room 33
+   READ [ROOM]: Class 10, Subject 30, lab -> Room 36
+   READ [ROOM]: Class 10, Subject 57, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 58, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 59, lab -> Room 35
+   TOTAL ROOM PREFERENCES: 64
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   Built 78 requirements from existing mappings
+   [DEBUG] Found 21 elective lab requirements for this batch
+   [PLAN] Applied global elective THEORY plan for 3 groups
+   [PLAN] Applied global elective LAB plan for 3 groups
+      Processing 1 elective group(s)
+
+      Elective Group 'Emerging Elective' (Year 2, Basket 2):
+        Component: theory
+        [SYNC] Preferred 3 global slots (with 32 fallback slots)
+        Scheduled 3/3 hours for theory
+      [E-LAB] Grouped 21 reqs into 1 basket groups
+      [E-LAB] Basket 2 (Year 2): 7 subjects, 3 classes, need 1 block(s)
+        [OK] Lab block at Day 3 Slots 3-4 (3 classes)
+   [DB-PARALLEL-LAB] Processing 3 parallel lab baskets
+      [OK] Scheduled DB-Basket 3 block 1 at Day 4 Slots 3-4 for 2 subjects
+      [OK] Scheduled DB-Basket 3 block 2 at Day 1 Slots 5-6 for 2 subjects
+      [OK] Scheduled DB-Basket 4 block 1 at Day 4 Slots 0-1 for 2 subjects
+      [OK] Scheduled DB-Basket 4 block 2 at Day 2 Slots 3-4 for 2 subjects
+      [OK] Scheduled DB-Basket 5 block 1 at Day 1 Slots 3-4 for 2 subjects
+      [OK] Scheduled DB-Basket 5 block 2 at Day 2 Slots 1-2 for 2 subjects
+      CSE-II 'A' YEAR...
+         -> 16 subjects
+      CSE-II 'B' YEAR...
+         -> 16 subjects
+      CSE-II 'C' YEAR...
+         -> 16 subjects
+   [OK] Saved 117 allocations
+
+STARTING PHASE 1: Dept 2 (1 classes)
+   READ [ROOM]: Class 1, Subject 4, lab -> Room 10
+   READ [ROOM]: Class 1, Subject 9, lab -> Room 9
+   READ [ROOM]: Class 1, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 3, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 2, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 4, Subject 22, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 4, lab -> Room 11
+   READ [ROOM]: Class 2, Subject 3, lab -> Room 10
+   READ [ROOM]: Class 2, Subject 5, lab -> Room 12
+   READ [ROOM]: Class 3, Subject 3, lab -> Room 9
+   READ [ROOM]: Class 3, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 2, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 6, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 7, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 5, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 20, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 2, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 3, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 4, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 5, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 7, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 1, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 2, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 3, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 4, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 6, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 2, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 3, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 4, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 5, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 20, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 20, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 25, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 21, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 5, lab -> Room 24
+   READ [ROOM]: Class 8, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 8, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 29, lab -> Room 27
+   READ [ROOM]: Class 9, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 12, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 11, Subject 53, lab -> Room 33
+   READ [ROOM]: Class 10, Subject 30, lab -> Room 36
+   READ [ROOM]: Class 10, Subject 57, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 58, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 59, lab -> Room 35
+   TOTAL ROOM PREFERENCES: 64
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   Built 26 requirements from existing mappings
+   [DEBUG] Found 7 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+   [SYNC] Found 5 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 3 groups
+   [PLAN] Applied global elective LAB plan for 3 groups
+      Processing 1 elective group(s)
+
+      Elective Group 'Emerging Elective' (Year 2, Basket 2):
+        Component: theory
+        [SYNC] Preferred 3 global slots (with 32 fallback slots)
+        Scheduled 3/3 hours for theory
+      [E-LAB] Grouped 7 reqs into 1 basket groups
+      [E-LAB] Basket 2 (Year 2): 7 subjects, 1 classes, need 1 block(s)
+        [OK] Lab block at Day 3 Slots 3-4 (1 classes)
+      AIML-II YEAR...
+         -> 20 subjects
+   [OK] Saved 35 allocations
+
+STARTING PHASE 1: Dept 3 (2 classes)
+   READ [ROOM]: Class 1, Subject 4, lab -> Room 10
+   READ [ROOM]: Class 1, Subject 9, lab -> Room 9
+   READ [ROOM]: Class 1, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 3, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 2, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 4, Subject 22, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 4, lab -> Room 11
+   READ [ROOM]: Class 2, Subject 3, lab -> Room 10
+   READ [ROOM]: Class 2, Subject 5, lab -> Room 12
+   READ [ROOM]: Class 3, Subject 3, lab -> Room 9
+   READ [ROOM]: Class 3, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 2, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 6, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 7, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 5, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 20, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 2, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 3, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 4, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 5, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 7, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 1, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 2, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 3, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 4, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 6, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 2, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 3, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 4, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 5, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 20, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 20, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 25, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 21, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 5, lab -> Room 24
+   READ [ROOM]: Class 8, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 8, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 29, lab -> Room 27
+   READ [ROOM]: Class 9, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 12, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 11, Subject 53, lab -> Room 33
+   READ [ROOM]: Class 10, Subject 30, lab -> Room 36
+   READ [ROOM]: Class 10, Subject 57, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 58, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 59, lab -> Room 35
+   TOTAL ROOM PREFERENCES: 64
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   DEFAULT CLASSROOM: AI&DS-II 'A' YEAR (Year 2 Section A) -> LHC-102
+   DEFAULT CLASSROOM: AI&DS-II 'B' YEAR (Year 2 Section B) -> LHC-103
+   TOTAL DEFAULT CLASSROOMS MAPPED: 2
+   Built 52 requirements from existing mappings
+   [DEBUG] Found 14 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+   [SYNC] Found 5 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 3 groups
+   [PLAN] Applied global elective LAB plan for 3 groups
+      Processing 1 elective group(s)
+
+      Elective Group 'Emerging Elective' (Year 2, Basket 2):
+        Component: theory
+        [SYNC] Preferred 3 global slots (with 32 fallback slots)
+        Scheduled 3/3 hours for theory
+      [E-LAB] Grouped 14 reqs into 1 basket groups
+      [E-LAB] Basket 2 (Year 2): 7 subjects, 2 classes, need 1 block(s)
+        [OK] Lab block at Day 3 Slots 3-4 (2 classes)
+      AI&DS-II 'A' YEAR...
+         -> 20 subjects
+      AI&DS-II 'B' YEAR...
+         -> 20 subjects
+   [OK] Saved 70 allocations
+
+STARTING PHASE 1: Dept 4 (1 classes)
+   READ [ROOM]: Class 1, Subject 4, lab -> Room 10
+   READ [ROOM]: Class 1, Subject 9, lab -> Room 9
+   READ [ROOM]: Class 1, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 3, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 2, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 4, Subject 22, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 4, lab -> Room 11
+   READ [ROOM]: Class 2, Subject 3, lab -> Room 10
+   READ [ROOM]: Class 2, Subject 5, lab -> Room 12
+   READ [ROOM]: Class 3, Subject 3, lab -> Room 9
+   READ [ROOM]: Class 3, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 2, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 6, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 7, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 5, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 20, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 2, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 3, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 4, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 5, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 7, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 1, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 2, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 3, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 4, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 6, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 2, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 3, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 4, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 5, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 20, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 20, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 25, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 21, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 5, lab -> Room 24
+   READ [ROOM]: Class 8, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 8, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 29, lab -> Room 27
+   READ [ROOM]: Class 9, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 12, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 11, Subject 53, lab -> Room 33
+   READ [ROOM]: Class 10, Subject 30, lab -> Room 36
+   READ [ROOM]: Class 10, Subject 57, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 58, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 59, lab -> Room 35
+   TOTAL ROOM PREFERENCES: 64
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   [NO MAPPING] CGB1231 - lab in IT-II YEAR
+   [NO MAPPING]  CGB1232 - lab in IT-II YEAR
+   Built 24 requirements from existing mappings
+   [DEBUG] Found 7 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+   [SYNC] Found 5 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 3 groups
+   [PLAN] Applied global elective LAB plan for 3 groups
+      Processing 1 elective group(s)
+
+      Elective Group 'Emerging Elective' (Year 2, Basket 2):
+        Component: theory
+        [SYNC] Preferred 3 global slots (with 32 fallback slots)
+        Scheduled 3/3 hours for theory
+      [E-LAB] Grouped 7 reqs into 1 basket groups
+      [E-LAB] Basket 2 (Year 2): 7 subjects, 1 classes, need 1 block(s)
+        [OK] Lab block at Day 3 Slots 3-4 (1 classes)
+   [DB-PARALLEL-LAB] Processing 1 parallel lab baskets
+      [OK] Scheduled DB-Basket 2 block 1 at Day 4 Slots 5-6 for 2 subjects
+      [OK] Scheduled DB-Basket 2 block 2 at Day 1 Slots 0-1 for 2 subjects
+      IT-II YEAR...
+         -> 20 subjects
+   [OK] Saved 39 allocations
+
+STARTING PHASE 1: Dept 6 (2 classes)
+   READ [ROOM]: Class 1, Subject 4, lab -> Room 10
+   READ [ROOM]: Class 1, Subject 9, lab -> Room 9
+   READ [ROOM]: Class 1, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 3, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 2, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 4, Subject 22, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 4, lab -> Room 11
+   READ [ROOM]: Class 2, Subject 3, lab -> Room 10
+   READ [ROOM]: Class 2, Subject 5, lab -> Room 12
+   READ [ROOM]: Class 3, Subject 3, lab -> Room 9
+   READ [ROOM]: Class 3, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 2, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 6, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 7, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 5, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 20, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 2, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 3, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 4, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 5, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 7, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 1, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 2, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 3, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 4, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 6, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 2, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 3, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 4, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 5, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 20, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 20, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 25, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 21, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 5, lab -> Room 24
+   READ [ROOM]: Class 8, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 8, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 29, lab -> Room 27
+   READ [ROOM]: Class 9, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 12, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 11, Subject 53, lab -> Room 33
+   READ [ROOM]: Class 10, Subject 30, lab -> Room 36
+   READ [ROOM]: Class 10, Subject 57, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 58, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 59, lab -> Room 35
+   TOTAL ROOM PREFERENCES: 64
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   DEFAULT CLASSROOM: ECE-II 'A' YEAR (Year 2 Section A) -> LHC-407
+   DEFAULT CLASSROOM: ECE-II 'B' YEAR (Year 2 Section B) -> LHC-408
+   TOTAL DEFAULT CLASSROOMS MAPPED: 2
+   [NO MAPPING] ECB1231 - lab in ECE-II 'A' YEAR
+   [NO MAPPING] ECB1231 - lab in ECE-II 'B' YEAR
+   Built 36 requirements from existing mappings
+   [DEBUG] Found 0 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+   [SYNC] Found 5 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 3 groups
+   [PLAN] Applied global elective LAB plan for 3 groups
+      Processing 1 elective group(s)
+
+      Elective Group 'Emerging Elective' (Year 2, Basket 3):
+        Component: theory
+        [SYNC] Preferred 3 global slots (with 32 fallback slots)
+        Scheduled 3/3 hours for theory
+      No elective lab requirements to schedule.
+   [DB-PARALLEL-LAB] Processing 2 parallel lab baskets
+      [OK] Scheduled DB-Basket 8 block 1 at Day 3 Slots 4-5 for 2 subjects
+      [OK] Scheduled DB-Basket 8 block 2 at Day 1 Slots 0-1 for 2 subjects
+      [OK] Scheduled DB-Basket 9 block 1 at Day 0 Slots 5-6 for 2 subjects
+      [OK] Scheduled DB-Basket 9 block 2 at Day 4 Slots 4-5 for 2 subjects
+      ECE-II 'A' YEAR...
+         -> 18 subjects
+      ECE-II 'B' YEAR...
+         -> 18 subjects
+   [OK] Saved 78 allocations
+
+STARTING PHASE 1: Dept 7 (1 classes)
+   READ [ROOM]: Class 1, Subject 4, lab -> Room 10
+   READ [ROOM]: Class 1, Subject 9, lab -> Room 9
+   READ [ROOM]: Class 1, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 3, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 2, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 4, Subject 22, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 4, lab -> Room 11
+   READ [ROOM]: Class 2, Subject 3, lab -> Room 10
+   READ [ROOM]: Class 2, Subject 5, lab -> Room 12
+   READ [ROOM]: Class 3, Subject 3, lab -> Room 9
+   READ [ROOM]: Class 3, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 2, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 6, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 7, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 5, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 20, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 2, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 3, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 4, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 5, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 7, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 1, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 2, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 3, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 4, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 6, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 2, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 3, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 4, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 5, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 20, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 20, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 25, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 21, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 5, lab -> Room 24
+   READ [ROOM]: Class 8, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 8, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 29, lab -> Room 27
+   READ [ROOM]: Class 9, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 12, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 11, Subject 53, lab -> Room 33
+   READ [ROOM]: Class 10, Subject 30, lab -> Room 36
+   READ [ROOM]: Class 10, Subject 57, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 58, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 59, lab -> Room 35
+   TOTAL ROOM PREFERENCES: 64
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   [NO MAPPING] MEB1231 - lab in ME-II YEAR
+   [NO MAPPING] MEB1232 - lab in ME-II YEAR
+   Built 22 requirements from existing mappings
+   [DEBUG] Found 0 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 0:1
+   [SYNC] Found 8 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 3 groups
+   [PLAN] Applied global elective LAB plan for 3 groups
+      Processing 1 elective group(s)
+
+      Elective Group 'Elective' (Year 2, Basket None):
+        Component: theory
+        Scheduled 3/3 hours for theory
+        Component: seminar
+        Scheduled 1/1 hours for seminar
+      No elective lab requirements to schedule.
+   [DB-PARALLEL-LAB] Processing 2 parallel lab baskets
+      [OK] Scheduled DB-Basket 12 block 1 at Day 3 Slots 0-1 for 2 subjects
+      [OK] Scheduled DB-Basket 12 block 2 at Day 0 Slots 5-6 for 2 subjects
+      [OK] Scheduled DB-Basket 13 block 1 at Day 2 Slots 3-4 for 2 subjects
+      [OK] Scheduled DB-Basket 13 block 2 at Day 4 Slots 4-5 for 2 subjects
+      ME-II YEAR...
+         -> 19 subjects
+   [OK] Saved 43 allocations
+
+STARTING PHASE 1: Dept 8 (1 classes)
+   READ [ROOM]: Class 1, Subject 4, lab -> Room 10
+   READ [ROOM]: Class 1, Subject 9, lab -> Room 9
+   READ [ROOM]: Class 1, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 3, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 2, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 4, Subject 22, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 4, lab -> Room 11
+   READ [ROOM]: Class 2, Subject 3, lab -> Room 10
+   READ [ROOM]: Class 2, Subject 5, lab -> Room 12
+   READ [ROOM]: Class 3, Subject 3, lab -> Room 9
+   READ [ROOM]: Class 3, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 2, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 6, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 7, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 5, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 20, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 2, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 3, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 4, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 5, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 7, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 1, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 2, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 3, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 4, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 6, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 2, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 3, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 4, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 5, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 20, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 20, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 25, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 21, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 5, lab -> Room 24
+   READ [ROOM]: Class 8, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 8, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 29, lab -> Room 27
+   READ [ROOM]: Class 9, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 12, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 11, Subject 53, lab -> Room 33
+   READ [ROOM]: Class 10, Subject 30, lab -> Room 36
+   READ [ROOM]: Class 10, Subject 57, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 58, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 59, lab -> Room 35
+   TOTAL ROOM PREFERENCES: 64
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   [NO MAPPING] CEB1231 - lab in CIVIL-II YEAR
+   [NO MAPPING] CEB1232 - lab in CIVIL-II YEAR
+   Built 16 requirements from existing mappings
+   [DEBUG] Found 0 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 0 at 2:1
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 0 at 0:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 0 at 0:0
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 0 at 3:6
+   [SYNC] Found 12 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 3 groups
+   [PLAN] Applied global elective LAB plan for 3 groups
+      Processing 1 elective group(s)
+
+      Elective Group 'Elective civil' (Year 2, Basket 4):
+        Component: theory
+        [SYNC] Preferred 3 global slots (with 32 fallback slots)
+        Scheduled 3/3 hours for theory
+      No elective lab requirements to schedule.
+   [DB-PARALLEL-LAB] Processing 2 parallel lab baskets
+      [OK] Scheduled DB-Basket 10 block 1 at Day 1 Slots 1-2 for 2 subjects
+      [OK] Scheduled DB-Basket 10 block 2 at Day 3 Slots 3-4 for 2 subjects
+      [OK] Scheduled DB-Basket 11 block 1 at Day 4 Slots 5-6 for 2 subjects
+      [OK] Scheduled DB-Basket 11 block 2 at Day 3 Slots 0-1 for 2 subjects
+      CIVIL-II YEAR...
+         -> 16 subjects
+   [OK] Saved 43 allocations
+
+STARTING PHASE 1: Dept 9 (1 classes)
+   READ [ROOM]: Class 1, Subject 4, lab -> Room 10
+   READ [ROOM]: Class 1, Subject 9, lab -> Room 9
+   READ [ROOM]: Class 1, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 3, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 2, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 4, Subject 22, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 4, lab -> Room 11
+   READ [ROOM]: Class 2, Subject 3, lab -> Room 10
+   READ [ROOM]: Class 2, Subject 5, lab -> Room 12
+   READ [ROOM]: Class 3, Subject 3, lab -> Room 9
+   READ [ROOM]: Class 3, Subject 5, lab -> Room 11
+   READ [ROOM]: Class 1, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 2, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 3, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 6, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 7, Subject 11, lab -> Room 15
+   READ [ROOM]: Class 4, Subject 5, lab -> Room 15
+   READ [ROOM]: Class 5, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 5, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 20, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 2, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 3, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 4, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 5, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 7, Subject 12, lab -> Room 21
+   READ [ROOM]: Class 1, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 2, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 3, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 4, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 5, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 6, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 13, lab -> Room 23
+   READ [ROOM]: Class 1, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 2, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 3, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 4, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 5, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 14, lab -> Room 24
+   READ [ROOM]: Class 6, Subject 20, lab -> Room 21
+   READ [ROOM]: Class 6, Subject 25, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 21, lab -> Room 22
+   READ [ROOM]: Class 6, Subject 5, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 20, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 25, lab -> Room 23
+   READ [ROOM]: Class 7, Subject 21, lab -> Room 24
+   READ [ROOM]: Class 7, Subject 5, lab -> Room 24
+   READ [ROOM]: Class 8, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 8, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 9, Subject 29, lab -> Room 27
+   READ [ROOM]: Class 9, Subject 30, lab -> Room 27
+   READ [ROOM]: Class 12, Subject 6, lab -> Room 13
+   READ [ROOM]: Class 11, Subject 53, lab -> Room 33
+   READ [ROOM]: Class 10, Subject 30, lab -> Room 36
+   READ [ROOM]: Class 10, Subject 57, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 58, lab -> Room 34
+   READ [ROOM]: Class 10, Subject 59, lab -> Room 35
+   TOTAL ROOM PREFERENCES: 64
+   TOTAL BATCH-SPECIFIC MAPPINGS: 0
+   TOTAL BATCH-SPECIFIC ROOMS: 0
+   Built 20 requirements from existing mappings
+   [DEBUG] Found 0 elective lab requirements for this batch
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 0:5
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 1:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 2:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 2 at 3:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 2:2
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 3 at 0:1
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 0 at 2:1
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 0 at 0:4
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 0 at 0:0
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 0 at 3:6
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 4 at 2:0
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 4 at 4:3
+      [DEBUG-SYNC] Found existing elective slot: Year 2 Basket 4 at 3:2
+   [SYNC] Found 15 global elective slots to align with.
+   [PLAN] Applied global elective THEORY plan for 3 groups
+   [PLAN] Applied global elective LAB plan for 3 groups
+      Processing 1 elective group(s)
+
+      Elective Group 'Elective' (Year 2, Basket None):
+        Component: theory
+        Scheduled 2/2 hours for theory
+        Component: seminar
+        Scheduled 2/2 hours for seminar
+      No elective lab requirements to schedule.
+   [DB-PARALLEL-LAB] Processing 1 parallel lab baskets
+      [OK] Scheduled DB-Basket 14 block 1 at Day 3 Slots 0-1 for 2 subjects
+      [OK] Scheduled DB-Basket 14 block 2 at Day 1 Slots 3-4 for 2 subjects
+      EEE-II YEAR...
+         -> 19 subjects
+   [OK] Saved 39 allocations
+
+PHASE 2: GLOBAL VALIDATION & CONFLICT CHECK...
+   [OK] GLOBAL VALIDATION PASSED. No inter-department conflicts.
+INFO:     127.0.0.1:50933 - "POST /api/timetable/generate HTTP/1.1" 200 OK

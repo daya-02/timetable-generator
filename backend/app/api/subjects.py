@@ -101,13 +101,13 @@ def create_subject(subject_data: SubjectCreate, db: Session = Depends(get_db)):
 
     _validate_block("Project", subject_data.project_hours_per_week, subject_data.project_block_size)
     _validate_block("Report", subject_data.report_hours_per_week, subject_data.report_block_size)
-    _validate_block("Internship", subject_data.internship_hours_per_week, subject_data.internship_block_size)
+    _validate_block("Seminar", subject_data.seminar_hours_per_week, subject_data.seminar_block_size)
 
-    if subject_data.internship_day_based and subject_data.internship_hours_per_week > 0:
-        if subject_data.internship_hours_per_week < 7:
+    if subject_data.seminar_day_based and subject_data.seminar_hours_per_week > 0:
+        if subject_data.seminar_hours_per_week < 7:
             raise HTTPException(
                 status_code=400,
-                detail="Internship day-based mode requires at least 7 periods per week."
+                detail="Seminar day-based mode requires at least 7 periods per week."
             )
 
     total_hours = (
@@ -116,11 +116,16 @@ def create_subject(subject_data: SubjectCreate, db: Session = Depends(get_db)):
         + subject_data.tutorial_hours_per_week
         + subject_data.project_hours_per_week
         + subject_data.report_hours_per_week
+        + subject_data.self_study_hours_per_week
         + subject_data.seminar_hours_per_week
-        + subject_data.internship_hours_per_week
     )
     if total_hours > 0:
         data['weekly_hours'] = total_hours
+    
+    # Auto-compute priority score (never user-editable)
+    importance = data.get('importance_level', 'NORMAL') or 'NORMAL'
+    pass_pct = data.get('previous_year_pass_percentage')
+    data['computed_priority_score'] = Subject.calculate_priority_score(importance, pass_pct)
     
     subject = Subject(**data)
     
@@ -208,13 +213,13 @@ def update_subject(subject_id: int, subject_data: SubjectUpdate, db: Session = D
 
     _validate_block("Project", subject.project_hours_per_week or 0, subject.project_block_size or 1)
     _validate_block("Report", subject.report_hours_per_week or 0, subject.report_block_size or 1)
-    _validate_block("Internship", subject.internship_hours_per_week or 0, subject.internship_block_size or 2)
+    _validate_block("Seminar", subject.seminar_hours_per_week or 0, subject.seminar_block_size or 2)
 
-    if getattr(subject, "internship_day_based", False) and (subject.internship_hours_per_week or 0) > 0:
-        if (subject.internship_hours_per_week or 0) < 7:
+    if getattr(subject, "seminar_day_based", False) and (subject.seminar_hours_per_week or 0) > 0:
+        if (subject.seminar_hours_per_week or 0) < 7:
             raise HTTPException(
                 status_code=400,
-                detail="Internship day-based mode requires at least 7 periods per week."
+                detail="Seminar day-based mode requires at least 7 periods per week."
             )
 
     total_hours = (
@@ -223,11 +228,16 @@ def update_subject(subject_id: int, subject_data: SubjectUpdate, db: Session = D
         + (subject.tutorial_hours_per_week or 0)
         + (subject.project_hours_per_week or 0)
         + (subject.report_hours_per_week or 0)
+        + (subject.self_study_hours_per_week or 0)
         + (subject.seminar_hours_per_week or 0)
-        + (subject.internship_hours_per_week or 0)
     )
     if total_hours > 0:
         subject.weekly_hours = total_hours
+    
+    # Auto-compute priority score
+    importance = getattr(subject, 'importance_level', 'NORMAL') or 'NORMAL'
+    pass_pct = getattr(subject, 'previous_year_pass_percentage', None)
+    subject.computed_priority_score = Subject.calculate_priority_score(importance, pass_pct)
     
     db.commit()
     db.refresh(subject)
@@ -342,20 +352,20 @@ def get_subject_components(subject_id: int, db: Session = Depends(get_db)):
             "description": f"{subject.report_hours_per_week} report period(s)/week"
         })
 
+    if getattr(subject, "self_study_hours_per_week", 0) > 0:
+        components.append({
+            "type": "self_study",
+            "hours_per_week": subject.self_study_hours_per_week,
+            "description": f"{subject.self_study_hours_per_week} self-study period(s)/week"
+        })
+    
     if getattr(subject, "seminar_hours_per_week", 0) > 0:
         components.append({
             "type": "seminar",
             "hours_per_week": subject.seminar_hours_per_week,
+            "block_size": getattr(subject, "seminar_block_size", 2),
+            "day_based": getattr(subject, "seminar_day_based", False),
             "description": f"{subject.seminar_hours_per_week} seminar period(s)/week"
-        })
-
-    if getattr(subject, "internship_hours_per_week", 0) > 0:
-        components.append({
-            "type": "internship",
-            "hours_per_week": subject.internship_hours_per_week,
-            "block_size": getattr(subject, "internship_block_size", 2),
-            "day_based": getattr(subject, "internship_day_based", False),
-            "description": f"{subject.internship_hours_per_week} internship period(s)/week"
         })
     
     return {

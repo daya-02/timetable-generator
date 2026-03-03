@@ -4,6 +4,7 @@ CRUD API routes for Teachers.
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.exc import IntegrityError
 
 from app.db.session import get_db
 from app.db.models import (
@@ -121,6 +122,12 @@ def update_teacher(teacher_id: int, teacher_data: TeacherUpdate, db: Session = D
          existing = db.query(Teacher).filter(Teacher.email == update_data["email"]).first()
          if existing and existing.id != teacher_id:
              raise HTTPException(status_code=400, detail="Teacher with this email already exists")
+
+    # Check for duplicate teacher_code
+    if "teacher_code" in update_data and update_data["teacher_code"]:
+        existing_code = db.query(Teacher).filter(Teacher.teacher_code == update_data["teacher_code"]).first()
+        if existing_code and existing_code.id != teacher_id:
+             raise HTTPException(status_code=400, detail="Teacher code already exists")
     
     # Handle subject_ids separately
     if "subject_ids" in update_data:
@@ -211,17 +218,31 @@ def remove_subject_from_teacher(
     db.refresh(teacher)
     
     return teacher
+
+
 @router.post("/{teacher_id}/assignments", response_model=ClassSubjectTeacherResponse)
 def add_teacher_assignment(
     teacher_id: int,
     assignment_data: ClassSubjectTeacherCreate,
     db: Session = Depends(get_db)
 ):
-    """Assign a teacher to a specific class (semester), subject, and component."""
+    """
+    Append-only assignment:
+    - Inserts a new teacher-class-subject-component mapping if it does not exist.
+    - Never reassigns/deletes another teacher's existing mapping.
+    """
     # Verify teacher exists
     teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
     if not teacher:
         raise HTTPException(status_code=404, detail="Teacher not found")
+
+    # Path teacher_id is the source of truth. If payload contains teacher_id,
+    # it must match to prevent accidental cross-teacher overwrites.
+    if getattr(assignment_data, "teacher_id", None) not in (None, teacher_id):
+        raise HTTPException(
+            status_code=400,
+            detail="teacher_id in payload does not match path teacher_id"
+        )
     
     # Verify semester and subject exist
     semester = db.query(Semester).filter(Semester.id == assignment_data.semester_id).first()
@@ -263,8 +284,10 @@ def add_teacher_assignment(
         if assignment_data.component_type == ComponentType.LAB and room.room_type != RoomType.LAB:
             raise HTTPException(status_code=400, detail="Selected room is not a lab room")
 
-    # Check for existing assignment (Unique constraint)
+    # APPEND MODE: only treat exact same mapping as existing.
+    # Do NOT replace a different teacher's row for the same class/subject.
     query = db.query(ClassSubjectTeacher).filter(
+        ClassSubjectTeacher.teacher_id == teacher_id,
         ClassSubjectTeacher.semester_id == assignment_data.semester_id,
         ClassSubjectTeacher.subject_id == assignment_data.subject_id,
         ClassSubjectTeacher.component_type == assignment_data.component_type
@@ -278,17 +301,15 @@ def add_teacher_assignment(
     existing = query.first()
     
     if existing:
-        # Update existing assignment
-        existing.teacher_id = teacher_id
+        # Idempotent behavior: keep row, optionally refresh mutable metadata only.
         existing.room_id = assignment_data.room_id
         existing.assignment_reason = assignment_data.assignment_reason
         existing.is_locked = assignment_data.is_locked
         existing.parallel_lab_group = assignment_data.parallel_lab_group
-        
-        # Sync qualification
+
         if subject not in teacher.subjects:
             teacher.subjects.append(subject)
-            
+
         db.commit()
         db.refresh(existing)
         return existing
@@ -307,6 +328,23 @@ def add_teacher_assignment(
     try:
         db.commit()
         db.refresh(db_assignment)
+    except IntegrityError:
+        # Graceful duplicate handling for concurrent requests.
+        db.rollback()
+        dup_query = db.query(ClassSubjectTeacher).filter(
+            ClassSubjectTeacher.teacher_id == teacher_id,
+            ClassSubjectTeacher.semester_id == assignment_data.semester_id,
+            ClassSubjectTeacher.subject_id == assignment_data.subject_id,
+            ClassSubjectTeacher.component_type == assignment_data.component_type
+        )
+        if assignment_data.batch_id is not None:
+            dup_query = dup_query.filter(ClassSubjectTeacher.batch_id == assignment_data.batch_id)
+        else:
+            dup_query = dup_query.filter(ClassSubjectTeacher.batch_id.is_(None))
+        existing_dup = dup_query.first()
+        if existing_dup:
+            return existing_dup
+        raise HTTPException(status_code=400, detail="Duplicate assignment")
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))

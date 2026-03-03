@@ -50,6 +50,8 @@ from app.api import (
     reports,
     rule_toggles,
     parallel_lab_baskets,
+    room_availability,
+    structured_composite_baskets,
 )
 
 settings = get_settings()
@@ -150,6 +152,8 @@ app.include_router(departments.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(rule_toggles.router, prefix="/api")
 app.include_router(parallel_lab_baskets.router, prefix="/api")
+app.include_router(room_availability.router, prefix="/api")
+app.include_router(structured_composite_baskets.router, prefix="/api")
 
 
 @app.get("/")

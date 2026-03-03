@@ -1,4 +1,4 @@
-"""
+﻿"""
 READ-ONLY COLLEGE TIMETABLE GENERATION ENGINE
 ==============================================
 
@@ -16,6 +16,7 @@ GENERATION FLOW:
 """
 import random
 import time
+import os
 from typing import List, Dict, Tuple, Optional, Set
 from dataclasses import dataclass, field
 from sqlalchemy.orm import Session
@@ -71,6 +72,7 @@ class ComponentRequirement:
     batch_allocations: Dict[int, int] = field(default_factory=dict)
     batch_room_allocations: Dict[int, int] = field(default_factory=dict)  # batch_id -> room_id
     parallel_lab_group: Optional[str] = None  # Links multi-subject parallel labs
+    priority_weight: int = 0  # Soft scheduling weight for morning slot preference
 
 
 @dataclass
@@ -447,10 +449,37 @@ class TimetableGenerator:
     def __init__(self, db: Session):
         self.db = db
         self.free_period_reasons: List[str] = []
+        trace_raw = str(os.getenv("GENERATOR_TRACE", "0")).strip().lower()
+        self.trace_enabled = trace_raw in {"1", "true", "yes", "on"}
         # Continuity boundaries are slot indices after which lunch exists.
         # Example: boundary=3 means slot pair (3,4) is NOT continuous.
         self.lab_continuity_boundaries: Set[int] = set()
         self.valid_lab_blocks: List[Tuple[int, int]] = list(VALID_LAB_BLOCKS)
+
+    def _trace(self, message: str):
+        """Verbose trace logs (disabled by default for faster generation)."""
+        if self.trace_enabled:
+            print(message)
+
+    def _summarize_free_period_causes(self) -> List[str]:
+        """
+        Build concise, user-actionable cause summaries from collected failures.
+        Most causes here are data/config constraints rather than code/runtime faults.
+        """
+        fails = getattr(self, "allocation_failures", []) or []
+        if not fails:
+            return []
+
+        causes: List[str] = []
+        if any("[E-LAB]" in f or "[THEORY] Elective Group" in f for f in fails):
+            causes.append("elective basket teacher/slot mapping is constrained (configuration)")
+        if any(f.startswith("[LAB]") for f in fails):
+            causes.append("some assigned lab teachers/room pairs cannot fit a valid 2-slot block")
+        if any("Teacher" in f and "Busy" in f for f in fails):
+            causes.append("some teachers are double-booked at remaining candidate slots")
+        if any("No Room" in f for f in fails):
+            causes.append("room capacity/type availability is insufficient for some slots")
+        return causes
 
     def _build_valid_lab_blocks(self) -> List[Tuple[int, int]]:
         """
@@ -493,7 +522,7 @@ class TimetableGenerator:
         print("COLLEGE TIMETABLE GENERATION ENGINE (MULTI-DEPT)")
         print("="*60)
         
-        target_semesters = self._read_semesters(semester_ids, dept_id)
+        target_semesters = self._read_semesters(semester_ids, dept_id, semester_type)
         if not target_semesters:
             return False, "No active semesters found", [], 0.0
 
@@ -577,6 +606,7 @@ class TimetableGenerator:
             print("   [CLEANUP] Clearing all existing allocations for these semesters...")
             self._clear_allocations_only(target_semesters)
         
+
         # INITIALIZE CUMULATIVE STATE
         # This state object will persist through all department batches, ensuring 
         # that Dept 2 sees the teachers/rooms already taken by Dept 1.
@@ -587,6 +617,22 @@ class TimetableGenerator:
             
         # Load external constraints (from semesters NOT in target_semesters)
         self._load_existing_allocations(cumulative_state, exclude_semesters=target_semesters)
+
+        print("\nPHASE 0.5: PRE-SCHEDULING STRUCTURED COMPOSITE BASKETS")
+        scb_allocations = self._pre_schedule_scbs(
+            target_semesters,
+            all_subjects,
+            teacher_assignment_map_global,
+            cumulative_state,
+            all_rooms
+        )
+        print(f"   [GLOBAL SCB] Locked {len(scb_allocations)} SCB slot entries")
+        
+        # Add to cumulative state directly
+        for entry in scb_allocations:
+            cumulative_state.add_allocation(entry, force_parallel=True)
+            cumulative_state.mark_slot_as_fixed(entry.semester_id, entry.day, entry.slot)
+
 
         # ============================================================
         # EXECUTE GENERATION PER DEPARTMENT
@@ -751,7 +797,7 @@ class TimetableGenerator:
             
         elective_theory_reqs = [r for r in all_requirements if r.is_elective and r.component_type == ComponentType.THEORY]
         elective_lab_reqs = [r for r in all_requirements if r.is_elective and r.component_type == ComponentType.LAB]
-        print(f"   [DEBUG] Found {len(elective_lab_reqs)} elective lab requirements for this batch")
+        self._trace(f"   [DEBUG] Found {len(elective_lab_reqs)} elective lab requirements for this batch")
         regular_lab_reqs = [r for r in all_requirements if not r.is_elective and r.component_type == ComponentType.LAB and not r.parallel_lab_group]
         parallel_lab_reqs = [r for r in all_requirements if not r.is_elective and r.component_type == ComponentType.LAB and r.parallel_lab_group]
         theory_tutorial_reqs = [r for r in all_requirements if not r.is_elective and r.component_type in [ComponentType.THEORY, ComponentType.TUTORIAL]]
@@ -819,6 +865,9 @@ class TimetableGenerator:
         msg = f"Generated {len(new_allocations)} slots"
         if free_periods > 0:
             msg += f" ({free_periods} free)"
+            cause_summary = self._summarize_free_period_causes()
+            if cause_summary:
+                msg += " | causes: " + "; ".join(cause_summary)
         
         
         return True, msg, new_allocations
@@ -870,128 +919,253 @@ class TimetableGenerator:
             if year not in year_to_baskets: year_to_baskets[year] = []
             year_to_baskets[year].append(key)
 
-        for year, basket_keys in year_to_baskets.items():
-            year_teachers = set()
-            year_theory_hours_needed = 0
-            year_lab_blocks_needed = 0
-            
-            for key in basket_keys:
-                group = elective_groups[key]
-                if not group.subjects: continue
-                year_teachers.update(group.teachers)
-                
-                theory_h = 0
-                lab_b = 0
-                for sid in group.subjects:
-                    s = next((sub for sub in subjects if sub.id == sid), None)
-                    if s:
-                        theory_h = max(theory_h, s.theory_hours_per_week)
-                        lab_b = max(lab_b, s.lab_hours_per_week // 2)
-                        
-                year_theory_hours_needed = max(year_theory_hours_needed, theory_h)
-                year_lab_blocks_needed = max(year_lab_blocks_needed, lab_b)
-            
-            if year_theory_hours_needed == 0 and year_lab_blocks_needed == 0:
-                year_theory_hours_needed = 3 
-            
-            print(f"   [PLAN] Year {year} Global Elective requires: {year_theory_hours_needed} Theory, {year_lab_blocks_needed} Lab Blocks")
+        subject_by_id = {s.id: s for s in subjects}
 
-            theory_slots_target = min(year_theory_hours_needed, DAYS_PER_WEEK)
-            lab_blocks_target = year_lab_blocks_needed
-            
-            # 2. ASSIGN THEORY SLOTS FOR THE YEAR
-            allocated_theory = set()
-            candidates = [(d, s) for d in range(DAYS_PER_WEEK) for s in range(SLOTS_PER_DAY)]
-            random.shuffle(candidates)
-            
-            for day, slot in candidates:
-                if len(allocated_theory) >= theory_slots_target:
-                    break
-                if slot in blocked_slots:
+        for year, basket_keys in year_to_baskets.items():
+            sorted_basket_keys = sorted(
+                basket_keys,
+                key=lambda x: (x[1] if x[1] is not None else -1)
+            )
+
+            for key in sorted_basket_keys:
+                group = elective_groups[key]
+                if not group.subjects:
                     continue
-                
-                # Constraint: Max 1 elective theory per day
-                assigned_days = {d for d, s in allocated_theory}
-                if day in assigned_days:
-                    continue
-                    
-                # Collision Check
-                if (year, day, slot) in year_slots_used:
-                    continue
-                
-                teacher_clash = False
-                for tid in year_teachers:
-                    if tid in internal_teacher_usage and (day, slot) in internal_teacher_usage[tid]:
-                        teacher_clash = True
+
+                basket_id = key[1]
+                basket_teachers = set(group.teachers)
+
+                theory_hours_needed = 0
+                lab_blocks_needed = 0
+                for sid in group.subjects:
+                    s = subject_by_id.get(sid)
+                    if not s:
+                        continue
+                    theory_hours_needed = max(theory_hours_needed, int(getattr(s, "theory_hours_per_week", 0) or 0))
+                    lab_blocks_needed = max(lab_blocks_needed, int(getattr(s, "lab_hours_per_week", 0) or 0) // 2)
+
+                if theory_hours_needed == 0 and lab_blocks_needed == 0:
+                    theory_hours_needed = 3
+
+                print(
+                    f"   [PLAN] Year {year} Basket {basket_id} Global Elective requires: "
+                    f"{theory_hours_needed} Theory, {lab_blocks_needed} Lab Blocks"
+                )
+
+                theory_slots_target = min(theory_hours_needed, DAYS_PER_WEEK)
+                allocated_theory: Set[Tuple[int, int]] = set()
+                candidates = [(d, s) for d in range(DAYS_PER_WEEK) for s in range(SLOTS_PER_DAY)]
+                random.shuffle(candidates)
+
+                for day, slot in candidates:
+                    if len(allocated_theory) >= theory_slots_target:
                         break
-                if teacher_clash:
-                    continue
-                        
-                allocated_theory.add((day, slot))
-            
-            # 3. ASSIGN LAB SLOTS FOR THE YEAR (Different Day than Theory)
-            allocated_lab_slots = set() 
-            
-            if lab_blocks_target > 0:
-                lab_candidates = []
-                for d in range(DAYS_PER_WEEK):
-                    for (s1, s2) in self.valid_lab_blocks:
-                        lab_candidates.append((d, s1, s2))
-                random.shuffle(lab_candidates)
-                
-                theory_days = {d for d, s in allocated_theory}
-                
-                blocks_found = 0
-                for day, s1, s2 in lab_candidates:
-                    if blocks_found >= lab_blocks_target:
-                        break
-                        
-                    if s1 in blocked_slots or s2 in blocked_slots:
+                    if slot in blocked_slots:
                         continue
-                        
-                    # CRITICAL RULE: Elective Lab must be on DIFFERENT day than elective theory
-                    if day in theory_days:
+
+                    # Max one elective theory slot per day for a basket.
+                    if day in {d for d, _ in allocated_theory}:
                         continue
-                        
-                    if (year, day, s1) in year_slots_used or (year, day, s2) in year_slots_used:
+                    if (year, day, slot) in year_slots_used:
                         continue
-                    
-                    teacher_clash = False
-                    for tid in year_teachers:
-                        if tid in internal_teacher_usage:
-                             if (day, s1) in internal_teacher_usage[tid] or (day, s2) in internal_teacher_usage[tid]:
-                                 teacher_clash = True
-                                 break
+
+                    teacher_clash = any(
+                        (day, slot) in internal_teacher_usage.get(tid, set())
+                        for tid in basket_teachers
+                    )
                     if teacher_clash:
                         continue
-                        
-                    blocks_found += 1
-                    allocated_lab_slots.add((day, s1))
-                    allocated_lab_slots.add((day, s2))
-                    
-            # 4. COMMIT TO ALL BASKETS IN THIS YEAR
-            for key in basket_keys:
+
+                    allocated_theory.add((day, slot))
+
+                allocated_lab_slots: Set[Tuple[int, int]] = set()
+                if lab_blocks_needed > 0:
+                    lab_candidates = [
+                        (d, s1, s2)
+                        for d in range(DAYS_PER_WEEK)
+                        for (s1, s2) in self.valid_lab_blocks
+                    ]
+                    random.shuffle(lab_candidates)
+
+                    theory_days = {d for d, _ in allocated_theory}
+                    blocks_found = 0
+                    for day, s1, s2 in lab_candidates:
+                        if blocks_found >= lab_blocks_needed:
+                            break
+                        if s1 in blocked_slots or s2 in blocked_slots:
+                            continue
+                        # CRITICAL RULE: elective labs must not share a day with elective theory.
+                        if day in theory_days:
+                            continue
+                        if (year, day, s1) in year_slots_used or (year, day, s2) in year_slots_used:
+                            continue
+
+                        teacher_clash = any(
+                            (day, s1) in internal_teacher_usage.get(tid, set())
+                            or (day, s2) in internal_teacher_usage.get(tid, set())
+                            for tid in basket_teachers
+                        )
+                        if teacher_clash:
+                            continue
+
+                        blocks_found += 1
+                        allocated_lab_slots.add((day, s1))
+                        allocated_lab_slots.add((day, s2))
+
                 global_theory_plan[key] = allocated_theory
                 global_lab_plan[key] = allocated_lab_slots
-                basket_teachers = elective_groups[key].teachers
-                
+
                 for d, s in allocated_theory:
                     year_slots_used.add((year, d, s))
                     for tid in basket_teachers:
-                        if tid not in internal_teacher_usage: internal_teacher_usage[tid] = set()
-                        internal_teacher_usage[tid].add((d, s))
-                        if tid not in global_teacher_locks: global_teacher_locks[tid] = set()
-                        global_teacher_locks[tid].add((d, s))
-                        
+                        internal_teacher_usage.setdefault(tid, set()).add((d, s))
+                        global_teacher_locks.setdefault(tid, set()).add((d, s))
+
                 for d, s in allocated_lab_slots:
                     year_slots_used.add((year, d, s))
                     for tid in basket_teachers:
-                        if tid not in internal_teacher_usage: internal_teacher_usage[tid] = set()
-                        internal_teacher_usage[tid].add((d, s))
-                        if tid not in global_teacher_locks: global_teacher_locks[tid] = set()
-                        global_teacher_locks[tid].add((d, s))
+                        internal_teacher_usage.setdefault(tid, set()).add((d, s))
+                        global_teacher_locks.setdefault(tid, set()).add((d, s))
             
         return global_theory_plan, global_lab_plan, global_teacher_locks
+
+    def _pre_schedule_scbs(
+        self,
+        target_semesters: List[Semester],
+        all_subjects: List[Subject],
+        teacher_assignment_map: Dict[Tuple[int, int, str], int],
+        state: TimetableState,
+        all_rooms: List[Room]
+    ):
+        import random
+        from app.db.models import StructuredCompositeBasket, RoomType, ComponentType, Batch
+        
+        allocations = []
+        
+        try:
+            active_scbs = self.db.query(StructuredCompositeBasket).all()
+        except:
+            return []
+            
+        if not active_scbs:
+            return []
+            
+        subject_by_id = {s.id: s for s in all_subjects}
+        room_by_type = {RoomType.LECTURE: [r for r in all_rooms if r.room_type in [RoomType.LECTURE, RoomType.SEMINAR]],
+                        RoomType.LAB: [r for r in all_rooms if r.room_type == RoomType.LAB]}
+        
+        for scb in active_scbs:
+            if not scb.departments_involved:
+                continue
+                
+            scb_dept_ids = {d.id for d in scb.departments_involved}
+            participating_sems = [
+                s for s in target_semesters
+                if s.dept_id in scb_dept_ids and s.semester_number == scb.semester
+            ]
+            
+            if not participating_sems:
+                continue
+                
+            theory_h = scb.theory_hours or 0
+            lab_h = scb.lab_hours or 0
+            lab_cont = scb.continuous_lab_periods or 2
+            
+            used_days = set()
+            
+            # --- Schedule Labs ---
+            blocks_needed = lab_h // lab_cont if lab_cont > 0 else 0
+            for _ in range(blocks_needed):
+                valid_days = [d for d in range(5) if d not in used_days]
+                random.shuffle(valid_days)
+                
+                block_found = False
+                for d in valid_days:
+                    valid_starts = [s for s in range(7 - lab_cont + 1)]
+                    random.shuffle(valid_starts)
+                    for start_slot in valid_starts:
+                        slots_to_check = [start_slot + i for i in range(lab_cont)]
+                        
+                        # Validate
+                        invalid = False
+                        for s in slots_to_check:
+                            if s in getattr(state, 'global_blocked_slots', set()): invalid = True; break
+                            if any(state.is_slot_fixed(sem.id, d, s) for sem in participating_sems): invalid = True; break
+                        if invalid or any(s in self.lab_continuity_boundaries for s in slots_to_check[:-1]):
+                            continue
+                            
+                        # Assign lab block
+                        used_days.add(d)
+                        for sem in participating_sems:
+                            batches = []
+                            try:
+                                batches = self.db.query(Batch).filter(Batch.semester_id == sem.id).all()
+                            except:
+                                pass
+                            
+                            for offset in range(lab_cont):
+                                slot = start_slot + offset
+                                for link in scb.linked_subjects:
+                                    subject = subject_by_id.get(link.subject_id)
+                                    if not subject or not ("LAB" in subject.name.upper() or subject.lab_hours_per_week > 0):
+                                        continue
+                                        
+                                    tid = teacher_assignment_map.get((sem.id, subject.id, ComponentType.LAB.value))
+                                    if not tid: tid = teacher_assignment_map.get((sem.id, subject.id, ComponentType.THEORY.value))
+                                    if not tid: continue
+                                    
+                                    if scb.allow_lab_parallel and batches:
+                                        for i, b in enumerate(batches):
+                                            room = room_by_type[RoomType.LAB][i % len(room_by_type[RoomType.LAB])] if room_by_type[RoomType.LAB] else None
+                                            allocations.append(AllocationEntry(
+                                                semester_id=sem.id, subject_id=subject.id, teacher_id=tid, room_id=room.id if room else None,
+                                                day=d, slot=slot, component_type=ComponentType.LAB, academic_component="lab", batch_id=b.id
+                                            ))
+                                    else:
+                                        room = random.choice(room_by_type[RoomType.LAB]) if room_by_type[RoomType.LAB] else None
+                                        allocations.append(AllocationEntry(
+                                            semester_id=sem.id, subject_id=subject.id, teacher_id=tid, room_id=room.id if room else None,
+                                            day=d, slot=slot, component_type=ComponentType.LAB, academic_component="lab", batch_id=None
+                                        ))
+                        block_found = True
+                        break
+                    if block_found:
+                        break
+            
+            # --- Schedule Theory ---
+            for _ in range(theory_h):
+                valid_days = [d for d in range(5) if d not in used_days]
+                if not valid_days: valid_days = [d for d in range(5)]
+                random.shuffle(valid_days)
+                
+                theory_found = False
+                for d in valid_days:
+                    valid_slots = [s for s in range(7)]
+                    random.shuffle(valid_slots)
+                    for s in valid_slots:
+                        if s in getattr(state, 'global_blocked_slots', set()): continue
+                        if any(state.is_slot_fixed(sem.id, d, s) for sem in participating_sems): continue
+                        
+                        used_days.add(d)
+                        for sem in participating_sems:
+                            for link in scb.linked_subjects:
+                                subject = subject_by_id.get(link.subject_id)
+                                if not subject or ("LAB" in subject.name.upper() or subject.lab_hours_per_week > 0):
+                                    continue
+                                    
+                                tid = teacher_assignment_map.get((sem.id, subject.id, ComponentType.THEORY.value))
+                                if not tid: continue
+                                room = random.choice(room_by_type[RoomType.LECTURE]) if room_by_type[RoomType.LECTURE] else None
+                                allocations.append(AllocationEntry(
+                                    semester_id=sem.id, subject_id=subject.id, teacher_id=tid, room_id=room.id if room else None,
+                                    day=d, slot=slot, component_type=ComponentType.THEORY, academic_component="theory", batch_id=None
+                                ))
+                        theory_found = True
+                        break
+                    if theory_found:
+                        break
+                        
+        return allocations
 
     def _scan_global_elective_slots(self, current_batch_semesters: List[Semester]) -> Dict[Tuple[int, Optional[int]], Set[Tuple[int, int]]]:
         """
@@ -1029,7 +1203,7 @@ class TimetableGenerator:
             # Or use a placeholder basket_id=0 if unknown.
             
             # IMPROVEMENT: Try to find basket_id from Subject or FixedSlot?
-            basket_id = a.elective_basket_id if a.elective_basket_id is not None else 0 # Default if not found
+            basket_id = a.elective_basket_id
             # if a.subject and a.subject.is_elective:
             #     # This depends on how we model electives. 
             #     # If Subjects are linked to Baskets, we can find it.
@@ -1041,7 +1215,7 @@ class TimetableGenerator:
                 global_slots[key] = set()
             
             global_slots[key].add((a.day, a.slot))
-            print(f"      [DEBUG-SYNC] Found existing elective slot: Year {year} Basket {basket_id} at {a.day}:{a.slot}")
+            self._trace(f"      [DEBUG-SYNC] Found existing elective slot: Year {year} Basket {basket_id} at {a.day}:{a.slot}")
         
         if global_slots:
             print(f"   [SYNC] Found {sum(len(s) for s in global_slots.values())} global elective slots to align with.")
@@ -1083,7 +1257,8 @@ class TimetableGenerator:
     def _validate_global_constraints(self, allocations: List[AllocationEntry]) -> List[str]:
         """Check for hard conflicts across all generated allocations."""
         errors = []
-        teacher_map = {} # (teacher_id, day, slot) -> (sem_id, is_elective, basket_id)
+        # (teacher_id, day, slot) -> list of (sem_id, is_elective, basket_id)
+        teacher_map: Dict[Tuple, List[Tuple]] = {}
         room_map = {}    # (room_id, day, slot) -> (sem_id, is_elective, basket_id)
         
         for a in allocations:
@@ -1091,13 +1266,26 @@ class TimetableGenerator:
             if a.teacher_id is not None:
                 t_key = (a.teacher_id, a.day, a.slot)
                 if t_key in teacher_map:
-                    prev_sem, prev_elective, prev_basket = teacher_map[t_key]
-                    # Skip if both are electives in same basket (intentional overlap)
-                    if a.is_elective and prev_elective and a.elective_basket_id == prev_basket:
-                        pass
-                    else:
-                        errors.append(f"Teacher Clash: ID {a.teacher_id} at {a.day}:{a.slot} (Sem {prev_sem} vs {a.semester_id})")
-                teacher_map[t_key] = (a.semester_id, a.is_elective, a.elective_basket_id)
+                    has_conflict = False
+                    for prev_sem, prev_elective, prev_basket in teacher_map[t_key]:
+                        # Same semester is OK (batch splitting / parallel labs)
+                        if prev_sem == a.semester_id:
+                            continue
+                        # Both electives in same basket but DIFFERENT semesters = REAL CONFLICT
+                        # A teacher can't physically be in two classrooms at once
+                        if a.is_elective and prev_elective and a.elective_basket_id == prev_basket:
+                            errors.append(
+                                f"Teacher Elective Clash: Teacher {a.teacher_id} assigned to "
+                                f"Semester {prev_sem} AND Semester {a.semester_id} at Day {a.day} "
+                                f"Slot {a.slot} (Basket {a.elective_basket_id})"
+                            )
+                            has_conflict = True
+                        else:
+                            errors.append(f"Teacher Clash: ID {a.teacher_id} at {a.day}:{a.slot} (Sem {prev_sem} vs {a.semester_id})")
+                            has_conflict = True
+                    teacher_map[t_key].append((a.semester_id, a.is_elective, a.elective_basket_id))
+                else:
+                    teacher_map[t_key] = [(a.semester_id, a.is_elective, a.elective_basket_id)]
             
             # Room Check
             if a.room_id is not None:
@@ -1117,14 +1305,23 @@ class TimetableGenerator:
     # READ-ONLY DATA ACCESS (NO MODIFICATIONS)
     # ============================================================
     
-    def _read_semesters(self, semester_ids: Optional[List[int]], dept_id: Optional[int] = None) -> List[Semester]:
-        """READ semesters from DB (no modification)."""
+    def _read_semesters(self, semester_ids: Optional[List[int]], dept_id: Optional[int] = None, semester_type: Optional[str] = None) -> List[Semester]:
+        """READ semesters from DB (no modification), filtering by semester type if provided."""
         query = self.db.query(Semester)
         if semester_ids:
             query = query.filter(Semester.id.in_(semester_ids))
         if dept_id:
             query = query.filter(Semester.dept_id == dept_id)
-        return query.all()
+            
+        semesters = query.all()
+        
+        if semester_type:
+            if semester_type.upper() == "ODD":
+                semesters = [s for s in semesters if (s.semester_number % 2) != 0]
+            elif semester_type.upper() == "EVEN":
+                semesters = [s for s in semesters if (s.semester_number % 2) == 0]
+                
+        return semesters
     
     def _read_teachers(self) -> List[Teacher]:
         """READ teachers from DB (no modification)."""
@@ -1249,25 +1446,104 @@ class TimetableGenerator:
         gaps for classes where fixed class-level mapping is incomplete.
         """
         assignment_map: Dict[Tuple[int, int, str], int] = {}
-        
-        # STEP 1: READ explicit non-batch class assignments (PRIMARY SOURCE)
+        additional_teachers_by_key: Dict[Tuple[int, int, str], Set[int]] = {}
+
+        # Build quick lookups for balancing candidate selection.
+        teacher_max_hours: Dict[int, int] = {}
+        for t in self.db.query(Teacher).all():
+            teacher_max_hours[t.id] = int(getattr(t, "max_hours_per_week", 20) or 20)
+
+        subject_by_id: Dict[int, Subject] = {s.id: s for s in self.db.query(Subject).all()}
+
+        def _component_hours(subject_id: int, component_key: str) -> int:
+            subj = subject_by_id.get(subject_id)
+            if not subj:
+                return 1
+            if component_key == ComponentType.LAB.value:
+                return max(1, int(getattr(subj, "lab_hours_per_week", 0) or 0))
+            if component_key == ComponentType.TUTORIAL.value:
+                return max(1, int(getattr(subj, "tutorial_hours_per_week", 0) or 0))
+            # THEORY + extended theory-like components.
+            theory_like = (
+                int(getattr(subj, "theory_hours_per_week", 0) or 0)
+                + int(getattr(subj, "project_hours_per_week", 0) or 0)
+                + int(getattr(subj, "report_hours_per_week", 0) or 0)
+                + int(getattr(subj, "self_study_hours_per_week", 0) or 0)
+                + int(getattr(subj, "seminar_hours_per_week", 0) or 0)
+            )
+            return max(1, theory_like)
+
+        # STEP 1: READ explicit non-batch class assignments (PRIMARY SOURCE).
+        # If multiple teachers are mapped for the same key (append-mode history),
+        # choose one deterministically using load-aware balancing.
         explicit_assignments = self.db.query(ClassSubjectTeacher).filter(
             ClassSubjectTeacher.batch_id.is_(None)
-        ).all()
-        
+        ).order_by(ClassSubjectTeacher.id.asc()).all()
+
+        candidates_by_key: Dict[Tuple[int, int, str], List[int]] = {}
         for assignment in explicit_assignments:
             key = (assignment.semester_id, assignment.subject_id, assignment.component_type.value)
-            assignment_map[key] = assignment.teacher_id
-            print(f"   READ [LOCKED]: Class {assignment.semester_id}, Subject {assignment.subject_id}, {assignment.component_type.value} -> Teacher {assignment.teacher_id}")
+            if key not in candidates_by_key:
+                candidates_by_key[key] = []
+            if assignment.teacher_id not in candidates_by_key[key]:
+                candidates_by_key[key].append(assignment.teacher_id)
+
+        projected_hours_by_teacher: Dict[int, int] = {}
+
+        # Harder keys first (fewer candidates, then higher weekly component hours).
+        ordered_keys = sorted(
+            candidates_by_key.keys(),
+            key=lambda k: (
+                len(candidates_by_key[k]),
+                -_component_hours(k[1], k[2]),
+                k[0],
+                k[1],
+                k[2],
+            ),
+        )
+
+        for key in ordered_keys:
+            sem_id, subj_id, comp_key = key
+            candidates = candidates_by_key[key]
+            req_hours = _component_hours(subj_id, comp_key)
+
+            best_teacher = None
+            best_score = None
+            for idx, candidate_id in enumerate(candidates):
+                current_load = projected_hours_by_teacher.get(candidate_id, 0)
+                max_hours = teacher_max_hours.get(candidate_id, 20)
+                overflow_after = max(0, (current_load + req_hours) - max_hours)
+                # Prefer no-overflow, then lowest projected load, then stable candidate order.
+                score = (overflow_after, current_load, idx)
+                if best_score is None or score < best_score:
+                    best_score = score
+                    best_teacher = candidate_id
+
+            assignment_map[key] = best_teacher
+            projected_hours_by_teacher[best_teacher] = projected_hours_by_teacher.get(best_teacher, 0) + req_hours
+
+            if len(candidates) > 1:
+                additional_teachers_by_key[key] = set(candidates) - {best_teacher}
+                self._trace(
+                    f"   READ [LOCKED-BALANCED]: Class {sem_id}, Subject {subj_id}, {comp_key} "
+                    f"-> Teacher {best_teacher} (candidates={len(candidates)})"
+                )
+            else:
+                self._trace(
+                    f"   READ [LOCKED]: Class {sem_id}, Subject {subj_id}, {comp_key} -> Teacher {best_teacher}"
+                )
 
         # STEP 2: Batch assignments can still provide a deterministic teacher fallback
         # for components that have no whole-class mapping.
         batch_assignments = self.db.query(ClassSubjectTeacher).filter(
             ClassSubjectTeacher.batch_id.isnot(None)
-        ).all()
+        ).order_by(ClassSubjectTeacher.id.asc()).all()
         for assignment in batch_assignments:
             key = (assignment.semester_id, assignment.subject_id, assignment.component_type.value)
-            assignment_map.setdefault(key, assignment.teacher_id)
+            if key not in assignment_map:
+                assignment_map[key] = assignment.teacher_id
+            else:
+                additional_teachers_by_key.setdefault(key, set()).add(assignment.teacher_id)
 
         # STEP 3: Fill remaining unmapped keys from teacher_subjects (strict deterministic read).
         inferred_map = self._read_teacher_subjects_mapping_strict()
@@ -1278,7 +1554,14 @@ class TimetableGenerator:
                 inferred_added += 1
         if inferred_added:
             print(f"   [INFO] Filled {inferred_added} mappings from teacher_subjects")
-        
+
+        if additional_teachers_by_key:
+            extra_count = sum(len(v) for v in additional_teachers_by_key.values())
+            print(
+                f"   [INFO] Detected {extra_count} additional append-mode assignment row(s). "
+                "Balanced primary mapping selected per class-subject-component."
+            )
+
         print(f"   TOTAL LOCKED MAPPINGS: {len(assignment_map)}")
         return assignment_map
 
@@ -1305,7 +1588,7 @@ class TimetableGenerator:
                 continue
             key = (assignment.semester_id, assignment.subject_id, assignment.component_type.value)
             room_map[key] = assignment.room_id
-            print(
+            self._trace(
                 f"   READ [ROOM]: Class {assignment.semester_id}, Subject {assignment.subject_id}, "
                 f"{assignment.component_type.value} -> Room {assignment.room_id}"
             )
@@ -1380,13 +1663,22 @@ class TimetableGenerator:
             print(f"   [WARN] Could not read batch assignments: {e}")
             return {}
             
+        duplicate_batch_rows = 0
         for assignment in assignments:
             key = (assignment.semester_id, assignment.subject_id, assignment.component_type.value)
             if key not in batch_map:
                 batch_map[key] = {}
+            if assignment.batch_id in batch_map[key]:
+                duplicate_batch_rows += 1
+                continue
             batch_map[key][assignment.batch_id] = assignment.teacher_id
             
         print(f"   TOTAL BATCH-SPECIFIC MAPPINGS: {len(batch_map)}")
+        if duplicate_batch_rows:
+            print(
+                f"   [INFO] Ignored {duplicate_batch_rows} duplicate batch assignment row(s) "
+                "to keep deterministic mapping."
+            )
         return batch_map
 
     def _read_batch_room_map(self) -> Dict[Tuple[int, int, str], Dict[int, int]]:
@@ -1405,13 +1697,22 @@ class TimetableGenerator:
             print(f"   [WARN] Could not read batch room assignments: {e}")
             return {}
             
+        duplicate_batch_room_rows = 0
         for assignment in assignments:
             key = (assignment.semester_id, assignment.subject_id, assignment.component_type.value)
             if key not in room_map:
                 room_map[key] = {}
+            if assignment.batch_id in room_map[key]:
+                duplicate_batch_room_rows += 1
+                continue
             room_map[key][assignment.batch_id] = assignment.room_id
             
         print(f"   TOTAL BATCH-SPECIFIC ROOMS: {len(room_map)}")
+        if duplicate_batch_room_rows:
+            print(
+                f"   [INFO] Ignored {duplicate_batch_room_rows} duplicate batch room mapping row(s) "
+                "to keep deterministic mapping."
+            )
         return room_map
     
     def _read_parallel_lab_groups(self) -> Dict[Tuple[int, int, str], str]:
@@ -1469,7 +1770,7 @@ class TimetableGenerator:
                 teachers_for_subject = subject_to_teachers.get(subject.id, [])
                 
                 if not teachers_for_subject:
-                    print(f"   [NO TEACHER] {subject.code} in {semester.name}: Subject NOT eligible for scheduling")
+                    self._trace(f"   [NO TEACHER] {subject.code} in {semester.name}: Subject NOT eligible for scheduling")
                     continue
                 
                 # Use the first assigned teacher (deterministic, ordered by ID)
@@ -1483,7 +1784,7 @@ class TimetableGenerator:
                     key = (semester.id, subject.id, comp_type.value)
                     if key not in assignment_map:
                         assignment_map[key] = teacher_id
-                        print(
+                        self._trace(
                             f"   READ [INFERRED]: Class {semester.id}, Subject {subject.id} ({subject.code}), {comp_type.value} -> Teacher {teacher_id}"
                         )
         
@@ -1512,16 +1813,27 @@ class TimetableGenerator:
         
         # Build basket name lookup from ElectiveBasket table
         basket_names: Dict[int, str] = {}
+        basket_semester_map: Dict[int, Set[int]] = {}
         try:
             from app.db.models import ElectiveBasket
-            baskets = self.db.query(ElectiveBasket).all()
+            from sqlalchemy.orm import joinedload
+            baskets = self.db.query(ElectiveBasket).options(
+                joinedload(ElectiveBasket.subjects),
+                joinedload(ElectiveBasket.participating_semesters)
+            ).all()
             for basket in baskets:
                 basket_names[basket.id] = basket.name or f"Elective-{basket.id}"
+                sem_ids = {s.id for s in (basket.participating_semesters or [])}
+                if sem_ids:
+                    basket_semester_map[basket.id] = sem_ids
         except Exception:
+            baskets = []
             pass  # ElectiveBasket table may not exist
+
+        target_sem_ids = {s.id for s in semesters}
         
         for semester in semesters:
-            year = semester.semester_number
+            year = getattr(semester, 'year', None) or ((semester.semester_number + 1) // 2)
             
             for subject in semester.subjects:
                 # DETECT elective flag from existing data
@@ -1534,6 +1846,11 @@ class TimetableGenerator:
                 if is_elective:
                     # Use basket_id as the group identifier (can be None)
                     basket_id = subject.elective_basket_id
+                    if basket_id is not None:
+                        allowed_semesters = basket_semester_map.get(basket_id, set())
+                        if allowed_semesters and semester.id not in allowed_semesters:
+                            # Ignore off-basket class mappings for this elective subject.
+                            continue
                     group_key = (year, basket_id)
                     
                     # Create group if doesn't exist
@@ -1558,6 +1875,76 @@ class TimetableGenerator:
                         key = (semester.id, subject.id, comp_type)
                         if key in teacher_map:
                             groups[group_key].teachers.add(teacher_map[key])
+
+        # Also include basket-driven electives even if subject-semester mapping is incomplete.
+        for basket in baskets:
+            if not basket.subjects or not basket.participating_semesters:
+                continue
+            basket_id = basket.id
+            for sem in basket.participating_semesters:
+                if sem.id not in target_sem_ids:
+                    continue
+                year = getattr(sem, 'year', None) or ((sem.semester_number + 1) // 2)
+                group_key = (year, basket_id)
+                if group_key not in groups:
+                    basket_name = basket_names.get(basket_id, f"Elective-{basket_id}")
+                    groups[group_key] = ElectiveGroup(
+                        year=year,
+                        basket_id=basket_id,
+                        basket_name=basket_name
+                    )
+                if sem.id not in groups[group_key].classes:
+                    groups[group_key].classes.append(sem.id)
+                for subject in basket.subjects:
+                    if subject.id not in groups[group_key].subjects:
+                        groups[group_key].subjects.append(subject.id)
+                    # Prefer explicit class-subject mapping; fallback to subject-level teachers.
+                    added_teacher = False
+                    for comp_type in ['theory', 'lab', 'tutorial']:
+                        key = (sem.id, subject.id, comp_type)
+                        if key in teacher_map:
+                            groups[group_key].teachers.add(teacher_map[key])
+                            added_teacher = True
+                    if not added_teacher and getattr(subject, "teachers", None):
+                        for t in subject.teachers:
+                            groups[group_key].teachers.add(t.id)
+
+        # Include semesters inferred from explicit ClassSubjectTeacher mappings for electives.
+        sem_by_id = {s.id: s for s in semesters}
+        subject_by_id = {s.id: s for s in subjects}
+        for (sem_id, subj_id, comp_type), teacher_id in teacher_map.items():
+            if sem_id not in sem_by_id or subj_id not in subject_by_id:
+                continue
+            subject = subject_by_id[subj_id]
+            is_elective = (
+                subject.is_elective or
+                subject.subject_type == SubjectType.ELECTIVE or
+                subject.elective_basket_id is not None
+            )
+            if not is_elective:
+                continue
+            sem = sem_by_id[sem_id]
+            year = getattr(sem, 'year', None) or ((sem.semester_number + 1) // 2)
+            basket_id = subject.elective_basket_id
+            if basket_id is not None:
+                allowed_semesters = basket_semester_map.get(basket_id, set())
+                if allowed_semesters and sem_id not in allowed_semesters:
+                    # Ignore stray ClassSubjectTeacher rows that cross basket boundaries.
+                    continue
+            group_key = (year, basket_id)
+            if group_key not in groups:
+                basket_name = basket_names.get(basket_id, f"Elective-{basket_id}" if basket_id else "Elective")
+                groups[group_key] = ElectiveGroup(
+                    year=year,
+                    basket_id=basket_id,
+                    basket_name=basket_name
+                )
+            if sem_id not in groups[group_key].classes:
+                groups[group_key].classes.append(sem_id)
+            if subj_id not in groups[group_key].subjects:
+                groups[group_key].subjects.append(subj_id)
+            if teacher_id:
+                groups[group_key].teachers.add(teacher_id)
         
         return groups
     
@@ -1698,16 +2085,86 @@ class TimetableGenerator:
         batch_map = batch_map or {}
         batch_room_map = batch_room_map or {}
         parallel_lab_group_map = parallel_lab_group_map or {}
+
+        # Cross-semester teacher pool for elective fallback:
+        # (subject_id, component_key) -> sorted teacher_ids
+        subject_component_teacher_pool: Dict[Tuple[int, str], List[int]] = {}
+        for (sem_id, subj_id, comp_key), mapped_teacher in teacher_map.items():
+            if mapped_teacher is None:
+                continue
+            pool_key = (subj_id, comp_key)
+            subject_component_teacher_pool.setdefault(pool_key, set()).add(mapped_teacher)
+        for pool_key, teacher_ids in list(subject_component_teacher_pool.items()):
+            subject_component_teacher_pool[pool_key] = sorted(teacher_ids)
+
+        # Build per-semester subject list, augmented by elective basket participation.
+        semester_subjects_map: Dict[int, List[Subject]] = {}
+        semester_subject_ids: Dict[int, Set[int]] = {}
+        subject_by_id = {s.id: s for s in subjects}
+        for semester in semesters:
+            subj_list = list(getattr(semester, "subjects", []) or [])
+            semester_subjects_map[semester.id] = subj_list
+            semester_subject_ids[semester.id] = {s.id for s in subj_list}
+
+        baskets = []
+        basket_semester_map: Dict[int, Set[int]] = {}
+        try:
+            from app.db.models import ElectiveBasket
+            from sqlalchemy.orm import joinedload
+            baskets = self.db.query(ElectiveBasket).options(
+                joinedload(ElectiveBasket.subjects),
+                joinedload(ElectiveBasket.participating_semesters)
+            ).all()
+            for basket in baskets:
+                sem_ids = {s.id for s in (basket.participating_semesters or [])}
+                if sem_ids:
+                    basket_semester_map[basket.id] = sem_ids
+        except Exception as e:
+            print(f"   [WARN] Elective basket sync skipped: {e}")
+            baskets = []
+
+        # Include subjects that have explicit ClassSubjectTeacher mappings for this semester.
+        for (sem_id, subj_id, _), teacher_id in teacher_map.items():
+            if sem_id in semester_subjects_map and subj_id in subject_by_id:
+                subj = subject_by_id[subj_id]
+                basket_id = getattr(subj, "elective_basket_id", None)
+                if basket_id is not None:
+                    allowed_semesters = basket_semester_map.get(basket_id, set())
+                    if allowed_semesters and sem_id not in allowed_semesters:
+                        # Ignore off-basket mappings to keep elective classes strict.
+                        continue
+                if subj_id not in semester_subject_ids[sem_id]:
+                    semester_subject_ids[sem_id].add(subj_id)
+                    semester_subjects_map[sem_id].append(subject_by_id[subj_id])
+
+        target_sem_ids = set(semester_subjects_map.keys())
+        for basket in baskets:
+            if not basket.subjects:
+                continue
+            for sem in basket.participating_semesters or []:
+                if sem.id not in target_sem_ids:
+                    continue
+                for subj in basket.subjects:
+                    if subj.id not in semester_subject_ids[sem.id]:
+                        semester_subject_ids[sem.id].add(subj.id)
+                        semester_subjects_map[sem.id].append(subj)
+
+        missing_elective_teachers: List[Tuple[int, str, str]] = []
         
         for semester in semesters:
-            year = semester.semester_number
+            year = getattr(semester, 'year', None) or ((semester.semester_number + 1) // 2)
             
-            for subject in semester.subjects:
+            for subject in semester_subjects_map.get(semester.id, []):
                 is_elective = (
                     subject.is_elective or 
                     subject.subject_type == SubjectType.ELECTIVE or
                     subject.elective_basket_id is not None
                 )
+                if is_elective and subject.elective_basket_id is not None:
+                    allowed_semesters = basket_semester_map.get(subject.elective_basket_id, set())
+                    if allowed_semesters and semester.id not in allowed_semesters:
+                        # Keep elective requirements constrained to declared basket classes.
+                        continue
                 
                 components = self._get_subject_components(subject)
 
@@ -1730,6 +2187,33 @@ class TimetableGenerator:
                             teacher_id = teacher_map.get((semester.id, subject.id, fallback_key))
                             if teacher_id is not None:
                                 break
+
+                    # Elective fallback: if this class is missing a direct mapping for
+                    # this subject, reuse a deterministic teacher already mapped to the
+                    # same subject in other classes.
+                    if teacher_id is None and is_elective:
+                        fallback_keys = []
+                        if teacher_key:
+                            fallback_keys.append(teacher_key)
+                        if comp_type and comp_type.value:
+                            fallback_keys.append(comp_type.value)
+                        fallback_keys.extend(["theory", "tutorial", "lab"])
+
+                        seen_keys = set()
+                        for fkey in fallback_keys:
+                            if fkey in seen_keys:
+                                continue
+                            seen_keys.add(fkey)
+                            pool = subject_component_teacher_pool.get((subject.id, fkey), [])
+                            if pool:
+                                teacher_id = pool[0]
+                                break
+
+                    # Elective fallback: subject-level teacher mapping
+                    if teacher_id is None and is_elective:
+                        if getattr(subject, "teachers", None):
+                            if subject.teachers:
+                                teacher_id = subject.teachers[0].id
                     
                     # 2. Read BATCH teachers (split class)
                     batch_allocs = batch_map.get(lookup_key, {})
@@ -1742,7 +2226,6 @@ class TimetableGenerator:
                     # Requirement exists if:
                     # A. There is a primary teacher assigned OR
                     # B. There are batch assignments (parallel scheduling)
-                    
                     if teacher_id is not None or batch_allocs:
                         req = ComponentRequirement(
                             semester_id=semester.id,
@@ -1762,11 +2245,18 @@ class TimetableGenerator:
                             assigned_room_id=preferred_room_id,
                             batch_allocations=batch_allocs,
                             batch_room_allocations=batch_room_allocs,
-                            parallel_lab_group=parallel_lab_group_map.get(lookup_key)
+                            parallel_lab_group=parallel_lab_group_map.get(lookup_key),
+                            priority_weight=getattr(subject, 'computed_priority_score', 0) or 0
                         )
                         requirements.append(req)
                     else:
                         print(f"   [NO MAPPING] {subject.code} - {academic_component} in {semester.name}")
+                        if is_elective:
+                            missing_elective_teachers.append((semester.id, subject.code, subject.name))
+
+        if missing_elective_teachers:
+            unique_missing = {(s, c) for (s, c, _) in missing_elective_teachers}
+            print(f"   [WARN] {len(unique_missing)} elective subjects missing teacher assignments (not scheduled)")
         
         print(f"   Built {len(requirements)} requirements from existing mappings")
         return requirements
@@ -1853,11 +2343,11 @@ class TimetableGenerator:
                 if not scheduled_classes:
                     continue
 
-                # Hours needed is common per class for this component (best-effort max).
+                # Hours needed is common per class for this component.
                 hours_needed = max((r.hours_per_week for r in comp_reqs), default=0)
-                hours_scheduled = 0
 
-                # Per-class remaining synchronized hours for this component.
+                # Track remaining hours per class and keep scheduling until each class
+                # reaches its target. This prevents ghost/partial scheduling.
                 class_hours_remaining: Dict[int, int] = {
                     sem_id: hours_needed for sem_id in scheduled_classes
                 }
@@ -1865,15 +2355,18 @@ class TimetableGenerator:
                 # Track daily allocations for this component-group to enforce distribution
                 group_daily_counts = {d: 0 for d in range(DAYS_PER_WEEK)}
 
-                # Identify distinct elective sessions (Subject + Teacher pairs) across all classes.
-                # In a parallel elective system, every unique assigned option must run together.
-                distinct_sessions: List[ComponentRequirement] = []
-                _seen_sessions = set()
-                for r in comp_reqs:
-                    s_key = (r.subject_id, r.assigned_teacher_id)
-                    if s_key not in _seen_sessions:
-                        _seen_sessions.add(s_key)
-                        distinct_sessions.append(r)
+                # Map each class to a specific distinct elective subject/teacher for the whole week
+                class_to_req: Dict[int, ComponentRequirement] = {}
+                used_teachers_for_map = set()
+                sorted_classes = sorted(scheduled_classes, key=lambda sid: len(set(r.assigned_teacher_id for r in reqs_by_class.get(sid, []) if r.assigned_teacher_id)))
+                for sem_id in sorted_classes:
+                    r_candidates = reqs_by_class.get(sem_id, [])
+                    selected = next((r for r in r_candidates if r.assigned_teacher_id and r.assigned_teacher_id not in used_teachers_for_map), None)
+                    if not selected and r_candidates:
+                        selected = r_candidates[0]
+                    class_to_req[sem_id] = selected
+                    if selected and selected.assigned_teacher_id:
+                        used_teachers_for_map.add(selected.assigned_teacher_id)
 
                 # DETERMINE SLOT ORDER
                 slot_candidates = []
@@ -1893,8 +2386,31 @@ class TimetableGenerator:
                 else:
                     slot_candidates = self._get_randomized_slots()
 
+                # Pre-index existing elective allocations for this basket by slot to
+                # avoid repeatedly scanning full state on each candidate slot.
+                basket_slot_teacher_rooms: Dict[Tuple[int, int], Dict[int, int]] = {}
+                for a in state.allocations:
+                    if (
+                        a.is_elective
+                        and a.elective_basket_id == basket_id
+                        and a.teacher_id is not None
+                        and a.room_id is not None
+                    ):
+                        basket_slot_teacher_rooms.setdefault((a.day, a.slot), {})[a.teacher_id] = a.room_id
+
+                # Hard day-level exclusion (lab already scheduled for this basket/day).
+                lab_days_for_group = {
+                    a.day for a in state.allocations
+                    if (
+                        a.is_elective
+                        and a.elective_basket_id == basket_id
+                        and a.semester_id in scheduled_classes
+                        and a.component_type == ComponentType.LAB
+                    )
+                }
+
                 for day, slot in slot_candidates:
-                    if hours_scheduled >= hours_needed:
+                    if all(v <= 0 for v in class_hours_remaining.values()):
                         break
 
                     # EXTENDED: For 2nd Year (Semesters 3 & 4), enforce MAX 1 elective theory per day
@@ -1906,118 +2422,130 @@ class TimetableGenerator:
                     if state.is_slot_reserved_for_other_group(day, slot, year, basket_id):
                         continue
 
-                    active_classes = [sid for sid in scheduled_classes if class_hours_remaining.get(sid, 0) > 0]
-                    if not active_classes:
-                        break
+                    # HARD RULE: elective theory and elective lab for the same basket
+                    # must not be on the same day.
+                    if day in lab_days_for_group:
+                        continue
 
-                    # Check all active classes are free.
-                    all_free = all(state.is_semester_free(sid, day, slot) for sid in active_classes)
-                    if not all_free:
-                        if is_global_sync:
-                            print(f"        [WARN] Global sync conflict at {day}:{slot} - Class occupied")
+                    # Allow partial class coverage in this slot; classes that cannot be
+                    # scheduled here are retried in later slots.
+                    active_classes = [
+                        sid for sid in scheduled_classes
+                        if class_hours_remaining.get(sid, 0) > 0
+                        and state.is_semester_free(sid, day, slot)
+                    ]
+                    if not active_classes:
                         continue
 
                     # For this slot, schedule one elective option per class.
                     slot_allocs = []
                     used_rooms = set()
-                    can_schedule = True
                     shared_room_by_teacher: Dict[int, Room] = {}
-                    slot_teacher_usage: Dict[int, int] = {}
-                    for a in state.allocations:
-                        if (
-                            a.day == day
-                            and a.slot == slot
-                            and a.is_elective
-                            and a.elective_basket_id == basket_id
-                        ):
-                            room_obj = room_by_id.get(a.room_id)
-                            if room_obj:
-                                shared_room_by_teacher[a.teacher_id] = room_obj
+                    # Track teachers already used in THIS slot to prevent same teacher
+                    # being assigned to multiple departments/classes simultaneously
+                    slot_used_teachers: Set[int] = set()
+                    slot_teacher_rooms = basket_slot_teacher_rooms.get((day, slot), {})
+                    for tid, rid in slot_teacher_rooms.items():
+                        room_obj = room_by_id.get(rid)
+                        if room_obj:
+                            shared_room_by_teacher[tid] = room_obj
+                        slot_used_teachers.add(tid)
 
-                    for req in distinct_sessions:
-                        teacher_id = req.assigned_teacher_id
+                    for sem_id in active_classes:
+                        preferred_req = class_to_req.get(sem_id)
+                        if not preferred_req:
+                            continue
+                        req_candidates = [preferred_req] + [
+                            r for r in reqs_by_class.get(sem_id, [])
+                            if r is not preferred_req
+                        ]
+
+                        req = None
+                        teacher_id = None
+                        for cand in req_candidates:
+                            tid = cand.assigned_teacher_id
+                            if not tid or tid in slot_used_teachers:
+                                continue
+                            if state.is_teacher_eligible_for_elective_group(tid, day, slot, year, basket_id):
+                                req = cand
+                                teacher_id = tid
+                                break
+                        if not req or not teacher_id:
+                            continue
+                        class_to_req[sem_id] = req
+
                         room = None
                         used_shared_room = False
-                        
-                        # Check teacher eligibility
-                        if teacher_id and not state.is_teacher_eligible_for_elective_group(teacher_id, day, slot, year, basket_id):
-                            teacher_id = None # Fallback
 
-                        # 1. Try to join an existing session (sharing room) if same teacher
+                        # Room selection for valid teacher allocation only.
                         existing_alloc = next((r for r_q, r, tid, _ in slot_allocs if tid == teacher_id), None)
                         room = existing_alloc
                         used_shared_room = bool(existing_alloc)
-                        
-                        if not room and teacher_id:
+                        if not room:
                             room = shared_room_by_teacher.get(teacher_id)
                             if room:
                                 used_shared_room = True
 
-                        # 2. Try assigned room
-                        if not room and req and req.assigned_room_id and req.assigned_room_id not in used_rooms:
+                        if not room and req.assigned_room_id and req.assigned_room_id not in used_rooms:
                             r_obj = room_by_id.get(req.assigned_room_id)
-                            if (r_obj and r_obj.capacity >= req.min_room_capacity 
-                                and state.is_room_free(r_obj.id, day, slot) 
-                                and (not req.preferred_room_types or r_obj.room_type in req.preferred_room_types)):
+                            if r_obj and r_obj.capacity >= req.min_room_capacity and state.is_room_free(r_obj.id, day, slot) and (not req.preferred_room_types or r_obj.room_type in req.preferred_room_types):
                                 room = r_obj
 
-                        # 3. Random room
-                        if not room and req:
+                        if not room:
                             for r in rooms:
                                 if r.id not in used_rooms and r.capacity >= req.min_room_capacity and state.is_room_free(r.id, day, slot):
                                     if req.preferred_room_types and r.room_type not in req.preferred_room_types:
                                         continue
                                     room = r
                                     break
-                                    
                         if not room:
-                            teacher_id = None # fallback to unassigned if no room
-                            
-                        if room and not used_shared_room:
-                            used_rooms.add(room.id)
-                        
-                        # Find all classes participating in THIS subject-teacher session
-                        participating_classes = [
-                            sid for sid in active_classes 
-                            if any(r.subject_id == req.subject_id and r.assigned_teacher_id == req.assigned_teacher_id 
-                                   for r in reqs_by_class.get(sid, []))
-                        ]
-                        
-                        for sem_id in participating_classes:
-                            # Add allocation for each participating class
-                            slot_allocs.append((req, room, teacher_id, sem_id))
+                            continue
 
-                    # since we added everyone (even failures), we can always schedule this global slot
+                        if not used_shared_room:
+                            used_rooms.add(room.id)
+                        slot_used_teachers.add(teacher_id)
+                        slot_allocs.append((req, room, teacher_id, sem_id))
+
+                    if not slot_allocs:
+                        continue
+
                     state.reserve_elective_slot_for_group(day, slot, year, basket_id, group_teachers)
                     group_daily_counts[day] += 1
-                    hours_scheduled += 1
 
                     for req, room, teacher_id, sem_id in slot_allocs:
                         entry = AllocationEntry(
                             semester_id=sem_id,
-                            subject_id=req.subject_id if req else None,
+                            subject_id=req.subject_id,
                             teacher_id=teacher_id,
-                            room_id=room.id if room else None,
+                            room_id=room.id,
                             day=day,
                             slot=slot,
-                            component_type=req.component_type if req else ComponentType.THEORY,
-                            academic_component=req.academic_component if req else "theory",
+                            component_type=req.component_type,
+                            academic_component=req.academic_component,
                             is_elective=True,
                             elective_basket_id=basket_id
                         )
                         state.add_allocation(entry, force_parallel=True)
                         allocations_added += 1
+                        if teacher_id is not None and room is not None:
+                            basket_slot_teacher_rooms.setdefault((day, slot), {})[teacher_id] = room.id
                         class_hours_remaining[sem_id] = max(
                             0, class_hours_remaining.get(sem_id, 0) - 1
                         )
 
-                print(f"        Scheduled {hours_scheduled}/{hours_needed} hours for {comp_label}")
-                if hours_scheduled < hours_needed:
-                    missing = hours_needed - hours_scheduled
-                    # Find a representative req for the message
+                target_class_hours = len(scheduled_classes) * hours_needed
+                missing_class_hours = sum(class_hours_remaining.values())
+                scheduled_class_hours = target_class_hours - missing_class_hours
+                print(
+                    f"        Scheduled {scheduled_class_hours}/{target_class_hours} class-hours for {comp_label}"
+                )
+                if missing_class_hours > 0:
                     representative_req = comp_reqs[0] if comp_reqs else None
                     if representative_req:
-                        fail_msg = f"[THEORY] Elective Group '{group_name}' (Year {year}, Basket {basket_id}) Component '{comp_label}': Failed {missing}/{hours_needed} hours."
+                        fail_msg = (
+                            f"[THEORY] Elective Group '{group_name}' (Year {year}, Basket {basket_id}) "
+                            f"Component '{comp_label}': Unscheduled {missing_class_hours} class-hour(s)."
+                        )
                         print(f"        {fail_msg}")
                         self.allocation_failures.append(fail_msg)
         
@@ -2034,58 +2562,50 @@ class TimetableGenerator:
     ) -> int:
         """
         Schedule elective labs as atomic 2-period blocks.
-        
-        KEY DESIGN: All subjects in the same basket are ALTERNATIVES 
+
+        KEY DESIGN: All subjects in the same basket are ALTERNATIVES
         (students pick one). They MUST be scheduled at the SAME time slots
         across classes, while each class gets one elective option per block.
         """
         if not elective_reqs:
             print("      No elective lab requirements to schedule.")
             return 0
-        
+
         allocations_added = 0
         room_by_id = {r.id: r for r in rooms}
-        
+
         # Group requirements by (year, basket_id)
         reqs_by_group: Dict[Tuple[int, Optional[int]], List[ComponentRequirement]] = {}
         for req in elective_reqs:
             key = (req.year, req.elective_basket_id)
-            if key not in reqs_by_group: reqs_by_group[key] = []
+            if key not in reqs_by_group:
+                reqs_by_group[key] = []
             reqs_by_group[key].append(req)
-            
+
         print(f"      [E-LAB] Grouped {len(elective_reqs)} reqs into {len(reqs_by_group)} basket groups")
 
         for group_key, group_reqs in reqs_by_group.items():
             year, basket_id = group_key
             group = elective_groups.get(group_key)
-            if not group: 
+            if not group:
                 print(f"      [WARN] No elective group definition for {group_key}")
                 continue
-            
+
             group_classes = group.classes
             group_teachers = group.teachers
-            
-            # Blocks needed = max across all subjects in basket (should be uniform)
+
+            # Blocks needed per class = max across all subjects in basket.
             blocks_needed = max((r.hours_per_week for r in group_reqs), default=0) // 2
             if blocks_needed == 0:
                 continue
-            
-            # Identify distinct elective lab sessions (Subject + Teacher pairs) inside basket
-            distinct_lab_sessions: List[ComponentRequirement] = []
-            _seen_lab_sessions = set()
-            for r in group_reqs:
-                s_key = (r.subject_id, r.assigned_teacher_id)
-                if s_key not in _seen_lab_sessions:
-                    _seen_lab_sessions.add(s_key)
-                    distinct_lab_sessions.append(r)
-            
+
             # Sub-group requirements by class for one-option-per-class selection.
             reqs_by_class: Dict[int, List[ComponentRequirement]] = {}
             for req in group_reqs:
                 if req.semester_id not in reqs_by_class:
                     reqs_by_class[req.semester_id] = []
                 reqs_by_class[req.semester_id].append(req)
-            
+
             scheduled_classes = [sid for sid in group_classes if sid in reqs_by_class]
             if not scheduled_classes:
                 continue
@@ -2095,10 +2615,10 @@ class TimetableGenerator:
                 f"      [E-LAB] Basket {basket_id} (Year {year}): "
                 f"{len(unique_subject_ids)} subjects, {len(scheduled_classes)} classes, need {blocks_needed} block(s)"
             )
-            
+
             # Global Slot Restriction
             allowed_slots = global_slots.get(group_key) if global_slots else None
-            
+
             # Build candidates
             candidates = []
             if allowed_slots:
@@ -2119,149 +2639,235 @@ class TimetableGenerator:
             else:
                 candidates = [(d, s1, s2) for d in range(DAYS_PER_WEEK) for s1, s2 in self.valid_lab_blocks]
                 random.shuffle(candidates)
-            
-            blocks_scheduled = 0
-            
+
+            # Map each class to a specific distinct elective subject/teacher.
+            class_to_req: Dict[int, ComponentRequirement] = {}
+            used_teachers_for_map = set()
+            sorted_classes = sorted(
+                scheduled_classes,
+                key=lambda sid: len(set(r.assigned_teacher_id for r in reqs_by_class.get(sid, []) if r.assigned_teacher_id))
+            )
+            for sem_id in sorted_classes:
+                r_candidates = reqs_by_class.get(sem_id, [])
+                selected = next(
+                    (r for r in r_candidates if r.assigned_teacher_id and r.assigned_teacher_id not in used_teachers_for_map),
+                    None
+                )
+                if not selected and r_candidates:
+                    selected = r_candidates[0]
+                class_to_req[sem_id] = selected
+                if selected and selected.assigned_teacher_id:
+                    used_teachers_for_map.add(selected.assigned_teacher_id)
+
+            class_blocks_remaining: Dict[int, int] = {
+                sem_id: blocks_needed for sem_id in scheduled_classes
+            }
+            blocks_used_slots = 0
+
+            # Pre-index existing elective allocations for this basket by slot to
+            # avoid repeatedly scanning full state inside candidate loops.
+            basket_slot_teacher_rooms: Dict[Tuple[int, int], Dict[int, int]] = {}
+            for a in state.allocations:
+                if (
+                    a.is_elective
+                    and a.elective_basket_id == basket_id
+                    and a.teacher_id is not None
+                    and a.room_id is not None
+                ):
+                    basket_slot_teacher_rooms.setdefault((a.day, a.slot), {})[a.teacher_id] = a.room_id
+
+            # Hard day-level exclusion (theory already scheduled for this basket/day).
+            theory_days_for_group = {
+                a.day for a in state.allocations
+                if (
+                    a.is_elective
+                    and a.elective_basket_id == basket_id
+                    and a.semester_id in scheduled_classes
+                    and a.component_type == ComponentType.THEORY
+                )
+            }
+
             for day, s1, s2 in candidates:
-                if blocks_scheduled >= blocks_needed:
+                if all(v <= 0 for v in class_blocks_remaining.values()):
                     break
-                
-                # 1. Slot not reserved for another group
-                if state.is_slot_reserved_for_other_group(day, s1, year, basket_id) or \
-                   state.is_slot_reserved_for_other_group(day, s2, year, basket_id):
+
+                # Slot not reserved for another group.
+                if (
+                    state.is_slot_reserved_for_other_group(day, s1, year, basket_id)
+                    or state.is_slot_reserved_for_other_group(day, s2, year, basket_id)
+                ):
                     continue
-                
-                # 1b. Check all classes in this group are free for the full block.
-                semesters_free = True
-                for sem_id in scheduled_classes:
-                    if not (state.is_semester_free(sem_id, day, s1) and 
-                            state.is_semester_free(sem_id, day, s2)):
-                        semesters_free = False
-                        break
-                if not semesters_free:
+
+                # Elective labs and elective theory for the same basket should not be
+                # placed on the same day.
+                if day in theory_days_for_group:
                     continue
-                
-                # 2. Pick one lab option per class at this synchronized block.
+
+                active_classes = [
+                    sem_id for sem_id in scheduled_classes
+                    if class_blocks_remaining.get(sem_id, 0) > 0
+                    and state.is_semester_free(sem_id, day, s1)
+                    and state.is_semester_free(sem_id, day, s2)
+                ]
+                if not active_classes:
+                    continue
+
                 all_allocations_to_make = []
                 rooms_used_here = set()
-                slot_success = True
                 shared_lab_room_by_teacher: Dict[int, Room] = {}
-                slot_teacher_usage: Dict[int, int] = {}
+                slot_used_teachers: Set[int] = set()
 
                 # If a teacher already has an elective allocation for this basket in this
                 # exact lab block, allow classes to join that same teacher+room block.
-                teacher_slot_rooms: Dict[int, Dict[int, int]] = {}
-                for a in state.allocations:
-                    if (
-                        a.day == day
-                        and a.is_elective
-                        and a.elective_basket_id == basket_id
-                        and a.slot in (s1, s2)
-                    ):
-                        teacher_slot_rooms.setdefault(a.teacher_id, {})[a.slot] = a.room_id
-                for tid, slot_rooms in teacher_slot_rooms.items():
-                    if s1 in slot_rooms and s2 in slot_rooms and slot_rooms[s1] == slot_rooms[s2]:
-                        room_obj = room_by_id.get(slot_rooms[s1])
+                slot_map_1 = basket_slot_teacher_rooms.get((day, s1), {})
+                slot_map_2 = basket_slot_teacher_rooms.get((day, s2), {})
+                slot_used_teachers.update(slot_map_1.keys())
+                slot_used_teachers.update(slot_map_2.keys())
+                for tid in slot_used_teachers:
+                    rid_1 = slot_map_1.get(tid)
+                    rid_2 = slot_map_2.get(tid)
+                    if rid_1 is not None and rid_1 == rid_2:
+                        room_obj = room_by_id.get(rid_1)
                         if room_obj:
                             shared_lab_room_by_teacher[tid] = room_obj
-                
-                for req in distinct_lab_sessions:
-                    teacher_id = req.assigned_teacher_id
+
+                for sem_id in active_classes:
+                    preferred_req = class_to_req.get(sem_id)
+                    if not preferred_req:
+                        continue
+                    req_candidates = [preferred_req] + [
+                        r for r in reqs_by_class.get(sem_id, [])
+                        if r is not preferred_req
+                    ]
+
+                    req = None
+                    teacher_id = None
+                    for cand in req_candidates:
+                        tid = cand.assigned_teacher_id
+                        if not tid or tid in slot_used_teachers:
+                            continue
+                        if (
+                            state.is_teacher_eligible_for_elective_group(tid, day, s1, year, basket_id)
+                            and state.is_teacher_eligible_for_elective_group(tid, day, s2, year, basket_id)
+                        ):
+                            req = cand
+                            teacher_id = tid
+                            break
+                    if not req or not teacher_id:
+                        continue
+                    class_to_req[sem_id] = req
+
                     room = None
                     used_shared_room = False
-                    
-                    if teacher_id and state.is_teacher_eligible_for_elective_group(teacher_id, day, s1, year, basket_id) and state.is_teacher_eligible_for_elective_group(teacher_id, day, s2, year, basket_id):
-                        # Join session
-                        existing_alloc = next((r for r_q, r, tid, _ in all_allocations_to_make if tid == teacher_id), None)
-                        room = existing_alloc
-                        used_shared_room = bool(existing_alloc)
-                        
-                        if not room:
-                            room = shared_lab_room_by_teacher.get(teacher_id)
-                            if room: used_shared_room = True
-                        
-                        # Assigned room
-                        if not room and req.assigned_room_id and req.assigned_room_id not in rooms_used_here:
-                            r_obj = room_by_id.get(req.assigned_room_id)
-                            if r_obj and r_obj.capacity >= req.min_room_capacity and state.is_room_free(r_obj.id, day, s1) and state.is_room_free(r_obj.id, day, s2) and (not req.preferred_room_types or r_obj.room_type in req.preferred_room_types):
-                                room = r_obj
-                        
-                        # Fallback room
-                        if not room and req:
-                            for r in rooms:
-                                if r.id not in rooms_used_here and r.capacity >= req.min_room_capacity and state.is_room_free(r.id, day, s1) and state.is_room_free(r.id, day, s2):
-                                    if req.preferred_room_types and r.room_type not in req.preferred_room_types:
-                                        continue
-                                    room = r
-                                    break
-                        
-                        if not room:
-                            teacher_id = None # Fallback
-                    else:
-                        teacher_id = None
-                        
-                    if room and not used_shared_room:
-                        rooms_used_here.add(room.id)
-                    
-                    # Find all classes participating in THIS subject-teacher session
-                    participating_classes = [
-                        sid for sid in scheduled_classes 
-                        if any(r.subject_id == req.subject_id and r.assigned_teacher_id == req.assigned_teacher_id 
-                               for r in reqs_by_class.get(sid, []))
-                    ]
-                    
-                    for sem_id in participating_classes:
-                        all_allocations_to_make.append((req, room, teacher_id, sem_id))
 
-                # 3. Commit one elective lab option per class at this synchronized block.
+                    # Room selection for valid teacher allocation only.
+                    existing_alloc = next((r for _, r, tid, _ in all_allocations_to_make if tid == teacher_id), None)
+                    room = existing_alloc
+                    used_shared_room = bool(existing_alloc)
+                    if not room:
+                        room = shared_lab_room_by_teacher.get(teacher_id)
+                        if room:
+                            used_shared_room = True
+
+                    if not room and req.assigned_room_id and req.assigned_room_id not in rooms_used_here:
+                        r_obj = room_by_id.get(req.assigned_room_id)
+                        if (
+                            r_obj
+                            and r_obj.capacity >= req.min_room_capacity
+                            and state.is_room_free(r_obj.id, day, s1)
+                            and state.is_room_free(r_obj.id, day, s2)
+                            and (not req.preferred_room_types or r_obj.room_type in req.preferred_room_types)
+                        ):
+                            room = r_obj
+
+                    if not room:
+                        for r in rooms:
+                            if (
+                                r.id not in rooms_used_here
+                                and r.capacity >= req.min_room_capacity
+                                and state.is_room_free(r.id, day, s1)
+                                and state.is_room_free(r.id, day, s2)
+                            ):
+                                if req.preferred_room_types and r.room_type not in req.preferred_room_types:
+                                    continue
+                                room = r
+                                break
+
+                    if not room:
+                        continue
+                    if not used_shared_room:
+                        rooms_used_here.add(room.id)
+                    slot_used_teachers.add(teacher_id)
+
+                    all_allocations_to_make.append((req, room, teacher_id, sem_id))
+
+                if not all_allocations_to_make:
+                    continue
+
+                # Commit one elective lab option per schedulable class at this block.
                 for req, room, teacher_id, sem_id in all_allocations_to_make:
                     state.add_allocation(AllocationEntry(
                         semester_id=sem_id,
-                        subject_id=req.subject_id if req else None,
+                        subject_id=req.subject_id,
                         teacher_id=teacher_id,
-                        room_id=room.id if room else None,
+                        room_id=room.id,
                         day=day,
                         slot=s1,
-                        component_type=req.component_type if req else ComponentType.LAB,
-                        academic_component=req.academic_component if req else "lab",
+                        component_type=req.component_type,
+                        academic_component=req.academic_component,
                         is_lab_continuation=False,
                         is_elective=True,
                         elective_basket_id=basket_id
                     ))
                     state.add_allocation(AllocationEntry(
                         semester_id=sem_id,
-                        subject_id=req.subject_id if req else None,
+                        subject_id=req.subject_id,
                         teacher_id=teacher_id,
-                        room_id=room.id if room else None,
+                        room_id=room.id,
                         day=day,
                         slot=s2,
-                        component_type=req.component_type if req else ComponentType.LAB,
-                        academic_component=req.academic_component if req else "lab",
+                        component_type=req.component_type,
+                        academic_component=req.academic_component,
                         is_lab_continuation=True,
                         is_elective=True,
                         elective_basket_id=basket_id
                     ), force_parallel=True)
                     allocations_added += 2
-                
-                # Mark slot ownership
+                    if teacher_id is not None and room is not None:
+                        basket_slot_teacher_rooms.setdefault((day, s1), {})[teacher_id] = room.id
+                        basket_slot_teacher_rooms.setdefault((day, s2), {})[teacher_id] = room.id
+                    class_blocks_remaining[sem_id] = max(0, class_blocks_remaining.get(sem_id, 0) - 1)
+
+                # Mark slot ownership.
                 state.elective_slot_ownership[(year, day, s1)] = (year, basket_id)
                 state.elective_slot_ownership[(year, day, s2)] = (year, basket_id)
                 state.reserve_elective_slot_for_group(day, s1, year, basket_id, group_teachers)
                 state.reserve_elective_slot_for_group(day, s2, year, basket_id, group_teachers)
-                
-                blocks_scheduled += 1
+
+                blocks_used_slots += 1
                 print(f"        [OK] Lab block at Day {day} Slots {s1}-{s2} ({len(all_allocations_to_make)} classes)")
-            
-            if blocks_scheduled < blocks_needed:
-                missing = blocks_needed - blocks_scheduled
-                fail_msg = f"[E-LAB] Basket {basket_id} (Year {year}): Failed {missing}/{blocks_needed} lab blocks. Checked {len(candidates)} slots."
+
+            target_class_blocks = len(scheduled_classes) * blocks_needed
+            missing_class_blocks = sum(class_blocks_remaining.values())
+            scheduled_class_blocks = target_class_blocks - missing_class_blocks
+            if missing_class_blocks > 0:
+                fail_msg = (
+                    f"[E-LAB] Basket {basket_id} (Year {year}): Unscheduled "
+                    f"{missing_class_blocks}/{target_class_blocks} class-block(s). Checked {len(candidates)} slots."
+                )
                 if allowed_slots:
                     fail_msg += f" (Restricted by GLOBAL plan: {allowed_slots})"
                 print(f"        {fail_msg}")
                 self.allocation_failures.append(fail_msg)
+            else:
+                print(
+                    f"        [OK] Basket {basket_id} completed "
+                    f"{scheduled_class_blocks}/{target_class_blocks} class-blocks "
+                    f"using {blocks_used_slots} synchronized slot(s)."
+                )
 
         return allocations_added
-    
+
     # ============================================================
     # PARALLEL LAB BASKET SCHEDULING (DATABASE-BACKED SYSTEM)
     # ============================================================
@@ -2749,6 +3355,22 @@ class TimetableGenerator:
                             state.add_allocation(entry)
                             allocations_added += 1
                         blocks_scheduled += 1
+
+            if blocks_scheduled < blocks_needed:
+                missing = blocks_needed - blocks_scheduled
+                if req.batch_allocations:
+                    fail_msg = (
+                        f"[LAB] Class {req.semester_id} {req.subject_code} ({req.academic_component}): "
+                        f"Unscheduled {missing}/{blocks_needed} batch block(s). "
+                        "Likely teacher or room constraint for one/more batches."
+                    )
+                else:
+                    fail_msg = (
+                        f"[LAB] Class {req.semester_id} {req.subject_code} ({req.academic_component}): "
+                        f"Unscheduled {missing}/{blocks_needed} block(s). "
+                        f"Assigned teacher {req.assigned_teacher_id} not available with a valid room pair."
+                    )
+                self.allocation_failures.append(fail_msg)
         
         return allocations_added
 
@@ -2918,7 +3540,22 @@ class TimetableGenerator:
                     ]
                     
                     if available:
-                        available.sort(key=lambda x: x[1], reverse=True)
+                        # PRIORITY SLOT SCORING:
+                        # Slot weights: Period 1-2 â†’ +3, Period 3-4 â†’ +2, Period 5-6 â†’ +1, Period 7 â†’ 0
+                        SLOT_WEIGHTS = {0: 3, 1: 3, 2: 2, 3: 2, 4: 1, 5: 1, 6: 0}
+                        slot_weight = SLOT_WEIGHTS.get(slot, 0)
+                        
+                        # Sort by: priority_weight (desc), then remaining hours (desc)
+                        # Higher priority subjects get first pick of morning slots
+                        def sort_key(item):
+                            key, remaining = item
+                            req = req_lookup.get(key)
+                            pw = req.priority_weight if req else 0
+                            # TotalScore = SlotWeight + priority_weight
+                            # For HIGH priority subjects, score matters more for early slots
+                            return (-(pw * slot_weight + remaining), -remaining)
+                        
+                        available.sort(key=sort_key)
                         
                         for (s_sem, s_subj, s_comp), remaining in available:
                             req = req_lookup.get((s_sem, s_subj, s_comp))
@@ -2932,8 +3569,13 @@ class TimetableGenerator:
                                 continue
                             
                             # Daily limit (soft constraint - can be relaxed)
+                            # HIGH priority: prefer spread across week (max 1/day)
                             current = state.get_subject_daily_count(sem_id, day, req.subject_id)
-                            max_daily = 2 if req.hours_per_week > 5 else 1
+                            if req.priority_weight >= 2:
+                                # HIGH priority: prefer 1 per day for better distribution
+                                max_daily = 1 if req.hours_per_week <= 5 else 2
+                            else:
+                                max_daily = 2 if req.hours_per_week > 5 else 1
                             if current >= max_daily:
                                 continue
 
@@ -3100,6 +3742,10 @@ class TimetableGenerator:
         seen = set()
         unique = []
         for entry in allocations:
+            # Prevent saving incomplete allocations (which violates DB NOT NULL constraints)
+            if entry.teacher_id is None or entry.subject_id is None or entry.room_id is None:
+                continue
+                
             key = (entry.semester_id, entry.subject_id, entry.day, entry.slot)
             if key not in seen:
                 seen.add(key)
@@ -3124,7 +3770,7 @@ class TimetableGenerator:
         
         try:
             self.db.commit()
-            print(f"   [OK] Saved {len(unique)} allocations")
+            print(f"   [OK] Saved {len(unique)} valid allocations")
         except Exception as e:
             self.db.rollback()
             print(f"   [FAIL] Save failed: {e}")
@@ -3148,4 +3794,5 @@ class TimetableGenerator:
         slots = [(d, s) for d in range(DAYS_PER_WEEK) for s in range(SLOTS_PER_DAY)]
         random.shuffle(slots)
         return slots
+
 

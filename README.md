@@ -1,6 +1,9 @@
 # 🎓 AI Dept Timetable Generator
 
 A modern, full-stack web application for **automated AI department timetable generation** with **intelligent teacher substitution**. Built with FastAPI (Python) and React.
+# 🎓 AI Dept Timetable Generator
+
+A modern, full-stack web application for **automated AI department timetable generation** with **intelligent teacher substitution**. Built with FastAPI (Python) and React.
 
 ![Dashboard Preview](docs/dashboard.png)
 
@@ -9,6 +12,7 @@ A modern, full-stack web application for **automated AI department timetable gen
 ### Core Functionality
 - **📋 Resource Management**: CRUD operations for Teachers, Subjects, Classes (Semesters), and Rooms
 - **🔄 Automatic Timetable Generation**: Two-phase algorithm (Greedy + Genetic) that respects all constraints
+- **🧩 SCB Scheduling**: Support for Structured Composite Baskets (Theory + Lab combinations)
 - **🔁 Automated Teacher Substitution**: Score-based candidate ranking for intelligent substitute assignment
 - **📊 Multiple View Modes**: View timetables by class or by teacher
 - **⏰ Free Periods**: 1-2 free periods per class per week (configurable)
@@ -164,72 +168,14 @@ timetable_generator/
 3. Click "Generate Timetable"
 4. View generated schedule on **Timetable** page
 
+### 2b. Electives Setup (Important)
+1. Create an **Elective Basket** and select all participating classes/semesters.
+2. Add elective subjects into that basket.
+3. Assign a teacher for each elective subject **per class** (class-subject mapping).
+4. Ensure elective class mappings match basket participation to avoid skipped scheduling.
+
 ### 3. Manage Substitutions
 1. Go to **Substitution** page
-2. Select absent teacher and date
-3. View affected classes and candidate substitutes
-4. Either:
-   - Click "Auto-Assign" for automatic best-match selection
-   - Manually select from ranked candidates
-
-## 🔧 API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/teachers` | GET, POST | List/create teachers |
-| `/api/subjects` | GET, POST | List/create subjects |
-| `/api/semesters` | GET, POST | List/create classes |
-| `/api/rooms` | GET, POST | List/create rooms |
-| `/api/timetable/generate` | POST | Generate timetable |
-| `/api/timetable/view/semester/{id}` | GET | View class timetable |
-| `/api/timetable/view/teacher/{id}` | GET | View teacher timetable |
-| `/api/substitution/auto-substitute/{teacher_id}/{date}` | POST | Auto-assign substitutes |
-| `/api/substitution/candidates/{alloc_id}/{date}` | GET | Get substitute candidates |
-| `/api/dashboard/stats` | GET | Dashboard statistics |
-
-See full API documentation at http://localhost:8000/docs
-
-## 🧮 Algorithm Details
-
-### Phase 1: Greedy/CSP Generation
-1. **Reserve free periods**: 1-2 random slots per class are reserved as free periods
-2. Sort requirements by difficulty (labs first, fewer qualified teachers first)
-3. For each requirement, find available (day, slot) combinations
-4. Select teacher with lowest current load
-5. Select room meeting capacity requirements
-6. Validate hard constraints before committing
-
-### Phase 2: Genetic Optimization
-1. Create population from initial solution variants
-2. Calculate fitness based on soft constraints
-3. Selection: Keep top 50% by fitness
-4. Mutation: Swap slots while maintaining hard constraints
-5. Repeat for configured generations
-
-### Substitution Workflow
-1. Detect affected allocations for absent teacher
-2. For each allocation, find candidates who:
-   - Are not already teaching in that slot
-   - Are not marked absent
-   - Are available on that day
-3. Score candidates using weighted formula
-4. Assign highest-scored candidate (or allow manual selection)
-
-## 🔮 Future Enhancements
-
-- [ ] Multi-department support (dept_id already in schema)
-- [ ] Multi-college support (college_id already in schema)
-- [ ] User authentication & roles
-- [ ] Email notifications for substitutions
-- [ ] Export timetable to PDF/Excel
-- [ ] Conflict visualization
-- [ ] Room booking calendar view
-
-## � Deployment
-
-This project is configured for easy deployment to **Render** and **Vercel**.
-
-### Render (Recommended)
 The project includes a `render.yaml` blueprint that automatically sets up:
 1. **Backend API** (Python/FastAPI)
 2. **PostgreSQL Database** (Persistent storage)

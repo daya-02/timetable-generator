@@ -19,6 +19,7 @@ import {
     Layers,
     FileText,
     Gauge,
+    DoorOpen,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useDepartmentContext } from '../context/DepartmentContext';
@@ -34,9 +35,11 @@ const navItems = [
     { path: '/teachers', label: 'Teachers', icon: Users },
     { path: '/subjects', label: 'Subjects', icon: BookOpen },
     { path: '/electives', label: 'Elective Baskets', icon: Layers },
+    { path: '/structured-baskets', label: 'Structured Baskets', icon: Layers },
     { path: '/parallel-labs', label: 'Parallel Labs', icon: Layers },
     { path: '/semesters', label: 'Classes', icon: GraduationCap },
     { path: '/rooms', label: 'Rooms', icon: Building2 },
+    { path: '/room-availability', label: 'Room Availability', icon: DoorOpen },
     { path: '/timetable', label: 'View Timetable', icon: Calendar },
     { path: '/manage-timetable', label: 'Manage Slots', icon: Lock },
     { path: '/substitution', label: 'Substitution', icon: UserCheck },

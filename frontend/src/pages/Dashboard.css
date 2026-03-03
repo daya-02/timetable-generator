@@ -1,12 +1,12 @@
-/* Dashboard Page Styles - Institutional with Subtle Animations */
+/* Dashboard Page Styles — Modern, Clean */
 .dashboard {
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* Welcome Section - Gentle fade-in */
+/* ── Welcome header ─────────────────────────────────────────────── */
 .page-header {
-    animation: fadeIn 350ms ease-out;
+    animation: dashFadeIn 350ms ease-out;
 }
 
 .page-header h1 {
@@ -19,8 +19,9 @@
     bottom: -4px;
     left: 0;
     width: 0;
-    height: 2px;
-    background: var(--primary-600);
+    height: 3px;
+    background: var(--primary-500);
+    border-radius: 2px;
     animation: underlineExpand 500ms ease-out 200ms forwards;
 }
 
@@ -30,9 +31,9 @@
     }
 }
 
-/* Stats Grid - Staggered fade-in */
+/* ── Stats cards — staggered fade-in ────────────────────────────── */
 .stats-grid {
-    animation: fadeIn 300ms ease-out;
+    animation: dashFadeIn 300ms ease-out;
 }
 
 .stat-card {
@@ -45,44 +46,46 @@
 }
 
 .stat-card:nth-child(2) {
-    animation-delay: 50ms;
+    animation-delay: 60ms;
 }
 
 .stat-card:nth-child(3) {
-    animation-delay: 100ms;
+    animation-delay: 120ms;
 }
 
 .stat-card:nth-child(4) {
-    animation-delay: 150ms;
+    animation-delay: 180ms;
 }
 
 .stat-card:nth-child(5) {
-    animation-delay: 200ms;
+    animation-delay: 240ms;
 }
 
 .stat-card:nth-child(6) {
-    animation-delay: 250ms;
+    animation-delay: 300ms;
 }
 
 @keyframes fadeInCard {
     from {
         opacity: 0;
+        transform: translateY(6px);
     }
 
     to {
         opacity: 1;
+        transform: translateY(0);
     }
 }
 
-/* Dashboard Grid */
+/* ── Dashboard grid ─────────────────────────────────────────────── */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-    gap: 1rem;
-    animation: fadeIn 300ms ease-out 150ms both;
+    gap: 1.25rem;
+    animation: dashFadeIn 300ms ease-out 150ms both;
 }
 
-/* Quick Actions - Clean, responsive feel */
+/* ── Quick Actions ──────────────────────────────────────────────── */
 .quick-actions {
     display: flex;
     flex-direction: column;
@@ -94,28 +97,30 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: var(--gray-50);
+    background: white;
     border: 1px solid var(--gray-200);
     border-radius: var(--radius);
     color: var(--gray-700);
     text-decoration: none;
     font-size: 0.875rem;
-    transition: background-color 150ms ease-out, border-color 150ms ease-out;
+    transition: all var(--transition-fast);
 }
 
 .quick-action-btn:hover {
     background: var(--primary-50);
     border-color: var(--primary-200);
-    color: var(--primary-800);
+    color: var(--primary-700);
     text-decoration: none;
+    transform: translateX(3px);
 }
 
 .quick-action-btn:active {
     background: var(--primary-100);
+    transform: translateX(1px);
 }
 
 .quick-action-btn svg:first-child {
-    color: var(--primary-600);
+    color: var(--primary-500);
 }
 
 .quick-action-btn span {
@@ -125,14 +130,14 @@
 
 .quick-action-btn svg:last-child {
     color: var(--gray-400);
-    transition: transform 150ms ease-out;
+    transition: transform var(--transition-fast);
 }
 
 .quick-action-btn:hover svg:last-child {
-    transform: translateX(2px);
+    transform: translateX(3px);
 }
 
-/* Recent Substitutions List */
+/* ── Recent Substitutions ───────────────────────────────────────── */
 .recent-list {
     display: flex;
     flex-direction: column;
@@ -141,11 +146,11 @@
 .recent-item {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.625rem 0;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
     border-bottom: 1px solid var(--gray-100);
     opacity: 0;
-    animation: fadeIn 250ms ease-out forwards;
+    animation: dashFadeIn 250ms ease-out forwards;
 }
 
 .recent-item:nth-child(1) {
@@ -173,11 +178,11 @@
 }
 
 .recent-item-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--primary-100);
-    color: var(--primary-700);
-    border-radius: var(--radius);
+    width: 36px;
+    height: 36px;
+    background: var(--primary-50);
+    color: var(--primary-600);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -204,7 +209,7 @@
     color: var(--gray-500);
 }
 
-/* Alert Notice - Subtle slide-in */
+/* ── Alert ──────────────────────────────────────────────────────── */
 .alert {
     animation: slideInNotice 200ms ease-out;
 }
@@ -221,8 +226,8 @@
     }
 }
 
-/* Core Animations */
-@keyframes fadeIn {
+/* ── Animations ─────────────────────────────────────────────────── */
+@keyframes dashFadeIn {
     from {
         opacity: 0;
     }
@@ -232,14 +237,12 @@
     }
 }
 
-/* Card hover - No scale, just subtle color change */
 .card {
-    animation: fadeIn 300ms ease-out;
+    animation: dashFadeIn 300ms ease-out;
 }
 
-/* Status badge fade-in */
 .badge {
-    animation: fadeIn 400ms ease-out 300ms both;
+    animation: dashFadeIn 400ms ease-out 300ms both;
 }
 
 @media (max-width: 768px) {

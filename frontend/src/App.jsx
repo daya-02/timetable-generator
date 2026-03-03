@@ -15,12 +15,14 @@ import RoomsPage from './pages/RoomsPage';
 import TimetablePage from './pages/TimetablePage';
 import ManageTimetablePage from './pages/ManageTimetablePage';
 import ElectivesPage from './pages/ElectivesPage';
+import StructuredBasketsPage from './pages/StructuredBasketsPage';
 import ParallelLabsPage from './pages/ParallelLabsPage';
 import GeneratePage from './pages/GeneratePage';
 import SubstitutionPage from './pages/SubstitutionPage';
 import ReportsPage from './pages/ReportsPage';
 import MasterLabTimetablePage from './pages/MasterLabTimetablePage';
 import TeacherLoadDashboard from './pages/TeacherLoadDashboard';
+import RoomAvailabilityPage from './pages/RoomAvailabilityPage';
 
 function App() {
   return (
@@ -36,6 +38,7 @@ function App() {
                 <Route path="/teachers" element={<TeachersPage />} />
                 <Route path="/subjects" element={<SubjectsPage />} />
                 <Route path="/electives" element={<ElectivesPage />} />
+                <Route path="/structured-baskets" element={<StructuredBasketsPage />} />
                 <Route path="/parallel-labs" element={<ParallelLabsPage />} />
                 <Route path="/semesters" element={<SemestersPage />} />
                 <Route path="/rooms" element={<RoomsPage />} />
@@ -46,6 +49,7 @@ function App() {
                 <Route path="/teacher-load" element={<TeacherLoadDashboard />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/master-lab" element={<MasterLabTimetablePage />} />
+                <Route path="/room-availability" element={<RoomAvailabilityPage />} />
               </Routes>
             </main>
           </div>

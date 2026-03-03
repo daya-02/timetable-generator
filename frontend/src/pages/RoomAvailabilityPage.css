@@ -1,0 +1,789 @@
+/* ================================================================
+   Room Availability Dashboard - Premium Design System
+   Redesigned: Rooms as rows, Days as columns
+   ================================================================ */
+
+.room-availability-page {
+    padding: 1.5rem;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.room-availability-page .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.room-availability-page .page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.room-availability-page .page-header p {
+    color: var(--gray-500);
+    font-size: 0.85rem;
+    margin: 0.15rem 0 0;
+}
+
+/* ── Filter Bar ────────────────────────────────────────────────── */
+.ra-filter-bar {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding: 0.65rem 1rem;
+    background: var(--gray-50);
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+}
+
+.ra-filter-bar select,
+.ra-filter-bar input[type="text"] {
+    font-size: 0.85rem;
+    padding: 0.38rem 0.6rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-300);
+    background: white;
+    min-width: 160px;
+    transition: border-color 0.2s;
+}
+
+.ra-filter-bar select:focus,
+.ra-filter-bar input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+/* ── Stats Cards ────────────────────────────────────────────────── */
+.ra-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.ra-stat-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ra-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.ra-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.ra-stat-icon.rooms {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+}
+
+.ra-stat-icon.occupied {
+    background: linear-gradient(135deg, #ef4444, #f87171);
+}
+
+.ra-stat-icon.free {
+    background: linear-gradient(135deg, #22c55e, #4ade80);
+}
+
+.ra-stat-icon.util {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.ra-stat-icon.conflict {
+    background: linear-gradient(135deg, #dc2626, #f87171);
+}
+
+.ra-stat-content h3 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.ra-stat-content p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+/* ── View Toggle ────────────────────────────────────────────────── */
+.ra-view-toggle {
+    display: inline-flex;
+    background: var(--gray-100);
+    border-radius: var(--radius);
+    padding: 3px;
+    gap: 2px;
+}
+
+.ra-view-toggle button {
+    padding: 0.4rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: calc(var(--radius) - 2px);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.ra-view-toggle button.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ================================================================
+   MASTER GRID TABLE (Rooms as rows × Days as columns)
+   ================================================================ */
+.ra-grid-container {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.ra-master-table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ra-master-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+/* ── Day headers ── */
+.ra-master-table .ra-day-header {
+    padding: 0.6rem 0.3rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: white;
+    border-bottom: none;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.ra-day-header.even {
+    background: #4f46e5;
+}
+
+.ra-day-header.odd {
+    background: #6366f1;
+}
+
+/* ── Period sub-headers ── */
+.ra-master-table .ra-period-header {
+    padding: 0.35rem 0;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.65rem;
+    color: var(--gray-500);
+    border-bottom: 2px solid var(--gray-200);
+    min-width: 68px;
+    position: sticky;
+    top: 32px;
+    z-index: 2;
+}
+
+.ra-period-header.even {
+    background: #f0edff;
+}
+
+.ra-period-header.odd {
+    background: #f8fafc;
+}
+
+/* ── Room Name Column (sticky left) ── */
+.ra-room-name-col {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: #1e293b;
+    color: white;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.6rem 0.8rem;
+    min-width: 130px;
+    text-align: left;
+    border-right: 2px solid var(--gray-300);
+}
+
+.ra-room-name-cell {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: #f8fafc;
+    border-right: 2px solid var(--gray-200);
+    border-bottom: 1px solid var(--gray-100);
+    padding: 0.4rem 0.6rem;
+    min-width: 130px;
+}
+
+.ra-room-name-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ra-room-label {
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: var(--gray-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.ra-room-type-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    width: fit-content;
+}
+
+.ra-room-type-tag.lab {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.ra-room-type-tag.lecture {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.ra-room-type-tag.seminar {
+    background: #f3e8ff;
+    color: #9333ea;
+}
+
+/* ── Room Info Column (sticky left) ── */
+.ra-room-info-col {
+    position: sticky;
+    left: 130px;
+    z-index: 5;
+    background: #1e293b;
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.6rem 0.5rem;
+    min-width: 80px;
+    text-align: center;
+    border-right: 2px solid var(--gray-300);
+}
+
+.ra-room-info-cell {
+    position: sticky;
+    left: 130px;
+    z-index: 3;
+    background: #f8fafc;
+    border-right: 2px solid var(--gray-200);
+    border-bottom: 1px solid var(--gray-100);
+    padding: 0.35rem 0.3rem;
+    min-width: 80px;
+}
+
+.ra-room-info-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.ra-cap-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--gray-700);
+}
+
+.ra-util-bar-mini {
+    width: 50px;
+    height: 4px;
+    background: var(--gray-200);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.ra-util-pct {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--gray-500);
+}
+
+/* ── Utilization Bars (shared) ── */
+.ra-util-bar {
+    width: 80px;
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.ra-util-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.ra-util-fill.low {
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+
+.ra-util-fill.mid {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.ra-util-fill.high {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+/* ── Schedule Cells ── */
+.ra-cell {
+    border-bottom: 1px solid var(--gray-100);
+    padding: 2px;
+    text-align: center;
+    vertical-align: middle;
+    min-width: 68px;
+    height: 44px;
+}
+
+.ra-cell.even-day {
+    background: #fafaff;
+}
+
+.ra-cell.odd-day {
+    background: #ffffff;
+}
+
+/* Free cell */
+.ra-cell-free {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 36px;
+    border-radius: 5px;
+    border: 1px dashed #d1fae5;
+    background: #f0fdf4;
+    color: #86efac;
+    font-size: 0.62rem;
+    font-weight: 600;
+    transition: all 0.15s;
+}
+
+.ra-cell-free:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #22c55e;
+}
+
+/* Occupied cell */
+.ra-cell-occupied {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 36px;
+    border-radius: 5px;
+    padding: 2px 3px;
+    gap: 1px;
+    transition: all 0.15s;
+}
+
+/* Component-specific colors */
+.ra-cell-occupied.comp-theory {
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    border: 1px solid #c7d2fe;
+}
+
+.ra-cell-occupied.comp-theory:hover {
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+}
+
+.ra-cell-occupied.comp-lab {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border: 1px solid #86efac;
+}
+
+.ra-cell-occupied.comp-lab:hover {
+    background: linear-gradient(135deg, #bbf7d0, #86efac);
+}
+
+.ra-cell-occupied.comp-tutorial {
+    background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+    border: 1px solid #f9a8d4;
+}
+
+.ra-cell-occupied.comp-seminar {
+    background: linear-gradient(135deg, #ffedd5, #fed7aa);
+    border: 1px solid #fdba74;
+}
+
+.ra-cell-occupied.comp-project {
+    background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+    border: 1px solid #7dd3fc;
+}
+
+.ra-cell-occupied.comp-self_study {
+    background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+    border: 1px solid #d8b4fe;
+}
+
+.ra-cell-subject {
+    font-weight: 700;
+    font-size: 0.65rem;
+    color: var(--gray-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60px;
+    line-height: 1.2;
+}
+
+.ra-cell-class {
+    font-weight: 500;
+    font-size: 0.55rem;
+    color: var(--gray-500);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60px;
+    line-height: 1.1;
+}
+
+/* ── Room badges (existing) ── */
+.ra-room-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.ra-room-badge.lecture {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.ra-room-badge.lab {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.ra-room-badge.seminar {
+    background: #f3e8ff;
+    color: #9333ea;
+}
+
+/* ── Slot component badges (for conflict detail) ── */
+.ra-slot-component {
+    font-size: 0.58rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-top: 1px;
+}
+
+.ra-slot-component.theory {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.ra-slot-component.lab {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.ra-slot-component.tutorial {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.ra-slot-component.self_study {
+    background: #f3e8ff;
+    color: #9333ea;
+}
+
+.ra-slot-component.seminar {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+.ra-slot-component.project {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+/* ── Free Rooms Finder Panel ─────────────────────────────────── */
+.ra-free-finder {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.ra-free-finder h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    color: var(--gray-800);
+}
+
+.ra-free-finder-form {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 0.75rem;
+}
+
+.ra-free-finder-form label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ra-free-finder-form select,
+.ra-free-finder-form input {
+    font-size: 0.85rem;
+    padding: 0.38rem 0.5rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+}
+
+.ra-free-rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.ra-free-room-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.85rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius);
+    transition: all 0.15s;
+}
+
+.ra-free-room-chip:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+    transform: translateY(-1px);
+}
+
+.ra-free-room-chip .room-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--gray-800);
+}
+
+.ra-free-room-chip .room-meta {
+    font-size: 0.72rem;
+    color: var(--gray-500);
+}
+
+/* ── Conflict Alert ────────────────────────────────────────────── */
+.ra-conflict-alert {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 1px solid #fecaca;
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.82rem;
+    color: #991b1b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Conflict Detail Panel ─────────────────────────────────────── */
+.ra-conflict-details {
+    background: white;
+    border: 1px solid #fecaca;
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ra-conflict-item {
+    background: linear-gradient(135deg, #fff5f5, #fff1f2);
+    border: 1px solid #fecaca;
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    transition: box-shadow 0.15s;
+}
+
+.ra-conflict-item:hover {
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+}
+
+.ra-conflict-item-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ra-conflict-room {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #991b1b;
+}
+
+.ra-conflict-time {
+    font-size: 0.78rem;
+    color: #b91c1c;
+    font-weight: 500;
+}
+
+.ra-conflict-count {
+    margin-left: auto;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: #dc2626;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.ra-conflict-classes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ra-conflict-class-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.65rem;
+    background: white;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    font-size: 0.75rem;
+}
+
+.ra-conflict-subject {
+    font-weight: 700;
+    color: var(--gray-800);
+}
+
+.ra-conflict-semester {
+    font-weight: 500;
+    color: var(--gray-500);
+    font-size: 0.7rem;
+}
+
+.ra-conflict-teacher {
+    font-size: 0.7rem;
+    color: var(--gray-600);
+}
+
+/* ── Empty State ─── */
+.ra-grid-container .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--gray-500);
+    text-align: center;
+}
+
+.ra-grid-container .empty-state h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--gray-700);
+}
+
+.ra-grid-container .empty-state p {
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .room-availability-page {
+        padding: 1rem;
+    }
+
+    .ra-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .ra-master-table .ra-period-header {
+        min-width: 55px;
+    }
+
+    .ra-cell {
+        min-width: 55px;
+    }
+
+    .ra-free-rooms-grid {
+        grid-template-columns: 1fr;
+    }
+}

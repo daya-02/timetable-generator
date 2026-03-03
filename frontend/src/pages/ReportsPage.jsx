@@ -145,10 +145,8 @@ export default function ReportsPage() {
                                 <th>Theory</th>
                                 <th>Lab</th>
                                 <th>Tutorial</th>
-                                <th>Project</th>
-                                <th>Report</th>
                                 <th>Self Study</th>
-                                <th>Internship</th>
+                                <th>Seminar</th>
                                 <th>Elective</th>
                                 <th>Max Consecutive</th>
                                 <th>Free Periods</th>
@@ -167,10 +165,8 @@ export default function ReportsPage() {
                                             <td>{row.theory_hours}</td>
                                             <td>{row.lab_hours}</td>
                                             <td>{row.tutorial_hours}</td>
-                                            <td>{row.project_hours}</td>
-                                            <td>{row.report_hours}</td>
                                             <td>{row.self_study_hours}</td>
-                                            <td>{row.self_study_hours}</td>
+                                            <td>{row.seminar_hours}</td>
                                             <td>{row.elective_hours}</td>
                                             <td>{row.max_consecutive_periods}</td>
                                             <td>{row.free_periods}</td>
@@ -183,7 +179,7 @@ export default function ReportsPage() {
                                     ))
                             ) : (
                                 <tr>
-                                    <td colSpan="14" className="text-center text-muted">
+                                    <td colSpan="12" className="text-center text-muted">
                                         No workload data available.
                                     </td>
                                 </tr>
@@ -300,8 +296,8 @@ export default function ReportsPage() {
                                             <td>
                                                 <span
                                                     className={`badge ${row.status === 'Complete'
-                                                            ? 'badge-success'
-                                                            : 'badge-warning'
+                                                        ? 'badge-success'
+                                                        : 'badge-warning'
                                                         }`}
                                                 >
                                                     {row.status}

@@ -4,7 +4,7 @@ Provides SQLAlchemy engine and session factory.
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool, StaticPool
 from typing import Generator
 
 from app.core.config import get_settings
@@ -20,10 +20,19 @@ if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://")
 
 # Handle SQLite vs PostgreSQL connection args
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    is_in_memory_sqlite = (
+        SQLALCHEMY_DATABASE_URL in {"sqlite://", "sqlite:///:memory:"}
+        or SQLALCHEMY_DATABASE_URL.endswith(":memory:")
+    )
+
+    # File-based SQLite should not use StaticPool in concurrent API usage.
+    # StaticPool is safe for in-memory SQLite tests only.
+    sqlite_pool = StaticPool if is_in_memory_sqlite else NullPool
+
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL,
         connect_args={"check_same_thread": False},
-        poolclass=StaticPool
+        poolclass=sqlite_pool
     )
     
     # Enable Foreign Key support in SQLite

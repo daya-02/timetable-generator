@@ -207,7 +207,6 @@ export default function TeachersPage() {
             semester_id: parseInt(formData.get('semester_id')),
             subject_id: parseInt(formData.get('subject_id')),
             component_type: formData.get('component_type'),
-            teacher_id: editingTeacher.id
         };
 
         const batchId = formData.get('batch_id');

@@ -185,10 +185,8 @@ export default function TeacherLoadDashboard() {
                             <th>Theory</th>
                             <th>Lab</th>
                             <th>Tutorial</th>
-                            <th>Project</th>
-                            <th>Report</th>
                             <th>Self Study</th>
-                            <th>Internship</th>
+                            <th>Seminar</th>
                             <th>Elective</th>
                             <th>Max Consecutive</th>
                             <th>Days w/ Overload</th>
@@ -217,10 +215,8 @@ export default function TeacherLoadDashboard() {
                                     <td>{row.theory_hours}</td>
                                     <td>{row.lab_hours}</td>
                                     <td>{row.tutorial_hours}</td>
-                                    <td>{row.project_hours}</td>
-                                    <td>{row.report_hours}</td>
                                     <td>{row.self_study_hours}</td>
-                                    <td>{row.self_study_hours}</td>
+                                    <td>{row.seminar_hours}</td>
                                     <td>{row.elective_hours}</td>
                                     <td>{row.max_consecutive_periods}</td>
                                     <td>{row.days_with_overload}</td>

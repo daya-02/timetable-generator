@@ -1,0 +1,34 @@
+DEPARTMENTS (0):
+
+SEMESTERS (4):
+  id=1 name=3rd Semester - Section A code=CS3A dept_id=None sem_num=3
+  id=2 name=3rd Semester - Section B code=CS3B dept_id=None sem_num=3
+  id=3 name=5th Semester - Section A code=CS5A dept_id=None sem_num=5
+  id=4 name=7th Semester - Section A code=CS7A dept_id=None sem_num=7
+
+TOTAL ALLOCATIONS: 0
+
+ALLOCATIONS BY SEMESTER:
+
+ALLOCATIONS FOR DEPT 10: 0
+
+SEMESTERS WITH NULL DEPT_ID (4):
+  id=1 name=3rd Semester - Section A code=CS3A dept_id=None
+  id=2 name=3rd Semester - Section B code=CS3B dept_id=None
+  id=3 name=5th Semester - Section A code=CS5A dept_id=None
+  id=4 name=7th Semester - Section A code=CS7A dept_id=None
+
+ALLOCATION COLUMNS:
+  id (INTEGER)
+  teacher_id (INTEGER)
+  subject_id (INTEGER)
+  semester_id (INTEGER)
+  room_id (INTEGER)
+  day (INTEGER)
+  slot (INTEGER)
+  component_type (VARCHAR(8))
+  is_lab_continuation (BOOLEAN)
+  is_elective (BOOLEAN)
+  elective_basket_id (INTEGER)
+  created_at (DATETIME)
+  updated_at (DATETIME)

@@ -7,6 +7,7 @@ import axios from 'axios';
 // Use environment variable for API URL (set in Vercel/Render dashboard)
 // Falls back to localhost for development or relative path for same-origin production
 let rawApiUrl = import.meta.env.VITE_API_URL || '';
+const hasExplicitApiUrl = Boolean(rawApiUrl);
 
 // Smart fix for common deployment misconfigurations
 if (rawApiUrl) {
@@ -22,9 +23,9 @@ if (rawApiUrl) {
 
 // Fallback logic:
 // 1. If VITE_API_URL is provided, use it.
-// 2. In development, use localhost:8001.
+// 2. In development, use localhost:8000.
 // 3. In production, use relative /api (assumes same-origin hosting).
-const DEFAULT_API_BASE_URL = rawApiUrl || (import.meta.env.DEV ? 'http://127.0.0.1:8001/api' : '/api');
+const DEFAULT_API_BASE_URL = rawApiUrl || (import.meta.env.DEV ? 'http://127.0.0.1:8000/api' : '/api');
 
 const api = axios.create({
   baseURL: DEFAULT_API_BASE_URL,
@@ -56,12 +57,24 @@ const withTimeout = async (promise, ms) => {
   }
 };
 
-const detectLocalApiBaseUrl = async () => {
+const getPortFromBaseUrl = (url) => {
+  try {
+    const parsed = new URL(url);
+    return parsed.port ? parseInt(parsed.port, 10) : null;
+  } catch {
+    return null;
+  }
+};
+
+const detectLocalApiBaseUrl = async (preferredPort = null) => {
   const hostname = window.location.hostname || '127.0.0.1';
   const safeHost = isLocalHostname(hostname) ? hostname : '127.0.0.1';
   const candidatePorts = [8000, 8001, 8002, 8003, 8004, 8005];
+  const ports = preferredPort && candidatePorts.includes(preferredPort)
+    ? [preferredPort, ...candidatePorts.filter((port) => port !== preferredPort)]
+    : candidatePorts;
 
-  for (const port of candidatePorts) {
+  for (const port of ports) {
     const healthUrl = `http://${safeHost}:${port}/health`;
     try {
       const response = await withTimeout(
@@ -86,6 +99,7 @@ api.interceptors.response.use(
   async (error) => {
     const shouldTryDetect =
       import.meta.env.DEV &&
+      !hasExplicitApiUrl &&
       !hasAutoDetected &&
       !error.response &&
       isLocalBaseUrl(api.defaults.baseURL);
@@ -95,7 +109,9 @@ api.interceptors.response.use(
     }
 
     if (!autoDetectInFlight) {
-      autoDetectInFlight = detectLocalApiBaseUrl().finally(() => {
+      autoDetectInFlight = detectLocalApiBaseUrl(
+        getPortFromBaseUrl(api.defaults.baseURL)
+      ).finally(() => {
         autoDetectInFlight = null;
       });
     }
@@ -258,6 +274,43 @@ export const roomsApi = {
 };
 
 // ============================================================================
+// Room Availability (Analytics / Dashboard)
+// ============================================================================
+export const roomAvailabilityApi = {
+  getSchedule: (params = {}) => {
+    const sp = new URLSearchParams();
+    if (params.deptId) sp.append('dept_id', params.deptId);
+    if (params.roomType) sp.append('room_type', params.roomType);
+    if (params.roomId) sp.append('room_id', params.roomId);
+    return api.get(`/room-availability/schedule?${sp.toString()}`);
+  },
+  getFreeRooms: (day, slot, params = {}) => {
+    const sp = new URLSearchParams();
+    sp.append('day', day);
+    sp.append('slot', slot);
+    if (params.deptId) sp.append('dept_id', params.deptId);
+    if (params.roomType) sp.append('room_type', params.roomType);
+    if (params.minCapacity) sp.append('min_capacity', params.minCapacity);
+    return api.get(`/room-availability/free-rooms?${sp.toString()}`);
+  },
+  getSummary: (params = {}) => {
+    const sp = new URLSearchParams();
+    if (params.deptId) sp.append('dept_id', params.deptId);
+    return api.get(`/room-availability/summary?${sp.toString()}`);
+  },
+  suggest: (day, slot, params = {}) => {
+    const sp = new URLSearchParams();
+    sp.append('day', day);
+    sp.append('slot', slot);
+    if (params.deptId) sp.append('dept_id', params.deptId);
+    if (params.roomType) sp.append('room_type', params.roomType);
+    if (params.minCapacity) sp.append('min_capacity', params.minCapacity);
+    if (params.consecutive) sp.append('consecutive', params.consecutive);
+    return api.get(`/room-availability/suggest?${sp.toString()}`);
+  },
+};
+
+// ============================================================================
 // Parallel Lab Baskets
 // ============================================================================
 export const parallelLabBasketsApi = {
@@ -367,6 +420,17 @@ export const fixedSlotsApi = {
   clearAll: () => api.delete('/fixed-slots/clear/all'),
   // Validate if a slot can be locked (without actually locking it)
   validate: (data) => api.post('/fixed-slots/validate', data),
+};
+
+// ============================================================================
+// Structured Composite Baskets
+// ============================================================================
+export const structuredCompositeBasketsApi = {
+  getAll: () => api.get('/structured-composite-baskets/'),
+  getById: (id) => api.get(`/structured-composite-baskets/${id}`),
+  create: (data) => api.post('/structured-composite-baskets/', data),
+  update: (id, data) => api.put(`/structured-composite-baskets/${id}`, data),
+  delete: (id) => api.delete(`/structured-composite-baskets/${id}`),
 };
 
 export default api;

@@ -28,7 +28,41 @@ FREE PERIOD:
 """
 from pydantic_settings import BaseSettings
 from functools import lru_cache
-from typing import List, Tuple
+from pathlib import Path
+
+
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_DB_PATH = BACKEND_ROOT / "timetable.db"
+DEFAULT_SQLITE_URL = f"sqlite:///{DEFAULT_DB_PATH.as_posix()}"
+
+
+def _normalize_database_url(database_url: str) -> str:
+    """
+    Resolve relative SQLite paths against backend root so all run modes
+    (uvicorn from backend/, root/, IDE, scripts) use one physical DB file.
+    """
+    if not database_url or not database_url.startswith("sqlite"):
+        return database_url
+
+    if database_url in {"sqlite://", "sqlite:///:memory:", "sqlite+pysqlite:///:memory:"}:
+        return database_url
+
+    if database_url.startswith("sqlite:///"):
+        raw_path = database_url[len("sqlite:///"):]
+        if not raw_path:
+            return DEFAULT_SQLITE_URL
+
+        # Handle Windows absolute paths sometimes represented as "/C:/..."
+        if raw_path.startswith("/") and len(raw_path) > 2 and raw_path[2] == ":":
+            raw_path = raw_path[1:]
+
+        candidate_path = Path(raw_path)
+        if not candidate_path.is_absolute():
+            candidate_path = BACKEND_ROOT / candidate_path
+
+        return f"sqlite:///{candidate_path.resolve().as_posix()}"
+
+    return database_url
 
 
 class PeriodTiming:
@@ -87,7 +121,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
     # Database
-    DATABASE_URL: str = "sqlite:///./timetable.db"
+    DATABASE_URL: str = DEFAULT_SQLITE_URL
     
     # Security
     SECRET_KEY: str = "dev-secret-key-change-me"
@@ -132,8 +166,12 @@ class Settings(BaseSettings):
     EXPERIENCE_WEIGHT: float = 0.1
     
     class Config:
-        env_file = ".env"
+        env_file = str(BACKEND_ROOT / ".env")
         extra = "ignore"
+
+    def __init__(self, **values):
+        super().__init__(**values)
+        self.DATABASE_URL = _normalize_database_url(self.DATABASE_URL)
 
 
 @lru_cache

@@ -3,7 +3,7 @@
  * UPDATED: Supports component-based subject model (Theory + Lab + Tutorial)
  */
 import { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, X, BookOpen, Clock, AlertCircle, Beaker, GraduationCap, Star, Filter } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, BookOpen, Clock, AlertCircle, Beaker, GraduationCap, Star, Filter, TrendingUp } from 'lucide-react';
 import { subjectsApi, semestersApi } from '../services/api';
 import { useDepartmentContext } from '../context/DepartmentContext';
 import './CrudPage.css';
@@ -30,12 +30,8 @@ export default function SubjectsPage() {
         lab_hours_per_week: 0,
         tutorial_hours_per_week: 0,
         // Extended components (Optional)
-        project_hours_per_week: 0,
-        project_block_size: 1,
-        report_hours_per_week: 0,
-        report_block_size: 1,
         self_study_hours_per_week: 0,
-        self_study_hours_per_week: 0,
+        seminar_hours_per_week: 0,
         seminar_block_size: 2,
         seminar_day_based: false,
         // Legacy fields
@@ -49,6 +45,9 @@ export default function SubjectsPage() {
         // Assignment
         semester_ids: [],
         is_elective: false,
+        // Academic Importance
+        importance_level: 'NORMAL',
+        previous_year_pass_percentage: null,
     });
 
     useEffect(() => {
@@ -100,12 +99,8 @@ export default function SubjectsPage() {
                 theory_hours_per_week: subject.theory_hours_per_week ?? subject.weekly_hours ?? 3,
                 lab_hours_per_week: subject.lab_hours_per_week ?? 0,
                 tutorial_hours_per_week: subject.tutorial_hours_per_week ?? 0,
-                project_hours_per_week: subject.project_hours_per_week ?? 0,
-                project_block_size: subject.project_block_size ?? 1,
-                report_hours_per_week: subject.report_hours_per_week ?? 0,
-                report_block_size: subject.report_block_size ?? 1,
                 self_study_hours_per_week: subject.self_study_hours_per_week ?? 0,
-                self_study_hours_per_week: subject.self_study_hours_per_week ?? 0,
+                seminar_hours_per_week: subject.seminar_hours_per_week ?? 0,
                 seminar_block_size: subject.seminar_block_size ?? 2,
                 seminar_day_based: subject.seminar_day_based ?? false,
                 weekly_hours: subject.weekly_hours ?? 3,
@@ -116,6 +111,8 @@ export default function SubjectsPage() {
                 semester: subject.semester ?? 1,
                 semester_ids: subject.semesters ? subject.semesters.map(s => s.id) : [],
                 is_elective: subject.is_elective || subject.subject_type === 'elective',
+                importance_level: subject.importance_level || 'NORMAL',
+                previous_year_pass_percentage: subject.previous_year_pass_percentage ?? null,
             });
         } else {
             setEditingSubject(null);
@@ -125,15 +122,10 @@ export default function SubjectsPage() {
                 theory_hours_per_week: 3,
                 lab_hours_per_week: 0,
                 tutorial_hours_per_week: 0,
-                project_hours_per_week: 0,
-                project_block_size: 1,
-                report_hours_per_week: 0,
-                report_block_size: 1,
                 self_study_hours_per_week: 0,
-                self_study_hours_per_week: 0,
+                seminar_hours_per_week: 0,
                 seminar_block_size: 2,
                 seminar_day_based: false,
-                weekly_hours: 3,
                 subject_type: 'regular',
                 consecutive_slots: 1,
                 dept_id: deptId ?? null,
@@ -141,6 +133,8 @@ export default function SubjectsPage() {
                 semester: 1,
                 semester_ids: [],
                 is_elective: false,
+                importance_level: 'NORMAL',
+                previous_year_pass_percentage: null,
             });
         }
         setShowModal(true);
@@ -169,29 +163,21 @@ export default function SubjectsPage() {
             return true;
         };
 
-        const projectBlock = formData.project_block_size >= 2 ? 2 : 1;
-        if (!validateBlock('Project', formData.project_hours_per_week, projectBlock)) return;
-
-        const reportBlock = formData.report_block_size >= 2 ? 2 : 1;
-        if (!validateBlock('Report', formData.report_hours_per_week, reportBlock)) return;
-
         const seminarDayBased = !!formData.seminar_day_based;
         const seminarBlock = seminarDayBased ? 7 : (formData.seminar_block_size >= 2 ? 2 : 1);
-        if (seminarDayBased && formData.self_study_hours_per_week > 0 && formData.self_study_hours_per_week < 7) {
-            alert('Internship day-based mode requires at least 7 periods per week.');
+        if (seminarDayBased && formData.seminar_hours_per_week > 0 && formData.seminar_hours_per_week < 7) {
+            alert('Seminar day-based mode requires at least 7 periods per week.');
             return;
         }
-        if (!seminarDayBased && !validateBlock('Internship', formData.self_study_hours_per_week, seminarBlock)) return;
+        if (!seminarDayBased && !validateBlock('Seminar', formData.seminar_hours_per_week, seminarBlock)) return;
 
         // Calculate total weekly hours from components
         const totalHours =
             formData.theory_hours_per_week +
             formData.lab_hours_per_week +
             formData.tutorial_hours_per_week +
-            formData.project_hours_per_week +
-            formData.report_hours_per_week +
             formData.self_study_hours_per_week +
-            formData.self_study_hours_per_week;
+            formData.seminar_hours_per_week;
 
         if (totalHours === 0) {
             alert("Subject must have at least 1 hour per week (any component).");
@@ -202,8 +188,6 @@ export default function SubjectsPage() {
             ...formData,
             weekly_hours: totalHours,
             dept_id: deptId ?? formData.dept_id ?? null,
-            project_block_size: projectBlock,
-            report_block_size: reportBlock,
             seminar_block_size: seminarBlock,
         };
 
@@ -237,10 +221,8 @@ export default function SubjectsPage() {
         return formData.theory_hours_per_week +
             formData.lab_hours_per_week +
             formData.tutorial_hours_per_week +
-            formData.project_hours_per_week +
-            formData.report_hours_per_week +
             formData.self_study_hours_per_week +
-            formData.self_study_hours_per_week;
+            formData.seminar_hours_per_week;
     };
 
     const getLabBlocks = () => {
@@ -256,7 +238,7 @@ export default function SubjectsPage() {
             <div className="page-header">
                 <div>
                     <h1>Subjects</h1>
-                    <p>Manage courses with component hours (Theory, Lab, Tutorial, Project, Report, Self Study, Internship)</p>
+                    <p>Manage courses with component hours (Theory, Lab, Tutorial, Self Study, Seminar)</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => openModal()}>
                     <Plus size={18} />
@@ -344,18 +326,14 @@ export default function SubjectsPage() {
                     const theoryHours = subject.theory_hours_per_week ?? subject.weekly_hours ?? 0;
                     const labHours = subject.lab_hours_per_week ?? 0;
                     const tutorialHours = subject.tutorial_hours_per_week ?? 0;
-                    const projectHours = subject.project_hours_per_week ?? 0;
-                    const reportHours = subject.report_hours_per_week ?? 0;
-                    const seminarHours = subject.self_study_hours_per_week ?? 0;
-                    const internshipHours = subject.self_study_hours_per_week ?? 0;
+                    const selfStudyHours = subject.self_study_hours_per_week ?? 0;
+                    const seminarHours = subject.seminar_hours_per_week ?? 0;
                     const totalHours =
                         theoryHours +
                         labHours +
                         tutorialHours +
-                        projectHours +
-                        reportHours +
-                        seminarHours +
-                        internshipHours;
+                        selfStudyHours +
+                        seminarHours;
                     const isElective = subject.is_elective || subject.subject_type === 'elective';
 
                     return (
@@ -370,8 +348,18 @@ export default function SubjectsPage() {
                                     </h3>
                                     <div className="flex gap-2 items-center">
                                         <span className="text-sm text-muted">{subject.code}</span>
+                                        {subject.year && (
+                                            <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: '#eef2ff', color: '#6366f1', fontWeight: 600 }}>
+                                                Year {subject.year}
+                                            </span>
+                                        )}
+                                        {subject.semester && (
+                                            <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: '#f0fdf4', color: '#16a34a', fontWeight: 600 }}>
+                                                Sem {subject.semester}
+                                            </span>
+                                        )}
                                         {subject.semesters && (
-                                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                                            <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: '#f1f5f9', color: '#64748b', fontWeight: 600 }}>
                                                 {subject.semesters.length} Classes
                                             </span>
                                         )}
@@ -441,37 +429,7 @@ export default function SubjectsPage() {
                                         {tutorialHours}h Tutorial
                                     </span>
                                 )}
-                                {projectHours > 0 && (
-                                    <span className="component-badge project" style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '4px',
-                                        padding: '4px 8px',
-                                        borderRadius: '12px',
-                                        fontSize: '11px',
-                                        fontWeight: '600',
-                                        background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
-                                        color: 'white'
-                                    }}>
-                                        {projectHours}h Project
-                                    </span>
-                                )}
-                                {reportHours > 0 && (
-                                    <span className="component-badge report" style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '4px',
-                                        padding: '4px 8px',
-                                        borderRadius: '12px',
-                                        fontSize: '11px',
-                                        fontWeight: '600',
-                                        background: 'linear-gradient(135deg, #64748b 0%, #334155 100%)',
-                                        color: 'white'
-                                    }}>
-                                        {reportHours}h Report
-                                    </span>
-                                )}
-                                {seminarHours > 0 && (
+                                {selfStudyHours > 0 && (
                                     <span className="component-badge self-study" style={{
                                         display: 'inline-flex',
                                         alignItems: 'center',
@@ -483,10 +441,10 @@ export default function SubjectsPage() {
                                         background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
                                         color: 'white'
                                     }}>
-                                        {seminarHours}h Self Study
+                                        {selfStudyHours}h Self Study
                                     </span>
                                 )}
-                                {internshipHours > 0 && (
+                                {seminarHours > 0 && (
                                     <span className="component-badge self-study" style={{
                                         display: 'inline-flex',
                                         alignItems: 'center',
@@ -498,12 +456,12 @@ export default function SubjectsPage() {
                                         background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
                                         color: 'white'
                                     }}>
-                                        {internshipHours}h Self Study
+                                        {seminarHours}h Seminar
                                     </span>
                                 )}
                             </div>
 
-                            <div className="crud-item-details" style={{ marginTop: '8px' }}>
+                            <div className="crud-item-details" style={{ marginTop: '8px', alignItems: 'center' }}>
                                 <span className="crud-item-detail">
                                     <Clock size={14} /> {totalHours} hrs/week
                                 </span>
@@ -514,6 +472,12 @@ export default function SubjectsPage() {
                                         fontWeight: '600'
                                     }}>
                                         Elective
+                                    </span>
+                                )}
+                                {/* Pass Rate & Priority as simple text */}
+                                {subject.previous_year_pass_percentage != null && (
+                                    <span className="crud-item-detail" style={{ marginLeft: 'auto', fontSize: '12px', color: '#64748b' }}>
+                                        Pass: {subject.previous_year_pass_percentage}%
                                     </span>
                                 )}
                             </div>
@@ -593,6 +557,34 @@ export default function SubjectsPage() {
                                     <p className="text-xs text-muted mt-1">
                                         Electives are scheduled at common slots across all departments.
                                     </p>
+                                </div>
+                            </div>
+
+                            {/* Year & Semester Selection */}
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label className="form-label">Year *</label>
+                                    <select
+                                        className="form-select"
+                                        value={formData.year}
+                                        onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                                    >
+                                        {[1, 2, 3, 4].map(y => (
+                                            <option key={y} value={y}>Year {y}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Semester *</label>
+                                    <select
+                                        className="form-select"
+                                        value={formData.semester}
+                                        onChange={(e) => setFormData({ ...formData, semester: parseInt(e.target.value) })}
+                                    >
+                                        {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
+                                            <option key={s} value={s}>Semester {s}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
 
@@ -697,74 +689,6 @@ export default function SubjectsPage() {
                                     </div>
 
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
-                                        {/* Project */}
-                                        <div style={{
-                                            background: 'white',
-                                            borderRadius: '8px',
-                                            padding: '12px',
-                                            border: '2px solid #0ea5e9'
-                                        }}>
-                                            <div className="text-xs font-bold text-gray-600 mb-2">Project</div>
-                                            <input
-                                                type="number"
-                                                className="form-input"
-                                                value={formData.project_hours_per_week}
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    project_hours_per_week: parseInt(e.target.value) || 0
-                                                })}
-                                                min={0}
-                                                max={10}
-                                                style={{ textAlign: 'center', fontWeight: 'bold' }}
-                                            />
-                                            <div className="text-xs text-muted mt-1">hours/week</div>
-                                            <select
-                                                className="form-input mt-2"
-                                                value={formData.project_block_size}
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    project_block_size: parseInt(e.target.value) || 1
-                                                })}
-                                            >
-                                                <option value={1}>Single period</option>
-                                                <option value={2}>Continuous (2)</option>
-                                            </select>
-                                        </div>
-
-                                        {/* Report */}
-                                        <div style={{
-                                            background: 'white',
-                                            borderRadius: '8px',
-                                            padding: '12px',
-                                            border: '2px solid #64748b'
-                                        }}>
-                                            <div className="text-xs font-bold text-gray-600 mb-2">Report</div>
-                                            <input
-                                                type="number"
-                                                className="form-input"
-                                                value={formData.report_hours_per_week}
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    report_hours_per_week: parseInt(e.target.value) || 0
-                                                })}
-                                                min={0}
-                                                max={10}
-                                                style={{ textAlign: 'center', fontWeight: 'bold' }}
-                                            />
-                                            <div className="text-xs text-muted mt-1">hours/week</div>
-                                            <select
-                                                className="form-input mt-2"
-                                                value={formData.report_block_size}
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    report_block_size: parseInt(e.target.value) || 1
-                                                })}
-                                            >
-                                                <option value={1}>Single period</option>
-                                                <option value={2}>Continuous (2)</option>
-                                            </select>
-                                        </div>
-
                                         {/* Self Study */}
                                         <div style={{
                                             background: 'white',
@@ -789,21 +713,21 @@ export default function SubjectsPage() {
                                             <div className="text-xs text-muted mt-2">Single period</div>
                                         </div>
 
-                                        {/* Internship */}
+                                        {/* Seminar */}
                                         <div style={{
                                             background: 'white',
                                             borderRadius: '8px',
                                             padding: '12px',
                                             border: '2px solid #f97316'
                                         }}>
-                                            <div className="text-xs font-bold text-gray-600 mb-2">Self Study</div>
+                                            <div className="text-xs font-bold text-gray-600 mb-2">Seminar</div>
                                             <input
                                                 type="number"
                                                 className="form-input"
-                                                value={formData.self_study_hours_per_week}
+                                                value={formData.seminar_hours_per_week}
                                                 onChange={(e) => setFormData({
                                                     ...formData,
-                                                    self_study_hours_per_week: parseInt(e.target.value) || 0
+                                                    seminar_hours_per_week: parseInt(e.target.value) || 0
                                                 })}
                                                 min={0}
                                                 max={35}
@@ -859,6 +783,105 @@ export default function SubjectsPage() {
                                             ({getLabBlocks()} lab block{getLabBlocks() > 1 ? 's' : ''})
                                         </span>
                                     )}
+                                </div>
+                            </div>
+
+                            {/* Academic Performance & Importance Section */}
+                            <div style={{
+                                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                                borderRadius: '12px',
+                                padding: '16px',
+                                marginBottom: '16px',
+                                border: '1px solid #e2e8f0'
+                            }}>
+                                <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#475569', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <TrendingUp size={16} style={{ color: '#f59e0b' }} />
+                                    Academic Importance
+                                </h4>
+                                <p className="text-xs text-muted mb-3">
+                                    Higher importance + lower pass rate = prioritized for morning slots.
+                                </p>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                                    {/* Pass Rate */}
+                                    <div style={{
+                                        background: 'white',
+                                        borderRadius: '8px',
+                                        padding: '12px',
+                                        textAlign: 'center',
+                                        border: '2px solid #22c55e'
+                                    }}>
+                                        <Star size={20} style={{ color: '#22c55e', marginBottom: '6px' }} />
+                                        <div className="text-xs font-bold text-gray-600 mb-1">Pass Rate</div>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            value={formData.previous_year_pass_percentage ?? ''}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                previous_year_pass_percentage: e.target.value === '' ? null : Math.min(100, Math.max(0, parseInt(e.target.value) || 0)),
+                                                // Default importance_level to NORMAL so backend doesn't complain if required
+                                                importance_level: 'NORMAL'
+                                            })}
+                                            min={0}
+                                            max={100}
+                                            placeholder="—"
+                                            style={{ textAlign: 'center', fontWeight: 'bold' }}
+                                        />
+                                        <div className="text-xs text-muted mt-1">prev. year %</div>
+                                    </div>
+
+                                    {/* Auto Priority Score */}
+                                    <div style={{
+                                        background: 'white',
+                                        borderRadius: '8px',
+                                        padding: '12px',
+                                        textAlign: 'center',
+                                        border: '2px solid #6366f1'
+                                    }}>
+                                        <Clock size={20} style={{ color: '#6366f1', marginBottom: '6px' }} />
+                                        <div className="text-xs font-bold text-gray-600 mb-1">Priority</div>
+                                        {(() => {
+                                            const pct = formData.previous_year_pass_percentage;
+                                            let score = 0; // Default P0
+
+                                            // New logic: Priority strictly based on pass percentage
+                                            if (pct != null) {
+                                                if (pct < 50) score = 3;       // Critical for < 50%
+                                                else if (pct < 70) score = 2;  // Elevated for 50-69%
+                                                else if (pct < 85) score = 1;  // Standard for 70-84%
+                                                else score = 0;                // None for >= 85%
+                                            }
+
+                                            const labels = { 0: 'None', 1: 'Standard', 2: 'Elevated', 3: 'Critical' };
+                                            const bgColors = { 0: '#f1f5f9', 1: '#eef2ff', 2: '#fef3c7', 3: '#fee2e2' };
+                                            const textColors = { 0: '#64748b', 1: '#6366f1', 2: '#d97706', 3: '#dc2626' };
+                                            return (
+                                                <div style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '8px',
+                                                    background: bgColors[score],
+                                                    marginTop: '4px',
+                                                }}>
+                                                    <div style={{
+                                                        fontSize: '18px',
+                                                        fontWeight: '800',
+                                                        color: textColors[score],
+                                                    }}>
+                                                        P{score}
+                                                    </div>
+                                                    <div style={{
+                                                        fontSize: '10px',
+                                                        fontWeight: '600',
+                                                        color: textColors[score],
+                                                        marginTop: '2px',
+                                                    }}>
+                                                        {labels[score]}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
                                 </div>
                             </div>
 

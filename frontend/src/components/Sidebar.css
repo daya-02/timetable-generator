@@ -1,19 +1,24 @@
-/* Sidebar Styles - Institutional, Static Navigation */
+/* ================================================================
+   Sidebar — Clean, Professional, Modern Navigation
+   ================================================================ */
 .sidebar {
     position: fixed;
     left: 0;
     top: 0;
     bottom: 0;
     width: var(--sidebar-width);
-    background: var(--primary-900);
+    background: #ffffff;
+    border-right: 1px solid var(--gray-200);
     display: flex;
     flex-direction: column;
     z-index: 100;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
 }
 
+/* ── Header / Logo ────────────────────────────────────────────── */
 .sidebar-header {
-    padding: 1.25rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--gray-100);
 }
 
 .logo {
@@ -23,15 +28,16 @@
 }
 
 .logo-icon {
-    width: 42px;
-    height: 42px;
-    background: white;
+    width: 40px;
+    height: 40px;
+    background: var(--primary-50);
     border-radius: var(--radius);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     flex-shrink: 0;
+    border: 1px solid var(--primary-100);
 }
 
 .logo-image {
@@ -44,14 +50,14 @@
 .logo-text {
     display: flex;
     flex-direction: column;
-    gap: 0;
 }
 
 .logo-title {
     font-size: 1rem;
-    font-weight: 600;
-    color: white;
+    font-weight: 700;
+    color: var(--gray-900);
     line-height: 1.2;
+    letter-spacing: -0.01em;
 }
 
 .logo-subtitle {
@@ -59,10 +65,12 @@
     color: var(--gray-400);
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    font-weight: 500;
 }
 
+/* ── Department Switcher ──────────────────────────────────────── */
 .dept-switcher {
-    margin-top: 0.875rem;
+    margin-top: 1rem;
     display: grid;
     gap: 0.375rem;
 }
@@ -72,28 +80,33 @@
     color: var(--gray-400);
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    font-weight: 600;
 }
 
 .dept-select {
     width: 100%;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: white;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    color: var(--gray-800);
     padding: 0.5rem 0.625rem;
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     font-size: 0.8125rem;
+    font-family: inherit;
     outline: none;
+    transition: all var(--transition-fast);
+    cursor: pointer;
 }
 
 .dept-select:focus {
-    border-color: rgba(148, 163, 184, 0.55);
-    box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.18);
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .dept-select option {
-    color: #0f172a;
+    color: var(--gray-800);
 }
 
+/* ── Navigation ───────────────────────────────────────────────── */
 .sidebar-nav {
     flex: 1;
     padding: 0.75rem 0;
@@ -102,48 +115,67 @@
 
 .sidebar-nav ul {
     list-style: none;
+    padding: 0 0.5rem;
 }
 
-/* Navigation Links - Text + Icons, always visible */
 .nav-link {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    color: var(--gray-300);
+    padding: 0.625rem 0.875rem;
+    margin-bottom: 2px;
+    color: var(--gray-500);
     text-decoration: none;
     font-size: 0.875rem;
-    font-weight: 400;
-    border-left: 3px solid transparent;
-    transition: background-color var(--transition-fast), color var(--transition-fast);
+    font-weight: 450;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    position: relative;
 }
 
 .nav-link:hover {
-    background: rgba(255, 255, 255, 0.04);
-    color: white;
+    background: var(--gray-50);
+    color: var(--gray-800);
     text-decoration: none;
+    transform: translateX(2px);
 }
 
 .nav-link.active {
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
-    border-left-color: var(--secondary-400);
-    font-weight: 500;
+    background: var(--primary-50);
+    color: var(--primary-700);
+    font-weight: 600;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    background: var(--primary-500);
+    border-radius: 0 4px 4px 0;
 }
 
 .nav-link svg {
     flex-shrink: 0;
-    opacity: 0.7;
+    opacity: 0.5;
+    transition: opacity var(--transition-fast);
 }
 
-.nav-link.active svg,
 .nav-link:hover svg {
-    opacity: 1;
+    opacity: 0.8;
 }
 
+.nav-link.active svg {
+    opacity: 1;
+    color: var(--primary-600);
+}
+
+/* ── Footer ───────────────────────────────────────────────────── */
 .sidebar-footer {
-    padding: 0.75rem 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--gray-100);
 }
 
 .sidebar-footer-content {
@@ -155,30 +187,37 @@
     font-size: 0.75rem;
 }
 
-/* Mobile Menu Button */
+/* ── Mobile ───────────────────────────────────────────────────── */
 .mobile-menu-btn {
     display: none;
     position: fixed;
     top: 0.75rem;
     left: 0.75rem;
     z-index: 200;
-    background: var(--primary-800);
-    color: white;
-    border: none;
-    border-radius: var(--radius);
+    background: white;
+    color: var(--gray-700);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
     padding: 0.625rem;
     cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+.mobile-menu-btn:hover {
+    background: var(--gray-50);
+    box-shadow: var(--shadow);
 }
 
 .sidebar-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.5);
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
     z-index: 90;
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
     .sidebar {
         transform: translateX(-100%);
@@ -187,6 +226,7 @@
 
     .sidebar.open {
         transform: translateX(0);
+        box-shadow: var(--shadow-lg);
     }
 
     .mobile-menu-btn {

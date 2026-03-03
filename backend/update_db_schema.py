@@ -18,6 +18,14 @@ def _get_columns(cursor: sqlite3.Cursor, table_name: str) -> list[str]:
     return [info[1] for info in cursor.fetchall()]
 
 
+def _index_exists(cursor: sqlite3.Cursor, index_name: str) -> bool:
+    cursor.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='index' AND name=? LIMIT 1",
+        (index_name,),
+    )
+    return cursor.fetchone() is not None
+
+
 def update_schema():
     """
     Backward-compatible schema updater for SQLite deployments.
@@ -258,6 +266,69 @@ def update_schema():
             print("room_departments table already exists.")
     except Exception as e:
         print(f"[WARN] room_departments migration skipped due to error: {e}")
+
+    # 12. subjects: Add academic importance fields (optional, backward-compatible)
+    try:
+        if _table_exists(cursor, "subjects"):
+            columns = _get_columns(cursor, "subjects")
+
+            importance_columns = [
+                ("importance_level", "TEXT", "'NORMAL'"),
+                ("previous_year_pass_percentage", "INTEGER", None),
+                ("computed_priority_score", "INTEGER", "0"),
+            ]
+
+            for col_name, col_type, default_value in importance_columns:
+                if col_name not in columns:
+                    default_clause = f" DEFAULT {default_value}" if default_value is not None else ""
+                    print(f"Adding {col_name} to subjects table...")
+                    cursor.execute(
+                        f"ALTER TABLE subjects ADD COLUMN {col_name} {col_type}{default_clause}"
+                    )
+                else:
+                    print(f"{col_name} already exists in subjects.")
+        else:
+            print("[WARN] subjects table not found; skipping importance migration.")
+    except Exception as e:
+        print(f"[WARN] subjects importance migration skipped due to error: {e}")
+
+    # 13. class_subject_teachers: append-mode duplicate guard index (no data deletion)
+    try:
+        if _table_exists(cursor, "class_subject_teachers"):
+            index_name = "uq_cst_teacher_sem_subj_comp_batch_idx"
+
+            # Do not create index if exact duplicate rows already exist.
+            cursor.execute(
+                """
+                SELECT teacher_id, semester_id, subject_id, component_type, IFNULL(batch_id, -1), COUNT(*) AS cnt
+                FROM class_subject_teachers
+                GROUP BY teacher_id, semester_id, subject_id, component_type, IFNULL(batch_id, -1)
+                HAVING cnt > 1
+                LIMIT 1
+                """
+            )
+            duplicate_row = cursor.fetchone()
+
+            if duplicate_row:
+                print(
+                    "[WARN] Skipping append-mode unique index creation because duplicate "
+                    "rows already exist. No rows were deleted."
+                )
+            elif not _index_exists(cursor, index_name):
+                print("Creating append-mode unique index on class_subject_teachers...")
+                cursor.execute(
+                    f"""
+                    CREATE UNIQUE INDEX {index_name}
+                    ON class_subject_teachers
+                    (teacher_id, semester_id, subject_id, component_type, IFNULL(batch_id, -1))
+                    """
+                )
+            else:
+                print("append-mode unique index already exists on class_subject_teachers.")
+        else:
+            print("[WARN] class_subject_teachers table not found; skipping append-mode index migration.")
+    except Exception as e:
+        print(f"[WARN] append-mode class_subject_teachers index migration skipped due to error: {e}")
 
     try:
         conn.commit()

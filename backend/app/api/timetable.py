@@ -191,18 +191,57 @@ def get_semester_timetable(
                                 "batch_name": batch_name_str,
                                 "teacher_name": alloc.teacher.name,
                                 "room_name": alloc.room.name if alloc.room else None,
-                                "subject_name": alloc.subject.name if alloc.subject else "Elective",
-                                "subject_code": alloc.subject.code if alloc.subject else "ELECTIVE"
+                                "subject_name": alloc.subject.name,
+                                "subject_code": alloc.subject.code
                             }
                         )
 
                 # Build combined subject name for parallel multi-subject labs
                 unique_subjects = list({a.subject_id: a for a in slot_allocs}.values())
                 if is_pure_elective_slot:
-                    combined_name = "Elective"
-                    combined_code = "ELECTIVE"
+                    basket_name = None
+                    try:
+                        basket = unique_subjects[0].subject.elective_basket if unique_subjects and unique_subjects[0].subject else None
+                        if basket: basket_name = basket.name
+                    except:
+                        pass
+                    
+                    if not basket_name:
+                        # Try SCB fallback if elective basket not found
+                        try:
+                            from app.db.models import StructuredCompositeBasketSubject
+                            scb_link = db.query(StructuredCompositeBasketSubject).filter_by(subject_id=unique_subjects[0].subject_id).first()
+                            if scb_link and scb_link.basket:
+                                basket_name = scb_link.basket.name
+                        except:
+                            pass
+
+                    if basket_name:
+                        combined_name = basket_name
+                        combined_code = basket_name
+                    else:
+                        # Check if multiple subjects exist, it might be SCB or something else
+                        if len(unique_subjects) > 1:
+                           combined_name = " / ".join(a.subject.name for a in unique_subjects) + " (Basket)"
+                           combined_code = " / ".join(a.subject.code for a in unique_subjects)
+                        else:
+                           combined_name = "Elective"
+                           combined_code = "ELECTIVE"
                 elif len(unique_subjects) > 1:
-                    if not any(getattr(a, 'is_elective', False) for a in slot_allocs):
+                    # Check if this is an SCB scheduled class
+                    scb_name = None
+                    try:
+                        from app.db.models import StructuredCompositeBasketSubject
+                        scb_link = db.query(StructuredCompositeBasketSubject).filter_by(subject_id=unique_subjects[0].subject_id).first()
+                        if scb_link and scb_link.basket:
+                            scb_name = scb_link.basket.name
+                    except:
+                        pass
+                        
+                    if scb_name:
+                        combined_name = scb_name
+                        combined_code = scb_name
+                    elif not any(getattr(a, 'is_elective', False) for a in slot_allocs):
                         # Parallel Lab format
                         combined_name = " / ".join(f"{a.subject.code}:{a.batch.name if a.batch else 'B'} (PL)" for a in unique_subjects)
                         combined_code = " / ".join(f"{a.subject.code} (PL)" for a in unique_subjects)
@@ -240,12 +279,10 @@ def get_semester_timetable(
             slots=slots
         ))
 
-    # Default template logic - infer from existing allocations
-    # If slot 4 has allocations, it's likely ODD (no break after period 5)
-    has_slot_4_allocs = any(a.slot == 4 for a in allocations)
-    
-    # Simple heuristic to determine which template to show
-    preferred_type = "ODD" if has_slot_4_allocs else "EVEN"
+    # Determine template type from the semester's actual semester_number
+    # Odd semester numbers (1, 3, 5, 7) -> ODD template
+    # Even semester numbers (2, 4, 6, 8) -> EVEN template
+    preferred_type = "ODD" if (semester.semester_number % 2) != 0 else "EVEN"
     
     from app.db.models import SemesterTemplate
     import json
@@ -344,11 +381,22 @@ def get_teacher_timetable(
             slots=slots
         ))
 
-    has_slot_4_allocs = any(a.slot == 4 for a in allocations)
-    preferred_type = "ODD" if has_slot_4_allocs else "EVEN"
-    
+    # For teacher timetable, determine template from allocations' semesters
+    # Use the most common semester type among the teacher's allocations
     from app.db.models import SemesterTemplate
     import json
+    
+    # Determine preferred type from the semesters this teacher teaches
+    odd_count = 0
+    even_count = 0
+    for alloc in allocations:
+        if hasattr(alloc, 'semester') and alloc.semester:
+            if (alloc.semester.semester_number % 2) != 0:
+                odd_count += 1
+            else:
+                even_count += 1
+    preferred_type = "ODD" if odd_count >= even_count else "EVEN"
+    
     template = db.query(SemesterTemplate).filter(SemesterTemplate.semester_type == preferred_type).first()
     
     break_slots = []
